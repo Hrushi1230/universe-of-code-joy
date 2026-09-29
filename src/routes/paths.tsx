@@ -8,7 +8,6 @@ import {
   BookOpen,
   Code2,
   CalendarCheck,
-  Star,
   Play,
   ArrowRight,
   Layers,
@@ -102,19 +101,19 @@ type PathCard = {
   bullets: string[];
   steps: { done: boolean; current?: boolean }[];
   active: boolean;
-  popular: boolean;
+  foundation: boolean;
   nextSlug: string | null;
   icon: React.ReactNode;
 };
 
-const PATH_META: Record<string, { level: string; popular?: boolean; icon: React.ReactNode }> = {
+const PATH_META: Record<string, { level: string; foundation?: boolean; icon: React.ReactNode }> = {
   "interview-prep": {
     level: "INTERMEDIATE",
     icon: <Target size={22} className="text-accent-strong" />,
   },
   "data-structures": {
     level: "BEGINNER",
-    popular: true,
+    foundation: true,
     icon: <Layers size={22} className="text-accent-strong" />,
   },
   "competitive-programming": {
@@ -162,28 +161,43 @@ function buildPathCards(progress: ProgressData, activeSlug: string | null): Path
         { done: pct >= 100 },
       ],
       active: activeSlug === path.slug,
-      popular: PATH_META[path.slug]?.popular ?? false,
+      foundation: PATH_META[path.slug]?.foundation ?? false,
       nextSlug,
       icon: PATH_META[path.slug]?.icon ?? <Target size={22} className="text-accent-strong" />,
     };
   });
 }
 
-function PathTile({ card, onStart }: { card: PathCard; onStart: (card: PathCard) => void }) {
-  const featured = card.popular;
+function PathTile({
+  card,
+  onStart,
+  ready,
+}: {
+  card: PathCard;
+  onStart: (card: PathCard) => void;
+  ready: boolean;
+}) {
+  const featured = card.foundation;
   return (
     <div
-      className={`relative rounded-2xl border bg-card p-6 flex flex-col justify-between transition-all ${
-        featured
-          ? "border-accent-strong shadow-1 ring-1 ring-accent-strong/30"
-          : "border-hairline hover:border-slate-soft"
+      data-testid={`path-card-${card.slug}`}
+      className={`relative flex flex-col justify-between rounded-2xl border bg-card p-6 transition-all ${
+        card.active
+          ? "border-accent-strong shadow-1 ring-2 ring-accent-strong/30"
+          : featured
+            ? "border-accent-strong shadow-1 ring-1 ring-accent-strong/30"
+            : "border-hairline hover:border-slate-soft"
       }`}
     >
-      {featured && (
-        <span className="absolute -top-3.5 right-6 bg-accent-strong text-white font-sans text-xs font-semibold px-3 py-1 rounded-md shadow-sm">
-          Most popular
+      {card.active ? (
+        <span className="absolute -top-3.5 right-6 rounded-md bg-accent-strong px-3 py-1 font-sans text-xs font-semibold text-white shadow-sm">
+          Current path
         </span>
-      )}
+      ) : featured ? (
+        <span className="absolute -top-3.5 right-6 bg-accent-strong text-white font-sans text-xs font-semibold px-3 py-1 rounded-md shadow-sm">
+          Foundation path
+        </span>
+      ) : null}
 
       <div>
         {/* Header Badge + Icon */}
@@ -195,9 +209,9 @@ function PathTile({ card, onStart }: { card: PathCard; onStart: (card: PathCard)
         </div>
 
         {/* Title & Subtitle */}
-        <h3 className="mt-5 font-display text-[22px] font-semibold text-ink leading-tight">
+        <h2 className="mt-5 font-display text-[22px] font-semibold text-ink leading-tight">
           {card.title}
-        </h3>
+        </h2>
         <p className="mt-2 font-sans text-[13.5px] leading-relaxed text-slate">{card.desc}</p>
 
         {/* Progress Bar */}
@@ -254,8 +268,10 @@ function PathTile({ card, onStart }: { card: PathCard; onStart: (card: PathCard)
         {/* Action Button */}
         <button
           type="button"
+          aria-pressed={card.active}
+          disabled={!ready}
           onClick={() => onStart(card)}
-          className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg border border-hairline bg-card px-4 py-3 font-sans text-[14px] font-medium text-ink transition-colors hover:bg-paper hover:border-slate-soft"
+          className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg border border-hairline bg-card px-4 py-3 font-sans text-[14px] font-medium text-ink transition-colors hover:border-slate-soft hover:bg-paper disabled:opacity-60"
         >
           {card.progress >= 100
             ? "Review path"
@@ -269,12 +285,20 @@ function PathTile({ card, onStart }: { card: PathCard; onStart: (card: PathCard)
   );
 }
 
-function PathsGrid({ cards, onStart }: { cards: PathCard[]; onStart: (card: PathCard) => void }) {
+function PathsGrid({
+  cards,
+  onStart,
+  ready,
+}: {
+  cards: PathCard[];
+  onStart: (card: PathCard) => void;
+  ready: boolean;
+}) {
   return (
     <section id="paths-grid" className="mx-auto max-w-[1240px] px-6 pt-4">
       <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-3">
         {cards.map((c) => (
-          <PathTile key={c.slug} card={c} onStart={onStart} />
+          <PathTile key={c.slug} card={c} onStart={onStart} ready={ready} />
         ))}
       </div>
     </section>
@@ -318,7 +342,7 @@ function MasteryMapSection() {
               Unlock nodes as you master concepts.
             </h2>
             <p className="mt-1 font-sans text-sm text-slate">
-              Your map grows as you learn — no fake progress, only earned mastery.
+              Example structure only. Your live Mastery Map uses progress earned on this device.
             </p>
           </div>
           <div className="flex items-center gap-5 font-sans text-xs text-slate">
@@ -342,7 +366,12 @@ function MasteryMapSection() {
         </div>
 
         {/* 3-Tier Node Tree Diagram */}
-        <div className="relative py-4 overflow-x-auto">
+        <div
+          tabIndex={0}
+          role="region"
+          aria-label="Path timeline"
+          className="relative py-4 overflow-x-auto"
+        >
           <div className="relative max-w-[1000px] mx-auto min-w-[750px]">
             {/* Top Horizontal Trunk Line */}
             <div className="absolute top-[18px] left-[10%] right-[10%] h-[2px] bg-hairline z-0" />
@@ -424,13 +453,21 @@ function MasteryMapSection() {
             </div>
           </div>
         </div>
+        <div className="mt-5 flex justify-center">
+          <Link
+            to="/mastery-map"
+            className="inline-flex h-11 items-center gap-2 rounded-lg border border-hairline bg-card px-5 font-sans text-sm font-medium text-ink transition-colors hover:bg-paper"
+          >
+            Open my live mastery map <ArrowRight size={14} />
+          </Link>
+        </div>
       </div>
     </section>
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/* How It Works & Testimonials                                                */
+/* How It Works & product principles                                         */
 /* -------------------------------------------------------------------------- */
 function HowItWorks() {
   const items = [
@@ -479,36 +516,31 @@ function HowItWorks() {
   );
 }
 
-function Testimonials() {
+function PathPrinciples() {
   const items = [
     {
-      quote:
-        "\u201CAlgora's visualizer changed the way I understand algorithms. I finally see what's happening step by step.\u201D",
-      author: "— CS student, Georgia Tech",
+      title: "Your progress is earned",
+      body: "Path percentages come from your completed learning work, not a fabricated profile.",
     },
     {
-      quote:
-        "\u201CThe paths are perfectly structured. I went from arrays to graphs without feeling lost.\u201D",
-      author: "— Bootcamp grad",
+      title: "You can change direction",
+      body: "Starting another path updates the active path while keeping existing algorithm progress.",
     },
     {
-      quote:
-        "\u201CSpaced repetition actually works. I retain more and stress less before contests.\u201D",
-      author: "— Sophomore, UT Austin",
+      title: "Everything stays local",
+      body: "Until account sync is connected, path selection and mastery remain on this device.",
     },
   ];
   return (
     <section className="mx-auto my-16 max-w-[1240px] px-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {items.map((t) => (
-          <div key={t.author} className="rounded-2xl border border-hairline bg-card p-6 shadow-1">
-            <div className="flex items-center gap-1 text-highlight">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} size={15} fill="currentColor" strokeWidth={0} />
-              ))}
-            </div>
-            <p className="mt-3 font-sans text-[14px] leading-relaxed text-ink">{t.quote}</p>
-            <p className="mt-4 font-mono text-xs text-slate-soft">{t.author}</p>
+        {items.map((item) => (
+          <div key={item.title} className="rounded-2xl border border-hairline bg-card p-6 shadow-1">
+            <span className="inline-flex size-7 items-center justify-center rounded-full bg-tint text-accent-strong">
+              <Check size={14} strokeWidth={2.5} />
+            </span>
+            <h3 className="mt-3 font-display text-[17px] font-semibold text-ink">{item.title}</h3>
+            <p className="mt-2 font-sans text-[14px] leading-relaxed text-slate">{item.body}</p>
           </div>
         ))}
       </div>
@@ -559,7 +591,7 @@ function CtaBand({ onChoose }: { onChoose: () => void }) {
 /* -------------------------------------------------------------------------- */
 /* Main Paths Page Component                                                  */
 /* -------------------------------------------------------------------------- */
-export default function PathsPage() {
+function PathsPage() {
   const navigate = useNavigate();
   const hydrated = useHydrated();
   const live = useProgressStore((s) => s);
@@ -589,10 +621,10 @@ export default function PathsPage() {
       <SiteNav active="Paths" />
       <main id="main-content">
         <Hero onChoose={scrollToGrid} />
-        <PathsGrid cards={cards} onStart={onStart} />
+        <PathsGrid cards={cards} onStart={onStart} ready={hydrated} />
         <MasteryMapSection />
         <HowItWorks />
-        <Testimonials />
+        <PathPrinciples />
         <CtaBand onChoose={scrollToGrid} />
       </main>
       <SiteFooter />

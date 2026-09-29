@@ -109,7 +109,7 @@ export function ReviewSession({
       <section
         aria-labelledby="review-complete-heading"
         className={cn(
-          "mx-auto w-full max-w-[560px] rounded-2xl border border-hairline bg-card px-8 py-9 text-center",
+          "mx-auto w-full max-w-[560px] rounded-2xl border border-hairline bg-card px-4 py-7 text-center sm:px-8 sm:py-9",
           className,
         )}
       >
@@ -130,7 +130,7 @@ export function ReviewSession({
           <p className="mt-2 font-mono text-[12.5px] text-primary">{nextReviewLabel}</p>
         ) : null}
         {footer ? (
-          <div className="mt-6 flex items-center justify-center gap-3">{footer}</div>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">{footer}</div>
         ) : null}
       </section>
     );
@@ -152,7 +152,7 @@ export function ReviewSession({
     <section
       aria-labelledby="review-question-heading"
       className={cn(
-        "mx-auto w-full max-w-[640px] rounded-2xl border border-hairline bg-card px-7 pb-6 pt-5",
+        "mx-auto w-full max-w-[640px] rounded-2xl border border-hairline bg-card px-4 pb-6 pt-5 sm:px-7",
         className,
       )}
     >

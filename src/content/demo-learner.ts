@@ -30,8 +30,8 @@ const DEMO_LEVEL = levelFromXp(DEMO_XP);
 const DEMO_XP_TO_NEXT = xpForLevel(DEMO_LEVEL);
 
 export const demoLearner: DemoLearner = {
-  handle: "ada_codes",
-  name: "Ada Lovelace",
+  handle: "local_learner",
+  name: "Local Learner",
   level: DEMO_LEVEL,
   xp: DEMO_XP,
   xpToNextLevel: DEMO_XP_TO_NEXT,

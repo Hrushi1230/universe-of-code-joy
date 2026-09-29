@@ -9,7 +9,7 @@ import type {
   ValidationResult,
 } from "@/engine/types";
 
-const MAX_ITEMS = 25;
+const MAX_ITEMS = 12;
 
 /** Pseudocode -> listing line. JS merges the `if swapped` guard onto one line. */
 const CODE_MAP: CodeLineMap = {

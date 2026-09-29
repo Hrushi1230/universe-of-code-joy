@@ -25,6 +25,8 @@ import {
   Tv,
 } from "lucide-react";
 import { SiteNav, SiteFooter } from "@/components/site-chrome";
+import { DemoNotice } from "@/components/demo-notice";
+import { pricingCatalogClaim } from "@/content/marketing-claims";
 
 export const Route = createFileRoute("/visualizer")({
   component: VisualizerMarketingPage,
@@ -133,7 +135,7 @@ function TreeSvg() {
   );
 }
 
-export default function VisualizerMarketingPage() {
+function VisualizerMarketingPage() {
   return (
     <div className="min-h-screen bg-paper text-ink font-sans antialiased selection:bg-tint selection:text-accent-strong">
       <SiteNav active="Visualizer" />
@@ -163,7 +165,8 @@ export default function VisualizerMarketingPage() {
           {/* CTA Buttons */}
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3.5">
             <Link
-              to="/explore"
+              to="/algorithms/$slug"
+              params={{ slug: "binary-search" }}
               className="rounded-lg bg-accent-strong hover:bg-accent-strong/90 text-white font-sans text-[14px] font-medium px-6 py-3 transition-colors shadow-sm"
             >
               Try the demo
@@ -179,6 +182,12 @@ export default function VisualizerMarketingPage() {
 
         {/* -------------------- Interactive Showcase Section -------------------- */}
         <section className="relative my-6 max-w-[1240px] mx-auto">
+          <div className="mx-auto mb-5 max-w-[720px]">
+            <DemoNotice>
+              The showcase below is an annotated preview. Open the Binary Search demo for real Play,
+              Pause, Step, Replay, speed, code, state, and explanation controls.
+            </DemoNotice>
+          </div>
           {/* Callouts Bar Above Container */}
           <div className="hidden lg:grid grid-cols-[1.2fr_1.05fr_0.85fr] gap-6 mb-2 px-6 text-xs font-mono text-slate font-medium select-none">
             {/* Callout 1: current comparison */}
@@ -288,28 +297,32 @@ export default function VisualizerMarketingPage() {
                       <button
                         type="button"
                         aria-label="Step to start"
-                        className="p-1.5 rounded border border-hairline bg-card text-ink hover:bg-paper transition-colors"
+                        disabled
+                        className="cursor-default rounded border border-hairline bg-card p-1.5 text-ink opacity-55"
                       >
                         <SkipBack size={13} strokeWidth={1.5} />
                       </button>
                       <button
                         type="button"
                         aria-label="Step back"
-                        className="p-1.5 rounded border border-hairline bg-card text-ink hover:bg-paper transition-colors"
+                        disabled
+                        className="cursor-default rounded border border-hairline bg-card p-1.5 text-ink opacity-55"
                       >
                         <ChevronDown size={13} strokeWidth={1.5} className="rotate-90" />
                       </button>
                       <button
                         type="button"
-                        aria-label="Pause"
-                        className="p-1.5 rounded border border-hairline bg-card text-ink hover:bg-paper transition-colors"
+                        aria-label="Pause preview"
+                        disabled
+                        className="cursor-default rounded border border-hairline bg-card p-1.5 text-ink opacity-55"
                       >
                         <Pause size={13} strokeWidth={1.5} />
                       </button>
                       <button
                         type="button"
                         aria-label="Step forward"
-                        className="p-1.5 rounded border border-hairline bg-card text-ink hover:bg-paper transition-colors"
+                        disabled
+                        className="cursor-default rounded border border-hairline bg-card p-1.5 text-ink opacity-55"
                       >
                         <SkipForward size={13} strokeWidth={1.5} />
                       </button>
@@ -361,7 +374,12 @@ export default function VisualizerMarketingPage() {
                   </span>
                 </div>
 
-                <div className="p-3 font-mono text-[12px] leading-[1.65] overflow-x-auto flex-1 bg-card">
+                <div
+                  tabIndex={0}
+                  role="region"
+                  aria-label="Code example"
+                  className="p-3 font-mono text-[12px] leading-[1.65] overflow-x-auto flex-1 bg-card"
+                >
                   {[
                     {
                       n: 1,
@@ -498,16 +516,32 @@ export default function VisualizerMarketingPage() {
             <div className="rounded-2xl border border-hairline bg-card p-6 shadow-1">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-1.5">
-                  <button className="p-2 rounded border border-hairline bg-paper text-ink">
+                  <button
+                    disabled
+                    aria-label="Preview: step to start"
+                    className="cursor-default rounded border border-hairline bg-paper p-2 text-ink opacity-55"
+                  >
                     <SkipBack size={14} strokeWidth={1.5} />
                   </button>
-                  <button className="p-2 rounded border border-hairline bg-paper text-ink">
+                  <button
+                    disabled
+                    aria-label="Preview: step back"
+                    className="cursor-default rounded border border-hairline bg-paper p-2 text-ink opacity-55"
+                  >
                     <ChevronDown size={14} strokeWidth={1.5} className="rotate-90" />
                   </button>
-                  <button className="p-2 rounded border border-hairline bg-paper text-ink">
+                  <button
+                    disabled
+                    aria-label="Preview: pause"
+                    className="cursor-default rounded border border-hairline bg-paper p-2 text-ink opacity-55"
+                  >
                     <Pause size={14} strokeWidth={1.5} />
                   </button>
-                  <button className="p-2 rounded border border-hairline bg-paper text-ink">
+                  <button
+                    disabled
+                    aria-label="Preview: step forward"
+                    className="cursor-default rounded border border-hairline bg-paper p-2 text-ink opacity-55"
+                  >
                     <SkipForward size={14} strokeWidth={1.5} />
                   </button>
                 </div>
@@ -579,7 +613,9 @@ export default function VisualizerMarketingPage() {
                     <span className="text-[9px] text-accent-strong font-bold">◆ 7</span>
                   </div>
                   <div>&nbsp;&nbsp;&nbsp;&nbsp;order.append(node.val)</div>
-                  <div>&nbsp;&nbsp;&nbsp;&nbsp;q.extend([node.left, node.right])</div>
+                  <div>
+                    &nbsp;&nbsp;&nbsp;&nbsp;q.extend(c for c in (node.left, node.right) if c)
+                  </div>
                   <div>
                     &nbsp;&nbsp;<span className="text-accent-strong">return</span> order
                   </div>
@@ -661,8 +697,8 @@ export default function VisualizerMarketingPage() {
               { label: "Quicksort", icon: BarChart3, featured: true },
               { label: "Merge Sort", icon: GitMerge, featured: true },
               { label: "Binary Search", icon: Search },
-              { label: "DP Table", icon: Grid, pro: true },
-              { label: "Union-Find", icon: Layers, pro: true },
+              { label: "DP Table", icon: Grid, planned: true },
+              { label: "Union-Find", icon: Layers, planned: true },
               { label: "Heap", icon: Tv },
               { label: "And more", icon: MoreHorizontal },
             ].map((algo, idx) => (
@@ -680,9 +716,9 @@ export default function VisualizerMarketingPage() {
                     Featured
                   </span>
                 )}
-                {algo.pro && (
+                {"planned" in algo && algo.planned && (
                   <span className="absolute top-2.5 right-2.5 flex items-center gap-0.5 text-accent-strong font-mono text-[9px] font-semibold bg-tint px-1.5 py-0.5 rounded">
-                    <Lock size={9} strokeWidth={1.5} /> Pro
+                    <Lock size={9} strokeWidth={1.5} /> Planned
                   </span>
                 )}
                 <algo.icon size={26} strokeWidth={1.5} className="text-accent-strong mb-3" />
@@ -700,8 +736,8 @@ export default function VisualizerMarketingPage() {
                 <Code2 size={20} strokeWidth={1.5} />
               </div>
               <div>
-                <div className="font-display text-2xl font-bold text-ink">60+</div>
-                <div className="font-sans text-xs text-slate">algorithms</div>
+                <div className="font-display text-2xl font-bold text-ink">26</div>
+                <div className="font-sans text-xs text-slate">catalog algorithms</div>
               </div>
             </div>
 
@@ -710,8 +746,8 @@ export default function VisualizerMarketingPage() {
                 <BookOpen size={20} strokeWidth={1.5} />
               </div>
               <div>
-                <div className="font-display text-2xl font-bold text-ink">480</div>
-                <div className="font-sans text-xs text-slate">lessons</div>
+                <div className="font-display text-2xl font-bold text-ink">56</div>
+                <div className="font-sans text-xs text-slate">practice questions</div>
               </div>
             </div>
 
@@ -720,8 +756,10 @@ export default function VisualizerMarketingPage() {
                 <Star size={20} strokeWidth={1.5} />
               </div>
               <div>
-                <div className="font-display text-2xl font-bold text-ink">4.9★</div>
-                <div className="font-sans text-xs text-slate">average rating</div>
+                <div className="font-display text-2xl font-bold text-ink">
+                  {pricingCatalogClaim.value}
+                </div>
+                <div className="font-sans text-xs text-slate">runnable modules</div>
               </div>
             </div>
           </div>

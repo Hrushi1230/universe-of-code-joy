@@ -9,6 +9,8 @@ export interface NotificationPref {
   push: boolean;
 }
 
+export type NotificationPrefs = PrefsState["notificationPrefs"];
+
 export interface ProfileData {
   fullName: string;
   username: string;
@@ -43,6 +45,7 @@ export interface PrefsState {
   };
   quietHoursStart: string;
   quietHoursEnd: string;
+  notificationReadIds: string[];
 
   /* ---- code / playback setters ---- */
   setLanguage: (language: CodeLanguage) => void;
@@ -66,15 +69,22 @@ export interface PrefsState {
     value: boolean,
   ) => void;
   setQuietHours: (start: string, end: string) => void;
+  saveNotificationSettings: (
+    prefs: PrefsState["notificationPrefs"],
+    start: string,
+    end: string,
+  ) => void;
+  markNotificationRead: (id: string) => void;
+  markAllNotificationsRead: (ids: string[]) => void;
 }
 
 const defaultProfile: ProfileData = {
-  fullName: "Arjun Rao",
-  username: "@arjun",
-  email: "arjun@example.com",
-  country: "India",
-  bio: "CS undergrad · loves graphs & DP · building projects on the side.",
-  twoFactorEnabled: true,
+  fullName: "Local Learner",
+  username: "@learner",
+  email: "",
+  country: "",
+  bio: "",
+  twoFactorEnabled: false,
 };
 
 export const usePrefsStore = create<PrefsState>()(
@@ -92,7 +102,7 @@ export const usePrefsStore = create<PrefsState>()(
       profile: { ...defaultProfile },
 
       /* ---- billing ---- */
-      billingPlan: "pro-annual",
+      billingPlan: "free",
 
       /* ---- notification preferences ---- */
       notificationPrefs: {
@@ -104,6 +114,7 @@ export const usePrefsStore = create<PrefsState>()(
       },
       quietHoursStart: "22:00",
       quietHoursEnd: "08:00",
+      notificationReadIds: [],
 
       /* ---- code / playback setters ---- */
       setLanguage: (language) => set({ language }),
@@ -135,27 +146,46 @@ export const usePrefsStore = create<PrefsState>()(
           },
         })),
       setQuietHours: (start, end) => set({ quietHoursStart: start, quietHoursEnd: end }),
+      saveNotificationSettings: (notificationPrefs, quietHoursStart, quietHoursEnd) =>
+        set({ notificationPrefs, quietHoursStart, quietHoursEnd }),
+      markNotificationRead: (id) =>
+        set((state) => ({
+          notificationReadIds: state.notificationReadIds.includes(id)
+            ? state.notificationReadIds
+            : [...state.notificationReadIds, id],
+        })),
+      markAllNotificationsRead: (ids) =>
+        set((state) => ({
+          notificationReadIds: [...new Set([...state.notificationReadIds, ...ids])],
+        })),
     }),
     {
       name: "algora-prefs",
-      version: 2,
+      version: 4,
       migrate: (persisted: unknown, version: number) => {
-        if (version < 2) {
-          /* v1 had no profile/billing/notifications — fill with defaults */
-          const old = persisted as Record<string, unknown>;
+        if (version < 4) {
+          const old = persisted as Partial<PrefsState>;
+          const hadSeededProfile =
+            !old.profile ||
+            (old.profile.fullName === "Arjun Rao" &&
+              old.profile.username === "@arjun" &&
+              old.profile.email === "arjun@example.com");
           return {
             ...old,
-            profile: { ...defaultProfile },
-            billingPlan: "pro-annual",
-            notificationPrefs: {
+            profile: hadSeededProfile
+              ? { ...defaultProfile }
+              : { ...defaultProfile, ...old.profile, twoFactorEnabled: false },
+            billingPlan: "free",
+            notificationPrefs: old.notificationPrefs ?? {
               streakReminders: { email: true, push: true },
               achievements: { email: true, push: true },
               pathUpdates: { email: true, push: false },
               leaderboard: { email: false, push: true },
               weeklyRecap: { email: true, push: false },
             },
-            quietHoursStart: "22:00",
-            quietHoursEnd: "08:00",
+            quietHoursStart: old.quietHoursStart ?? "22:00",
+            quietHoursEnd: old.quietHoursEnd ?? "08:00",
+            notificationReadIds: old.notificationReadIds ?? [],
           };
         }
         return persisted as PrefsState;

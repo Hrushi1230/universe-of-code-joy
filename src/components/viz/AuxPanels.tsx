@@ -1,9 +1,8 @@
 import * as React from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import type { AuxPanel, CellState } from "@/engine/types";
-
-const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
+import type { AuxPanel } from "@/engine/types";
+import { LinearStructureView } from "@/components/viz/LinearStructureView";
+import { RecursionStackView } from "@/components/viz/RecursionStackView";
 
 export interface AuxPanelsProps {
   aux: AuxPanel[] | undefined;
@@ -11,47 +10,17 @@ export interface AuxPanelsProps {
 }
 
 export function AuxPanels({ aux, className }: AuxPanelsProps): React.ReactElement | null {
-  const reduced = useReducedMotion() ?? false;
-  const transition = reduced ? { duration: 0 } : { duration: 0.35, ease: EASE };
-
   if (!aux || aux.length === 0) return null;
 
   return (
     <div className={cn("flex flex-wrap items-center gap-4", className)}>
       {aux.map((panel, panelIndex) => {
-        // For queue or stack, we map the items into a bracketed array string like [2, 3, 4]
         if (panel.kind === "queue" || panel.kind === "stack") {
-          return (
-            <div
-              key={`${panel.kind}-${panelIndex}`}
-              className="flex items-center gap-3 rounded-lg border border-hairline px-4 py-2 font-mono text-[12px]"
-            >
-              <span className="text-slate lowercase">{panel.label}:</span>
-              <ul className="flex items-center" aria-label={panel.label}>
-                <span className="text-primary mr-1">[</span>
-                <AnimatePresence initial={false}>
-                  {panel.items.map((item, i) => (
-                    <motion.li
-                      key={item.id}
-                      layout={!reduced}
-                      initial={reduced ? false : { opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={reduced ? { opacity: 0, scale: 0.8 } : { opacity: 0 }}
-                      transition={transition}
-                      className="text-primary flex items-center"
-                    >
-                      {item.label}
-                      {i < panel.items.length - 1 && <span className="mr-1">,</span>}
-                    </motion.li>
-                  ))}
-                </AnimatePresence>
-                <span className="text-primary ml-1">]</span>
-                {panel.items.length === 0 && (
-                  <span className="text-primary/50 text-[10px]">empty</span>
-                )}
-              </ul>
-            </div>
-          );
+          return <LinearStructureView key={`${panel.kind}-${panelIndex}`} panel={panel} />;
+        }
+
+        if (panel.kind === "callstack") {
+          return <RecursionStackView key={`${panel.kind}-${panelIndex}`} panel={panel} />;
         }
 
         // For keyvalue (e.g., current node: 1)
@@ -90,20 +59,31 @@ export function AuxPanels({ aux, className }: AuxPanelsProps): React.ReactElemen
           );
         }
 
-        // Cost-per-item panel, compacted to one pill for this inline strip: the
-        // player renders it as a full table (see WorkspacePanels).
+        // Cost-per-item evidence stays explicit: the learner can verify every
+        // contribution instead of seeing only an unexplained total.
         if (panel.kind === "cost") {
           return (
             <div
               key={`${panel.kind}-${panelIndex}`}
-              className="flex items-center gap-3 rounded-lg border border-hairline px-4 py-2 font-mono text-[12px]"
+              className="w-full rounded-xl border border-hairline px-4 py-3 font-mono text-[12px]"
             >
-              <span className="text-slate lowercase">{panel.label}:</span>
-              <span className="text-primary">{panel.rows.map((row) => row.cost).join(" + ")}</span>
+              <span className="font-semibold text-ink">{panel.label}</span>
+              <ul className="mt-2 grid grid-cols-2 gap-x-5 gap-y-1 sm:grid-cols-4">
+                {panel.rows.map((row) => (
+                  <li key={row.id} className="flex items-baseline justify-between gap-2">
+                    <span className="text-slate">{row.item}</span>
+                    <span className="tabular-nums text-ink">{row.cost}</span>
+                  </li>
+                ))}
+              </ul>
               {panel.total ? (
-                <span className="text-ink">
-                  = {panel.total.value} / {panel.total.budget} {panel.total.ok ? "✓" : "✕"}
-                </span>
+                <div className="mt-2 flex items-center justify-end gap-2 border-t border-hairline pt-2 text-ink">
+                  <span>{panel.total.label}</span>
+                  <span className="font-semibold text-primary">{panel.total.value}</span>
+                  <span>
+                    / {panel.total.budget} {panel.total.ok ? "✓" : "✕"}
+                  </span>
+                </div>
               ) : null}
             </div>
           );

@@ -6,8 +6,9 @@ export function renderErrorPage(): string {
     <title>This page didn't load</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
+      * { box-sizing: border-box; }
       body { font: 15px/1.5 system-ui, -apple-system, sans-serif; background: rgb(247, 249, 248); color: rgb(14, 21, 19); display: grid; place-items: center; min-height: 100vh; margin: 0; padding: 1.5rem; }
-      .card { max-width: 28rem; width: 100%; text-align: center; padding: 2rem; }
+      .card { max-width: 28rem; width: 100%; text-align: center; padding: clamp(0.5rem, 4vw, 2rem); }
       h1 { font-size: 1.25rem; margin: 0 0 0.5rem; }
       p { color: rgb(91, 103, 99); margin: 0 0 1.5rem; }
       .actions { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }

@@ -75,12 +75,12 @@ export const achievements: Achievement[] = [
   },
   {
     id: "speed-demon",
-    name: "Speed Demon",
-    description: "Solve a medium-difficulty problem in under 5 minutes.",
+    name: "First Benchmark",
+    description: "Record a runtime for an accepted local solution.",
     icon: "Zap",
     tier: "gold",
     xp: 150,
-    criteria: "Solve a medium problem in under 5 minutes",
+    criteria: "Save 1 accepted result with a measured runtime",
   },
   {
     id: "streak-3",
@@ -157,7 +157,7 @@ export const achievements: Achievement[] = [
   {
     id: "path-collector",
     name: "Path Collector",
-    description: "Complete all four learning paths.",
+    description: "Complete every learning path in the current catalog.",
     icon: "Trophy",
     tier: "platinum",
     xp: 750,

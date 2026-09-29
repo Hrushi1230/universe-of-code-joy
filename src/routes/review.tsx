@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { AppSidebar, AppWorkspaceBar } from "@/components/app-shell";
 import { ReviewSession } from "@/components/learning/ReviewSession";
 import { getAlgorithm } from "@/content/algorithms";
+import { getProblem } from "@/content/problems";
 import useHydrated from "@/hooks/useHydrated";
 import {
   gradedToday,
@@ -20,15 +21,25 @@ import { baselineProgress, useProgressStore } from "@/stores/progressStore";
 /** `?algorithm=` opens that algorithm's curated recall set; bare /review keeps the queue. */
 interface ReviewSearch {
   algorithm?: string;
+  problem?: string;
 }
 
 export const Route = createFileRoute("/review")({
   validateSearch: (search: Record<string, unknown>): ReviewSearch => {
-    const algorithm =
-      typeof search.algorithm === "string" && hasReviewSet(search.algorithm)
-        ? search.algorithm
+    const requestedAlgorithm = typeof search.algorithm === "string" ? search.algorithm : undefined;
+    const requestedProblem = typeof search.problem === "string" ? search.problem : undefined;
+    const problem =
+      requestedAlgorithm &&
+      requestedProblem &&
+      getProblem(requestedProblem)?.algorithmSlug === requestedAlgorithm &&
+      hasReviewSet(requestedAlgorithm, requestedProblem)
+        ? requestedProblem
         : undefined;
-    return algorithm ? { algorithm } : {};
+    const algorithm =
+      requestedAlgorithm && hasReviewSet(requestedAlgorithm, problem)
+        ? requestedAlgorithm
+        : undefined;
+    return algorithm ? { algorithm, ...(problem ? { problem } : {}) } : {};
   },
   component: ReviewRoute,
   head: () => ({
@@ -52,8 +63,8 @@ export const Route = createFileRoute("/review")({
 
 /** Curated recall set when one is requested, the general queue otherwise. */
 function ReviewRoute() {
-  const { algorithm } = Route.useSearch();
-  return algorithm ? <AlgorithmReview slug={algorithm} /> : <ReviewQueue />;
+  const { algorithm, problem } = Route.useSearch();
+  return algorithm ? <AlgorithmReview slug={algorithm} problemSlug={problem} /> : <ReviewQueue />;
 }
 
 /**
@@ -61,44 +72,53 @@ function ReviewRoute() {
  * through the existing progress store, once per completed session — and not at
  * all when the card was already graded today, so refreshing cannot farm either.
  */
-function AlgorithmReview({ slug }: { slug: string }) {
+function AlgorithmReview({ slug, problemSlug }: { slug: string; problemSlug?: string }) {
   const hydrated = useHydrated();
-  const items = useMemo(() => reviewSetFor(slug), [slug]);
+  const items = useMemo(() => reviewSetFor(slug, problemSlug), [slug, problemSlug]);
   const algo = getAlgorithm(slug);
+  const problem = problemSlug ? getProblem(problemSlug) : undefined;
+  const reviewName = problem?.title ?? algo?.name ?? slug;
+  const reviewKey = problemSlug ?? slug;
   const gradeCard = useProgressStore((s) => s.gradeCard);
   const awardXp = useProgressStore((s) => s.awardXp);
   const touchStreak = useProgressStore((s) => s.touchStreak);
-  const card = useProgressStore((s) => s.reviewCards[slug]);
+  const card = useProgressStore((s) => s.reviewCards[reviewKey]);
 
-  /* Snapshot once: whether this session schedules must not flip mid-session. */
-  const [practiceOnly] = useState(() => gradedToday(card));
+  /* Snapshot once after the persisted store is available. Taking this value on
+     the first render sees the SSR baseline and can make a refreshed session
+     grade the same card twice. */
+  const practiceOnlyRef = useRef<boolean | null>(null);
+  if (hydrated && practiceOnlyRef.current === null) {
+    practiceOnlyRef.current = gradedToday(card);
+  }
+  const practiceOnly = practiceOnlyRef.current ?? false;
   const [label, setLabel] = useState<string | null>(null);
 
   const onComplete = useCallback(
     (outcomes: ReviewOutcome[]) => {
       if (practiceOnly) return;
       const grade = sessionGrade(outcomes);
-      gradeCard(slug, grade);
+      gradeCard(reviewKey, grade);
       const gained = gradeXp(grade);
-      awardXp(gained, `review:${slug}`);
+      awardXp(gained, `review:${reviewKey}`);
       touchStreak();
-      setLabel(nextReviewLabel(useProgressStore.getState().reviewCards[slug]));
+      setLabel(nextReviewLabel(useProgressStore.getState().reviewCards[reviewKey]));
       toast.success(`Review complete — +${gained} XP`, {
-        description: `${items.length} ${algo?.name ?? slug} prompts answered.`,
+        description: `${items.length} ${reviewName} prompts answered.`,
       });
     },
-    [algo?.name, awardXp, gradeCard, items.length, practiceOnly, slug, touchStreak],
+    [awardXp, gradeCard, items.length, practiceOnly, reviewKey, reviewName, touchStreak],
   );
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background">
+    <div className="flex h-dvh w-full overflow-hidden bg-background">
       <AppSidebar active="Review" collapsible />
       <div className="flex min-w-0 flex-1 flex-col">
-        <AppWorkspaceBar crumbs={["Review", algo?.name ?? slug]} />
-        <main className="flex min-h-0 flex-1 items-start justify-center overflow-y-auto px-8 py-6">
+        <AppWorkspaceBar crumbs={["Review", reviewName]} />
+        <main className="flex min-h-0 flex-1 items-start justify-center overflow-y-auto px-3 py-4 sm:px-8 sm:py-6">
           {hydrated ? (
             <ReviewSession
-              algorithmName={algo?.name ?? slug}
+              algorithmName={reviewName}
               items={items}
               practiceOnly={practiceOnly}
               onComplete={onComplete}
@@ -108,6 +128,7 @@ function AlgorithmReview({ slug }: { slug: string }) {
                   <Link
                     to="/algorithms/$slug"
                     params={{ slug }}
+                    search={problemSlug ? { problem: problemSlug } : {}}
                     className="inline-flex h-11 items-center rounded-xl border border-primary bg-card px-6 font-sans text-[14px] font-medium text-primary hover:bg-tint"
                   >
                     Back to lesson

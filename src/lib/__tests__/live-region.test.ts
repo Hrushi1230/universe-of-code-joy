@@ -4,23 +4,26 @@ import * as path from "node:path";
 
 describe("Live region announcements with aria-atomic (Criterion S7.5)", () => {
   describe("ExplainPane accessibility contracts", () => {
-    const panelsPath = path.resolve(process.cwd(), "src/components/player/WorkspacePanels.tsx");
+    const panelsPath = path.resolve(process.cwd(), "src/components/player/ExplainPane.tsx");
     const panelsContent = fs.readFileSync(panelsPath, "utf-8");
 
-    it("verifies ExplainPane defines aria-live='polite' and aria-atomic='true' on empty state", () => {
-      expect(panelsContent).toContain('aria-live="polite" aria-atomic="true"');
+    it("keeps ExplainPane's empty state readable without adding a competing live region", () => {
       expect(panelsContent).toContain("Run the algorithm to see the explanation.");
+      expect(panelsContent).not.toContain('aria-live="polite"');
     });
 
-    it("keeps the reasoning body a scrollable flex child (spacing may be tuned)", () => {
-      // Asserts structure, not exact spacing utilities, so layout polish does
-      // not require a test edit while the scroll container stays guaranteed.
-      expect(panelsContent).toMatch(/ref=\{bodyRef\}[\s\S]{0,160}min-h-0 flex-1/);
-      expect(panelsContent).toMatch(/ref=\{bodyRef\}[\s\S]{0,160}overflow-y-auto/);
+    it("keeps the reasoning body a fixed non-scrolling flex child", () => {
+      expect(panelsContent).toContain("min-h-0 flex-1 space-y-2.5 overflow-hidden");
+      expect(panelsContent).not.toContain("overflow-y-auto");
     });
 
     it("verifies VisualStage provides an accessible polite live region for cross-tab announcements", () => {
-      expect(panelsContent).toContain(
+      const workspacePanelsPath = path.resolve(
+        process.cwd(),
+        "src/components/player/WorkspacePanels.tsx",
+      );
+      const workspacePanelsContent = fs.readFileSync(workspacePanelsPath, "utf-8");
+      expect(workspacePanelsContent).toContain(
         '<div className="sr-only" aria-live="polite" aria-atomic="true">',
       );
     });

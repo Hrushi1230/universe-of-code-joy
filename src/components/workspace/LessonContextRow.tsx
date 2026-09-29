@@ -31,8 +31,8 @@ export function LessonContextRow({
   className,
 }: LessonContextRowProps): React.ReactElement {
   return (
-    <div className={cn("flex min-w-0 items-center gap-4", className)}>
-      <h1 className="shrink-0 truncate font-display text-[19px] font-semibold tracking-tight text-ink">
+    <div className={cn("flex min-w-0 flex-wrap items-center gap-3 sm:gap-4", className)}>
+      <h1 className="min-w-0 flex-1 truncate font-display text-[19px] font-semibold tracking-tight text-ink sm:flex-none">
         {heading}
       </h1>
       {difficulty ? <DifficultyBadge difficulty={difficulty} /> : null}
@@ -41,7 +41,7 @@ export function LessonContextRow({
       </span>
       <span className="font-mono text-[12px] text-slate">{complexity}</span>
 
-      <div className="ml-auto flex shrink-0 items-center gap-4">
+      <div className="flex w-full shrink-0 items-center justify-between gap-3 sm:ml-auto sm:w-auto sm:justify-start sm:gap-4">
         <span className="inline-flex items-center gap-2 font-mono text-[12px] text-slate">
           Mastery
           <MasteryRing pct={masteryPct} />

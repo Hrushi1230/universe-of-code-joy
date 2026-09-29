@@ -66,8 +66,8 @@ describe("paddedCounters over the real engine", () => {
     if (!parsed.ok) throw new Error(parsed.error);
     const run = mod.run(parsed.parsed);
 
-    expect(paddedCounters(run, run.steps[0]!)).toEqual({ "linear worst": 16, comparisons: 0 });
-    // 16 values ruled out in 5 comparisons is the whole argument for the algorithm.
-    expect(run.totalCounters).toEqual({ "linear worst": 16, comparisons: 5 });
+    expect(paddedCounters(run, run.steps[0]!)).toEqual({ "linear worst": 12, comparisons: 0 });
+    // 12 values ruled out in 4 comparisons is the whole argument for the algorithm.
+    expect(run.totalCounters).toEqual({ "linear worst": 12, comparisons: 4 });
   });
 });

@@ -1,0 +1,82 @@
+async (page) => {
+  const checks = [];
+  const assert = (condition, message) => { if (!condition) throw new Error(message); };
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.goto('http://localhost:8081/');
+  await page.locator('.home[data-motion="off"]').waitFor();
+  const progressBefore = await page.evaluate(() => localStorage.getItem('algora-progress'));
+  for (const width of [320,375,390,430,768,1024,1440,1920]) {
+    await page.setViewportSize({width,height:width<700?844:width===1024?768:900});
+    const demo=page.getByTestId('home-demo');
+    await demo.getByRole('button',{name:'Replay demo',exact:true}).click();
+    const box=await demo.boundingBox();
+    const sizes=[];
+    for(let i=0;i<7;i++) {
+      sizes.push((await demo.boundingBox()).height);
+      if(i<6) await demo.getByRole('button',{name:'Next demo step',exact:true}).click();
+    }
+    assert(Math.max(...sizes)-Math.min(...sizes)<1, 'Hero changes height at '+width+': '+sizes);
+    assert((await demo.locator('.home-step-count').innerText()).includes('07 / 07'),'Hero incomplete');
+    assert((await demo.locator('code').innerText()).includes('return mid'),'Code not synchronized');
+    const geometry=await page.evaluate(()=>({width:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth, internal:[...document.querySelectorAll('.home main *')].filter(e=>{const s=getComputedStyle(e); return /(auto|scroll)/.test(s.overflowX+' '+s.overflowY)&& (e.scrollWidth>e.clientWidth+1||e.scrollHeight>e.clientHeight+1);}).map(e=>e.className)}));
+    assert(geometry.scroll<=geometry.width+1,'Horizontal overflow at '+width+': '+JSON.stringify(geometry));
+    assert(geometry.internal.length===0,'Internal scrolling at '+width);
+    const reason=page.locator('.home-reason-scene');
+    const heights=[];
+    for(const label of ['01 Compare','02 Narrow','03 Find']) {await reason.getByRole('button',{name:label,exact:true}).click();heights.push((await reason.boundingBox()).height);}
+    assert(Math.max(...heights)-Math.min(...heights)<1,'Reason scene shifts at '+width+': '+heights);
+    const prediction=page.locator('.home-prediction-grid');
+    const before=(await prediction.boundingBox()).height;
+    await page.getByRole('button',{name:'B high = mid - 1',exact:true}).click();
+    assert((await page.getByRole('status').innerText()).includes('Try again'),'Wrong-answer feedback missing');
+    await page.getByRole('button',{name:/^A low = mid/}).click();
+    assert((await page.getByRole('status').innerText()).includes('Exactly'),'Correct-answer feedback missing');
+    assert(Math.abs((await prediction.boundingBox()).height-before)<1,'Prediction shifts at '+width);
+    await page.getByRole('button',{name:'Reset example',exact:true}).click();
+    const recall=page.locator('.home-recall-card');
+    const recallBefore=(await recall.boundingBox()).height;
+    await recall.getByRole('button',{name:'Reveal the reasoning',exact:true}).click();
+    assert(Math.abs((await recall.boundingBox()).height-recallBefore)<1,'Recall shifts at '+width);
+    await recall.getByRole('button',{name:'Hide answer',exact:true}).click();
+    checks.push({width,heroHeight:box.height,documentWidth:geometry.scroll,reasonHeight:heights[0],predictionHeight:before});
+  }
+  await page.setViewportSize({width:390,height:844});
+  await page.getByRole('button',{name:'Toggle navigation'}).click();
+  assert(await page.getByRole('navigation',{name:'Mobile homepage'}).isVisible(),'Mobile menu missing');
+  await page.keyboard.press('Escape');
+  assert(!(await page.getByRole('navigation',{name:'Mobile homepage'}).count()),'Escape does not close menu');
+  const preview=page.locator('.home-explorer');
+  for(const label of ['Trees 02','Graphs 03']) {
+    await preview.getByRole('button',{name:label,exact:true}).click();
+    const h=[];
+    let steps=0;
+    while(true) {h.push((await preview.boundingBox()).height);steps++; if(await preview.getByRole('button',{name:'Next demo step',exact:true}).isDisabled())break; await preview.getByRole('button',{name:'Next demo step',exact:true}).click(); if(steps>100)throw new Error('Run never ends');}
+    assert(Math.max(...h)-Math.min(...h)<1,label+' changes height '+h);
+    checks.push({preview:label,steps,height:h[0]});
+  }
+  const progressAfter=await page.evaluate(()=>localStorage.getItem('algora-progress'));
+  assert(progressBefore===progressAfter,'Homepage mutated learner progress');
+  await page.getByRole('button',{name:'Pause page motion',exact:true}).count();
+  assert(await page.getByTestId('home-demo').getByRole('button',{name:'Play demo',exact:true}).isDisabled(),'Reduced motion allowed autoplay');
+  await page.setViewportSize({width:1440,height:900});
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  await page.goto('http://localhost:8081/');
+  await page.locator('.home[data-motion="on"]').waitFor();
+  const demo=page.getByTestId('home-demo');
+  await demo.scrollIntoViewIfNeeded();
+  await page.waitForFunction(()=>document.querySelector('[data-testid=home-demo] .home-step-count').textContent.includes('07 / 07'),{},{timeout:15000});
+  await demo.getByRole('button',{name:'Replay demo',exact:true}).click();
+  await page.waitForFunction(()=>document.querySelector('[data-testid=home-demo] .home-step-count').textContent.includes('02 / 07'),{},{timeout:5000});
+  await demo.getByRole('button',{name:'Pause demo',exact:true}).click();
+  await page.screenshot({path:'output/playwright/home-desktop-1440.png'});
+  await page.setViewportSize({width:1920,height:1080});
+  await page.screenshot({path:'output/playwright/home-desktop-1920.png'});
+  await page.setViewportSize({width:1024,height:768});
+  await page.screenshot({path:'output/playwright/home-laptop-1024.png'});
+  await page.setViewportSize({width:390,height:844});
+  await page.evaluate(()=>window.scrollTo(0,0));
+  await page.screenshot({path:'output/playwright/home-mobile-390.png'});
+  await page.setViewportSize({width:320,height:844});
+  await page.screenshot({path:'output/playwright/home-mobile-320.png'});
+  return {passed:true,checks,progressUnchanged:true};
+}

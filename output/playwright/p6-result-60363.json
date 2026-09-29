@@ -1,0 +1,207 @@
+[
+  {
+    "route": "/",
+    "version": "4.12.0",
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "count": 3,
+        "nodes": [
+          {
+            "target": [
+              ".tracking-wide"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.38 (foreground color: #0b7f6d, background color: #e6f5f2, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".px-2\\.5"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.38 (foreground color: #0b7f6d, background color: #e6f5f2, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".w-4.text-primary.font-mono"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.38 (foreground color: #0b7f6d, background color: #e6f5f2, font size: 9.4pt (12.5px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "incomplete": [
+      {
+        "id": "aria-prohibited-attr",
+        "count": 5
+      },
+      {
+        "id": "color-contrast",
+        "count": 14
+      }
+    ]
+  },
+  {
+    "route": "/auth",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": []
+  },
+  {
+    "route": "/login",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": []
+  },
+  {
+    "route": "/explore",
+    "version": "4.12.0",
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "count": 1,
+        "nodes": [
+          {
+            "target": [
+              "a[aria-label=\"Account settings\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.38 (foreground color: #0b7f6d, background color: #e6f5f2, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "incomplete": []
+  },
+  {
+    "route": "/dashboard",
+    "version": "4.12.0",
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "count": 1,
+        "nodes": [
+          {
+            "target": [
+              "a[aria-label=\"Account settings\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.38 (foreground color: #0b7f6d, background color: #e6f5f2, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "route": "/notifications",
+    "version": "4.12.0",
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "count": 2,
+        "nodes": [
+          {
+            "target": [
+              "a[aria-label=\"Account settings\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.38 (foreground color: #0b7f6d, background color: #e6f5f2, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".rounded-md"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.38 (foreground color: #0b7f6d, background color: #e6f5f2, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "incomplete": []
+  },
+  {
+    "route": "/settings",
+    "version": "4.12.0",
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "count": 3,
+        "nodes": [
+          {
+            "target": [
+              "a[aria-label=\"Account settings\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.38 (foreground color: #0b7f6d, background color: #e6f5f2, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".grid-cols-3 > .active[href$=\"settings\"][data-status=\"active\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.38 (foreground color: #0b7f6d, background color: #e6f5f2, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".h-\\[64px\\]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.38 (foreground color: #0b7f6d, background color: #e6f5f2, font size: 14.3pt (19px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "incomplete": []
+  },
+  {
+    "route": "/algorithms/binary-search",
+    "version": "4.12.0",
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "count": 5,
+        "nodes": [
+          {
+            "target": [
+              ".bg-primary-tint"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.38 (foreground color: #0b7f6d, background color: #e6f5f2, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".t-mono-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.38 (foreground color: #0b7f6d, background color: #e6f5f2, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".tracking-\\[0\\.1em\\].bg-tint[aria-current=\"step\"]"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.38 (foreground color: #0b7f6d, background color: #e6f5f2, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".w-fit"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.38 (foreground color: #0b7f6d, background color: #e6f5f2, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ml-1.viz-swap.font-semibold"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.38 (foreground color: #0b7f6d, background color: #e6f5f2, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 2
+      }
+    ]
+  }
+]

@@ -9,7 +9,7 @@ import type {
   ValidationResult,
 } from "@/engine/types";
 
-const MAX_ITEMS = 25;
+const MAX_ITEMS = 12;
 /** A mountain needs something to climb and something to descend. */
 const MIN_ITEMS = 3;
 
@@ -318,16 +318,14 @@ export const peakIndexMountainModule: AlgorithmModule = {
     { label: "Summit in the middle", values: { values: "1, 3, 7, 12, 20, 15, 9, 4, 2" } },
     { label: "Steep start, long descent", values: { values: "2, 9, 8, 7, 5, 4, 3, 1" } },
     { label: "Long climb, sheer drop", values: { values: "1, 2, 4, 8, 16, 32, 64, 5" } },
-    /* 21 cells of three-digit values, which is enough for ArrayView to switch
-       from numbered boxes to bars — so this preset draws an actual mountain and
+    /* Twelve cells use the full fixed teaching width, so this preset draws a mountain and
        the search visibly walks the slope. That threshold is ArrayView's own
        (a box narrower than its digits becomes a bar), so if it ever moves this
-       preset degrades to boxes and stays correct, just less vivid. */
+       preset stays correct if the cell treatment changes. */
     {
       label: "See the mountain",
       values: {
-        values:
-          "10, 40, 90, 150, 220, 300, 390, 480, 570, 650, 720, 700, 660, 610, 550, 480, 400, 310, 210, 100, 20",
+        values: "10, 40, 90, 150, 220, 300, 390, 480, 570, 650, 720, 100",
       },
     },
   ],

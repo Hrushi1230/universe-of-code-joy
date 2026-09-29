@@ -38,16 +38,20 @@ export function ControlStrip({ children, className }: ControlStripProps): React.
   const isEnded = total > 0 && index >= total - 1;
 
   const side =
-    "inline-flex h-9 items-center gap-1.5 rounded-lg border border-hairline bg-card px-3 font-sans text-[13px] font-medium text-ink transition-colors hover:bg-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:pointer-events-none disabled:opacity-40";
+    "inline-flex h-9 items-center gap-1.5 rounded-lg border border-hairline bg-card px-3 font-sans text-[13px] font-medium text-ink transition-colors hover:bg-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 aria-disabled:pointer-events-none aria-disabled:opacity-40";
 
   return (
-    <div className={cn("flex w-full items-center gap-5", className)}>
-      <div className="flex shrink-0 items-center gap-2">
+    <div
+      className={cn("flex w-full flex-wrap items-center gap-3 sm:flex-nowrap sm:gap-5", className)}
+    >
+      <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
         <button
           type="button"
           aria-label="Previous step (←)"
-          onClick={prev}
-          disabled={!canBack}
+          aria-disabled={!canBack}
+          onClick={() => {
+            if (canBack) prev();
+          }}
           className={cn(side, "w-9 justify-center px-0")}
         >
           <ChevronLeft size={16} strokeWidth={1.5} />
@@ -55,9 +59,11 @@ export function ControlStrip({ children, className }: ControlStripProps): React.
         <button
           type="button"
           aria-label={`${isPlaying ? "Pause" : isEnded ? "Replay" : "Play"} (Space)`}
-          onClick={toggle}
-          disabled={total === 0 || isBlocking}
-          className="inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-4 font-sans text-[13px] font-semibold text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40"
+          aria-disabled={total === 0 || isBlocking}
+          onClick={() => {
+            if (total > 0 && !isBlocking) toggle();
+          }}
+          className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 font-sans text-[13px] font-semibold text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 aria-disabled:pointer-events-none aria-disabled:opacity-40 sm:gap-2 sm:px-4"
         >
           {isPlaying ? (
             <Pause size={16} strokeWidth={2} />
@@ -71,8 +77,10 @@ export function ControlStrip({ children, className }: ControlStripProps): React.
         <button
           type="button"
           aria-label={isBlocking ? "Answer the prediction to continue" : "Next step (→)"}
-          onClick={next}
-          disabled={!canForward || isBlocking}
+          aria-disabled={!canForward || isBlocking}
+          onClick={() => {
+            if (canForward && !isBlocking) next();
+          }}
           className={cn(side, "w-9 justify-center px-0")}
         >
           <ChevronRight size={16} strokeWidth={1.5} />
@@ -81,8 +89,10 @@ export function ControlStrip({ children, className }: ControlStripProps): React.
         <button
           type="button"
           aria-label="Restart from the first step (R)"
-          onClick={reset}
-          disabled={total === 0}
+          aria-disabled={total === 0}
+          onClick={() => {
+            if (total > 0) reset();
+          }}
           className={cn(side, "w-9 justify-center px-0")}
         >
           <RotateCcw size={16} strokeWidth={1.5} />
@@ -90,7 +100,9 @@ export function ControlStrip({ children, className }: ControlStripProps): React.
       </div>
 
       {children ? (
-        <div className="flex min-w-0 flex-1 justify-center">{children}</div>
+        <div className="order-3 flex min-w-0 basis-full justify-center sm:order-none sm:flex-1 sm:basis-auto">
+          {children}
+        </div>
       ) : (
         <div className="flex-1" />
       )}

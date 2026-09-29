@@ -155,9 +155,9 @@ function ExploreCard({
 
         <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="text-[17px] font-semibold leading-tight text-foreground">
+            <h2 className="text-[17px] font-semibold leading-tight text-foreground">
               {item.title}
-            </h3>
+            </h2>
           </div>
           <p className="mt-2 text-[13.5px] leading-[1.45] text-muted-foreground">{item.oneLiner}</p>
         </div>
@@ -304,8 +304,8 @@ function ExplorePage(): React.ReactElement {
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <AppTopBar title="Explore" searchValue={queryInput} onSearchChange={setQueryInput} />
 
-        <main className="flex-1 overflow-y-auto px-8 pb-10 pt-7">
-          <h1 className="text-[34px] font-semibold leading-none tracking-[-0.025em] text-foreground">
+        <main className="flex-1 overflow-y-auto px-4 pb-10 pt-6 sm:px-8 sm:pt-7">
+          <h1 className="text-[30px] font-semibold leading-none tracking-[-0.025em] text-foreground sm:text-[34px]">
             Explore algorithms
             <TealPeriod />
           </h1>
@@ -315,11 +315,11 @@ function ExplorePage(): React.ReactElement {
 
           {/* Filter bar */}
           <div className="mt-5 rounded-2xl border border-hairline bg-card px-5 py-4">
-            <div className="flex items-start justify-between gap-8">
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-8">
               <div className="pt-0.5 font-mono text-[12px] text-muted-foreground">Category</div>
 
-              <div className="flex items-end gap-6">
-                <div className="shrink-0">
+              <div className="flex w-full flex-wrap items-end gap-3 sm:gap-6 md:w-auto md:flex-nowrap">
+                <div className="min-w-[132px] flex-1 sm:flex-none">
                   <label
                     htmlFor="explore-difficulty"
                     className="mb-2 block font-mono text-[12px] text-muted-foreground"
@@ -330,7 +330,7 @@ function ExplorePage(): React.ReactElement {
                     id="explore-difficulty"
                     value={search.difficulty}
                     onChange={(e) => patch({ difficulty: e.target.value, page: 1 })}
-                    className="h-11 w-[136px] rounded-xl border border-hairline bg-card px-3.5 font-mono text-[13.5px] text-foreground hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="h-11 w-full rounded-xl border border-hairline bg-card px-3.5 font-mono text-[13.5px] text-foreground hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:w-[136px]"
                   >
                     {(["all", ...DIFFICULTIES] as string[]).map((d) => (
                       <option key={d} value={d}>
@@ -340,7 +340,7 @@ function ExplorePage(): React.ReactElement {
                   </select>
                 </div>
 
-                <div className="shrink-0">
+                <div className="min-w-[160px] flex-1 sm:flex-none">
                   <label
                     htmlFor="explore-sort"
                     className="mb-2 block font-mono text-[12px] text-muted-foreground"
@@ -351,7 +351,7 @@ function ExplorePage(): React.ReactElement {
                     id="explore-sort"
                     value={search.sort}
                     onChange={(e) => patch({ sort: e.target.value as SortKey, page: 1 })}
-                    className="h-11 w-[194px] rounded-xl border border-hairline bg-card px-3.5 font-mono text-[13.5px] text-foreground hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="h-11 w-full rounded-xl border border-hairline bg-card px-3.5 font-mono text-[13.5px] text-foreground hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:w-[194px]"
                   >
                     {SORTS.map((s) => (
                       <option key={s.value} value={s.value}>

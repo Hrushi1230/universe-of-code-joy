@@ -8,7 +8,7 @@ import type {
   ValidationResult,
 } from "@/engine/types";
 
-const MAX_ITEMS = 25;
+const MAX_ITEMS = 12;
 
 const PSEUDOCODE: string[] = [
   "function binarySearch(a, target)",
@@ -436,7 +436,7 @@ export const binarySearchModule: AlgorithmModule = {
       label: "Sorted numbers",
       kind: "numbers",
       default: "2, 5, 8, 12, 16, 23, 38, 56, 72, 91",
-      help: "Up to 40 numbers. Unsorted input is sorted for you.",
+      help: "Up to 12 numbers. Unsorted input is sorted for you.",
       max: MAX_ITEMS,
     },
     { name: "target", label: "Target", kind: "number", default: 23, min: -9999, max: 9999 },
@@ -465,7 +465,7 @@ export const binarySearchModule: AlgorithmModule = {
     },
     {
       label: "Worst case: missing & last",
-      values: { values: "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16", target: "17" },
+      values: { values: "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12", target: "13" },
     },
     // C9: the other three presets all narrow rightward at least once. This one
     // never does — `hi` walks down while `lo` stays at 0 — which is the case

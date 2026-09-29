@@ -10,7 +10,7 @@ import type {
   ValidationResult,
 } from "@/engine/types";
 
-const MAX_ITEMS = 25;
+const MAX_ITEMS = 12;
 
 /** Pseudocode -> listing line. The braced listings close the priming loop first. */
 const CODE_MAP: CodeLineMap = {

@@ -6,6 +6,8 @@ import {
   isImplementationSolved,
   isTransferSolved,
   resolveImplementationSlug,
+  resolveQuestionImplementationSlug,
+  resolveQuestionTransferSlug,
   resolveTransferSlug,
 } from "@/lib/lesson-stages";
 import { validatePracticeSearch } from "@/lib/practice-search";
@@ -77,6 +79,45 @@ describe("resolveTransferSlug", () => {
   });
 });
 
+describe("question-specific Golden stage mappings", () => {
+  it("maps Level Order Code to itself and Solve to Right Side View", () => {
+    expect(resolveQuestionImplementationSlug("binary-tree-level-order")).toBe(
+      "binary-tree-level-order",
+    );
+    expect(resolveQuestionTransferSlug("binary-tree-level-order")).toBe(
+      "binary-tree-right-side-view",
+    );
+  });
+
+  it("keeps each Two Pointers question on its own Code and Solve targets", () => {
+    expect(resolveQuestionImplementationSlug("sort-colors")).toBe("sort-colors");
+    expect(resolveQuestionTransferSlug("sort-colors")).toBe("move-zeroes");
+    expect(resolveQuestionImplementationSlug("two-sum")).toBe("two-sum");
+    expect(resolveQuestionTransferSlug("two-sum")).toBe("container-with-most-water");
+    expect(resolveQuestionImplementationSlug("container-with-most-water")).toBe(
+      "container-with-most-water",
+    );
+    expect(resolveQuestionTransferSlug("container-with-most-water")).toBe("trapping-rain-water");
+    expect(resolveQuestionImplementationSlug("trapping-rain-water")).toBe("trapping-rain-water");
+    expect(resolveQuestionTransferSlug("trapping-rain-water")).toBe("valid-palindrome");
+    expect(resolveQuestionImplementationSlug("valid-palindrome")).toBe("valid-palindrome");
+    expect(resolveQuestionTransferSlug("valid-palindrome")).toBe("move-zeroes");
+    expect(resolveQuestionImplementationSlug("move-zeroes")).toBe("move-zeroes");
+    expect(resolveQuestionTransferSlug("move-zeroes")).toBe("remove-duplicates-from-sorted-array");
+    expect(resolveQuestionImplementationSlug("remove-duplicates-from-sorted-array")).toBe(
+      "remove-duplicates-from-sorted-array",
+    );
+    expect(resolveQuestionTransferSlug("remove-duplicates-from-sorted-array")).toBe("three-sum");
+    expect(resolveQuestionImplementationSlug("three-sum")).toBe("three-sum");
+    expect(resolveQuestionTransferSlug("three-sum")).toBe("two-sum");
+  });
+
+  it("returns null for a question without a curated Golden mapping", () => {
+    expect(resolveQuestionImplementationSlug("diameter-of-binary-tree")).toBeNull();
+    expect(resolveQuestionTransferSlug("diameter-of-binary-tree")).toBeNull();
+  });
+});
+
 describe("isImplementationSolved", () => {
   it("is false with no mapping", () => {
     expect(isImplementationSolved(null, progressWith(["binary-search-classic"]))).toBe(false);
@@ -108,6 +149,31 @@ describe("validatePracticeSearch", () => {
   it("keeps recognised lesson origin context", () => {
     expect(
       validatePracticeSearch({ from: "lesson", algorithm: "binary-search", stage: "code" }),
+    ).toEqual({ from: "lesson", algorithm: "binary-search", stage: "code" });
+  });
+
+  it("preserves a question only when it belongs to the originating algorithm", () => {
+    expect(
+      validatePracticeSearch({
+        from: "lesson",
+        algorithm: "two-pointers",
+        problem: "two-sum",
+        stage: "code",
+      }),
+    ).toEqual({
+      from: "lesson",
+      algorithm: "two-pointers",
+      problem: "two-sum",
+      stage: "code",
+    });
+
+    expect(
+      validatePracticeSearch({
+        from: "lesson",
+        algorithm: "binary-search",
+        problem: "two-sum",
+        stage: "code",
+      }),
     ).toEqual({ from: "lesson", algorithm: "binary-search", stage: "code" });
   });
 

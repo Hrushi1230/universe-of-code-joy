@@ -1,0 +1,468 @@
+[
+  {
+    "route": "/",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "aria-prohibited-attr",
+        "count": 5
+      },
+      {
+        "id": "color-contrast",
+        "count": 11
+      }
+    ]
+  },
+  {
+    "route": "/visualizer",
+    "version": "4.12.0",
+    "violations": [
+      {
+        "id": "scrollable-region-focusable",
+        "impact": "serious",
+        "count": 1,
+        "nodes": [
+          {
+            "target": [
+              ".leading-\\[1\\.65\\]"
+            ],
+            "summary": "Fix any of the following:\n  Element should have focusable content\n  Element should be focusable"
+          }
+        ]
+      }
+    ],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 9
+      }
+    ]
+  },
+  {
+    "route": "/pricing",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "route": "/campus",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "aria-prohibited-attr",
+        "count": 5
+      },
+      {
+        "id": "color-contrast",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "route": "/blog",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 56
+      }
+    ]
+  },
+  {
+    "route": "/contact",
+    "version": "4.12.0",
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "count": 1,
+        "nodes": [
+          {
+            "target": [
+              "#contact-topic"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.79 (foreground color: #7c8582, background color: #ffffff, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "route": "/privacy",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": []
+  },
+  {
+    "route": "/terms",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": []
+  },
+  {
+    "route": "/auth",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": []
+  },
+  {
+    "route": "/login",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": []
+  },
+  {
+    "route": "/forgot-password",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "route": "/reset-password",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "route": "/verify-email",
+    "version": "4.12.0",
+    "violations": [
+      {
+        "id": "link-in-text-block",
+        "impact": "serious",
+        "count": 1,
+        "nodes": [
+          {
+            "target": [
+              "p:nth-child(9) > .hover\\:underline[href$=\"auth\"]"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 1.04:1 with the surrounding text. (Minimum contrast is 3:1, link text: #087563, surrounding text: #5b6763)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          }
+        ]
+      }
+    ],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "route": "/onboarding/goals",
+    "version": "4.12.0",
+    "violations": [
+      {
+        "id": "link-name",
+        "impact": "serious",
+        "count": 1,
+        "nodes": [
+          {
+            "target": [
+              ".mx-auto > a[href=\"/\"]"
+            ],
+            "summary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element does not have text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          }
+        ]
+      }
+    ],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "route": "/onboarding/assessment",
+    "version": "4.12.0",
+    "violations": [
+      {
+        "id": "link-name",
+        "impact": "serious",
+        "count": 1,
+        "nodes": [
+          {
+            "target": [
+              "a[href=\"/\"]"
+            ],
+            "summary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element does not have text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          }
+        ]
+      }
+    ],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 11
+      }
+    ]
+  },
+  {
+    "route": "/onboarding/path",
+    "version": "4.12.0",
+    "violations": [
+      {
+        "id": "link-name",
+        "impact": "serious",
+        "count": 1,
+        "nodes": [
+          {
+            "target": [
+              "a[href=\"/\"]"
+            ],
+            "summary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element does not have text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          }
+        ]
+      },
+      {
+        "id": "scrollable-region-focusable",
+        "impact": "serious",
+        "count": 1,
+        "nodes": [
+          {
+            "target": [
+              ".overflow-x-auto"
+            ],
+            "summary": "Fix any of the following:\n  Element should have focusable content\n  Element should be focusable"
+          }
+        ]
+      }
+    ],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "route": "/explore",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": []
+  },
+  {
+    "route": "/dashboard",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 2
+      }
+    ]
+  },
+  {
+    "route": "/paths",
+    "version": "4.12.0",
+    "violations": [
+      {
+        "id": "heading-order",
+        "impact": "moderate",
+        "count": 1,
+        "nodes": [
+          {
+            "target": [
+              "div[data-testid=\"path-card-interview-prep\"] > div:nth-child(1) > .text-\\[22px\\]"
+            ],
+            "summary": "Fix any of the following:\n  Heading order invalid"
+          }
+        ]
+      },
+      {
+        "id": "scrollable-region-focusable",
+        "impact": "serious",
+        "count": 1,
+        "nodes": [
+          {
+            "target": [
+              ".py-4"
+            ],
+            "summary": "Fix any of the following:\n  Element should have focusable content\n  Element should be focusable"
+          }
+        ]
+      }
+    ],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 11
+      }
+    ]
+  },
+  {
+    "route": "/mastery-map",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 30
+      }
+    ]
+  },
+  {
+    "route": "/quests",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "route": "/achievements",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": []
+  },
+  {
+    "route": "/leagues",
+    "version": "4.12.0",
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "count": 1,
+        "nodes": [
+          {
+            "target": [
+              ".block"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.59 (foreground color: #368f80, background color: #eef8f6, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 3
+      }
+    ]
+  },
+  {
+    "route": "/notifications",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": []
+  },
+  {
+    "route": "/settings",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": []
+  },
+  {
+    "route": "/settings/billing",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": []
+  },
+  {
+    "route": "/practice",
+    "version": "4.12.0",
+    "violations": [
+      {
+        "id": "scrollable-region-focusable",
+        "impact": "serious",
+        "count": 2,
+        "nodes": [
+          {
+            "target": [
+              "main"
+            ],
+            "summary": "Fix any of the following:\n  Element should have focusable content\n  Element should be focusable"
+          },
+          {
+            "target": [
+              ".overflow-x-auto"
+            ],
+            "summary": "Fix any of the following:\n  Element should have focusable content\n  Element should be focusable"
+          }
+        ]
+      }
+    ],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "route": "/practice/results",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": []
+  },
+  {
+    "route": "/review",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": []
+  },
+  {
+    "route": "/practice/two-sum",
+    "version": "4.12.0",
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "count": 1,
+        "nodes": [
+          {
+            "target": [
+              ".capitalize"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.34 (foreground color: #b4791a, background color: #fbf3e3, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 2
+      }
+    ]
+  },
+  {
+    "route": "/algorithms/binary-search",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 1
+      }
+    ]
+  }
+]

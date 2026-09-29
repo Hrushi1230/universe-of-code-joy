@@ -11,7 +11,8 @@ import type {
   ValidationResult,
 } from "@/engine/types";
 
-const MAX_NODES = 15;
+const MAX_NODES = 10;
+const MAX_EDGES = 16;
 
 /** Pseudocode -> listing line. `return order` sits past three closers in JS/TS. */
 const CODE_MAP: CodeLineMap = {
@@ -184,6 +185,12 @@ export function parseEdgeList(
       const edge: ParsedEdge = { from, to };
       if (weight !== undefined) edge.weight = weight;
       edges.push(edge);
+      if (edges.length > MAX_EDGES) {
+        return {
+          ok: false,
+          error: `That graph has more than ${MAX_EDGES} edges — please use a smaller one.`,
+        };
+      }
     }
   }
 

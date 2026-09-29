@@ -8,7 +8,7 @@ import type {
   ValidationResult,
 } from "@/engine/types";
 
-const MAX_VERSIONS = 25;
+const MAX_VERSIONS = 12;
 
 /**
  * Everything below is in VERSION space, 1-based, matching the problem statement
@@ -282,7 +282,7 @@ function parseWhole(raw: string, label: string, min: number, max: number): numbe
 export const firstBadVersionModule: AlgorithmModule = {
   slug: "first-bad-version",
   inputs: [
-    { name: "n", label: "Versions", kind: "number", default: 16, min: 1, max: MAX_VERSIONS },
+    { name: "n", label: "Versions", kind: "number", default: 12, min: 1, max: MAX_VERSIONS },
     {
       name: "bad",
       label: "First bad version",
@@ -310,9 +310,9 @@ export const firstBadVersionModule: AlgorithmModule = {
   // exactly 4 — "4 calls, not 16" is the point. The first three presets cover the
   // three shapes the loop can take: mixed answers, all bad, all good.
   presets: [
-    { label: "Broke somewhere in the middle", values: { n: "16", bad: "11" } },
-    { label: "Broken from the start", values: { n: "16", bad: "1" } },
-    { label: "Only the newest is bad", values: { n: "16", bad: "16" } },
+    { label: "Broke somewhere in the middle", values: { n: "12", bad: "8" } },
+    { label: "Broken from the start", values: { n: "12", bad: "1" } },
+    { label: "Only the newest is bad", values: { n: "12", bad: "12" } },
     { label: "A single version", values: { n: "1", bad: "1" } },
   ],
 };

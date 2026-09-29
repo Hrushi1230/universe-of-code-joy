@@ -28,6 +28,7 @@ describe("prefsStore", () => {
       },
       quietHoursStart: "22:00",
       quietHoursEnd: "08:00",
+      notificationReadIds: [],
     });
   });
 
@@ -58,6 +59,24 @@ describe("prefsStore", () => {
     usePrefsStore.getState().setQuietHours("23:00", "07:00");
     expect(usePrefsStore.getState().quietHoursStart).toBe("23:00");
     expect(usePrefsStore.getState().quietHoursEnd).toBe("07:00");
+  });
+
+  it("saves notification settings as one draft and persists read ids once", () => {
+    const next = {
+      ...usePrefsStore.getState().notificationPrefs,
+      leaderboard: { email: true, push: false },
+    };
+    usePrefsStore.getState().saveNotificationSettings(next, "21:30", "07:15");
+    expect(usePrefsStore.getState().notificationPrefs.leaderboard).toEqual({
+      email: true,
+      push: false,
+    });
+    expect(usePrefsStore.getState().quietHoursStart).toBe("21:30");
+
+    usePrefsStore.getState().markNotificationRead("lesson:one");
+    usePrefsStore.getState().markNotificationRead("lesson:one");
+    usePrefsStore.getState().markAllNotificationsRead(["lesson:one", "quest:two"]);
+    expect(usePrefsStore.getState().notificationReadIds).toEqual(["lesson:one", "quest:two"]);
   });
 
   it("toggles playback speed and narration", () => {

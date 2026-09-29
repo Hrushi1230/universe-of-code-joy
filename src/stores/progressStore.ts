@@ -1,9 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { algorithms, getAlgorithm } from "@/content/algorithms";
+import { getAlgorithm } from "@/content/algorithms";
 import { getLesson } from "@/content/lessons";
 import { getProblem } from "@/content/problems";
-import { demoLearner as mockUser } from "@/content/demo-learner";
 import { levelFromXp } from "@/lib/xp";
 
 export type AlgorithmStatus = "locked" | "new" | "watched" | "learning" | "practiced" | "mastered";
@@ -54,6 +53,13 @@ export interface AchievementProgress {
   progress: number;
 }
 
+export interface RewardTransaction {
+  kind: "quest" | "achievement" | "shop";
+  referenceId: string;
+  amount: number;
+  createdAt: string;
+}
+
 export interface ActivityRow {
   xp: number;
   minutes: number;
@@ -78,6 +84,7 @@ export interface ProgressData {
   reviewCards: Record<string, ReviewCard>;
   quests: Record<string, QuestProgress>;
   achievements: Record<string, AchievementProgress>;
+  rewardTransactions?: Record<string, RewardTransaction>;
   activity: Record<string, ActivityRow>;
   bookmarks: string[];
   activePathSlug: string | null;
@@ -97,6 +104,14 @@ export interface ProgressActions {
   setQuestProgress: (id: string, n: number, periodKey?: string) => void;
   claimQuest: (id: string) => void;
   unlockAchievement: (id: string, progress?: number) => void;
+  claimQuestReward: (id: string, periodKey: string, progress: number, xp: number) => boolean;
+  unlockAchievementReward: (id: string, progress: number, xp: number) => boolean;
+  redeemReward: (
+    transactionId: string,
+    itemId: string,
+    cost: number,
+    freezesGranted?: number,
+  ) => boolean;
   addFreeze: (n: number) => void;
   toggleBookmark: (slug: string) => void;
   setActivePath: (slug: string | null) => void;
@@ -223,54 +238,18 @@ function emptyState(): ProgressData {
     reviewCards: {},
     quests: {},
     achievements: {},
+    rewardTransactions: {},
     activity: {},
     bookmarks: [],
     activePathSlug: null,
   };
 }
 
-/** Demo seed, applied to the initial state only. Rehydration overwrites it. */
-function seededState(): ProgressData {
-  const base = emptyState();
-  base.xp = mockUser.xp;
-  base.level = levelFromXp(mockUser.xp);
-  base.streak = {
-    current: mockUser.streak,
-    longest: Math.max(mockUser.longestStreak, mockUser.streak),
-    lastActiveISO: null,
-    freezesLeft: 2,
-  };
-  for (const a of mockUser.achievementIds) {
-    base.achievements[a] = { unlockedAt: mockUser.joinedAt, progress: 100 };
-  }
-  for (const row of mockUser.activity) {
-    base.activity[row.date] = {
-      xp: row.xpEarned,
-      minutes: row.minutesActive,
-      steps: 0,
-      solved: row.problemsSolved,
-    };
-  }
-  // Seed per-algorithm rows from the mock category mastery, skipping unknown slugs.
-  for (const algo of algorithms) {
-    const pct = mockUser.mastery[algo.category] ?? 0;
-    if (pct < 50) continue;
-    const entry = blankAlgorithm(mockUser.joinedAt);
-    entry.stepsWatched = 24;
-    entry.lessonDone = pct >= 70;
-    entry.quizScore = pct >= 80 ? 100 : null;
-    entry.masteryPct = computeMasteryPct(entry);
-    entry.status = statusFor(entry);
-    base.algorithms[algo.slug] = entry;
-  }
-  return base;
-}
-
 /**
  * Deterministic pre-hydration snapshot. Identical on server and client, so UI that
  * reads persisted progress can render this until `useHydrated()` flips to true.
  */
-export const baselineProgress: ProgressData = seededState();
+export const baselineProgress: ProgressData = emptyState();
 
 /* ---------------- store migration (v1 -> v2) ---------------- */
 
@@ -297,10 +276,51 @@ export function migrateProgressState(persisted: unknown, version: number): Progr
       xp,
       level,
       streak: streak as StreakState,
+      rewardTransactions:
+        data.rewardTransactions && typeof data.rewardTransactions === "object"
+          ? (data.rewardTransactions as Record<string, RewardTransaction>)
+          : {},
     } as ProgressData;
   }
 
-  return { ...base, ...data } as ProgressData;
+  if (version < 3) {
+    const next = { ...base, ...data } as ProgressData;
+    const legacySeedDetected =
+      next.xp >= 4820 &&
+      next.streak.current === 12 &&
+      next.streak.longest === 21 &&
+      Object.keys(next.activity).some((key) => key.startsWith("2025-03-"));
+
+    if (legacySeedDetected) {
+      next.xp = Math.max(0, next.xp - 4820);
+      next.level = levelFromXp(next.xp);
+      if (next.streak.lastActiveISO === null) next.streak = { ...base.streak };
+      next.activity = Object.fromEntries(
+        Object.entries(next.activity).filter(([key]) => !key.startsWith("2025-03-")),
+      );
+      next.algorithms = Object.fromEntries(
+        Object.entries(next.algorithms).filter(
+          ([, entry]) => entry.lastSeenISO !== "2024-09-03T00:00:00.000Z",
+        ),
+      );
+      next.achievements = Object.fromEntries(
+        Object.entries(next.achievements).filter(
+          ([, entry]) => entry.unlockedAt !== "2024-09-03T00:00:00.000Z",
+        ),
+      );
+    }
+    next.rewardTransactions = next.rewardTransactions ?? {};
+    return next;
+  }
+
+  return {
+    ...base,
+    ...data,
+    rewardTransactions:
+      data.rewardTransactions && typeof data.rewardTransactions === "object"
+        ? (data.rewardTransactions as Record<string, RewardTransaction>)
+        : {},
+  } as ProgressData;
 }
 
 /* ---------------- store ---------------- */
@@ -347,7 +367,7 @@ export const useProgressStore = create<ProgressState>()(
       };
 
       return {
-        ...seededState(),
+        ...emptyState(),
 
         awardXp: (amount, _reason) => {
           const delta = Number.isFinite(amount) ? Math.round(amount) : 0;
@@ -619,6 +639,123 @@ export const useProgressStore = create<ProgressState>()(
           });
         },
 
+        claimQuestReward: (id, periodKey, progress, xpAward) => {
+          const transactionId = `quest:${id}:${periodKey}`;
+          let claimed = false;
+          set((s) => {
+            const transactions = s.rewardTransactions ?? {};
+            const previous = s.quests[id];
+            if (
+              transactions[transactionId] ||
+              (previous?.periodKey === periodKey && Boolean(previous.claimedAt))
+            ) {
+              return {};
+            }
+
+            const amount = Number.isFinite(xpAward) ? Math.max(0, Math.round(xpAward)) : 0;
+            const now = new Date().toISOString();
+            const xp = s.xp + amount;
+            claimed = true;
+            return {
+              xp,
+              level: levelFromXp(xp),
+              quests: {
+                ...s.quests,
+                [id]: {
+                  progress: Math.max(0, Math.round(progress || 0)),
+                  periodKey,
+                  claimedAt: now,
+                },
+              },
+              rewardTransactions: {
+                ...transactions,
+                [transactionId]: {
+                  kind: "quest",
+                  referenceId: id,
+                  amount,
+                  createdAt: now,
+                },
+              },
+              activity: touchActivity(s, { xp: amount }),
+            };
+          });
+          return claimed;
+        },
+
+        unlockAchievementReward: (id, progress, xpAward) => {
+          const transactionId = `achievement:${id}`;
+          let unlocked = false;
+          set((s) => {
+            const transactions = s.rewardTransactions ?? {};
+            if (transactions[transactionId] || s.achievements[id]?.unlockedAt) return {};
+
+            const amount = Number.isFinite(xpAward) ? Math.max(0, Math.round(xpAward)) : 0;
+            const now = new Date().toISOString();
+            const xp = s.xp + amount;
+            unlocked = true;
+            return {
+              xp,
+              level: levelFromXp(xp),
+              achievements: {
+                ...s.achievements,
+                [id]: { unlockedAt: now, progress: Math.max(0, Math.round(progress || 0)) },
+              },
+              rewardTransactions: {
+                ...transactions,
+                [transactionId]: {
+                  kind: "achievement",
+                  referenceId: id,
+                  amount,
+                  createdAt: now,
+                },
+              },
+              activity: touchActivity(s, { xp: amount }),
+            };
+          });
+          return unlocked;
+        },
+
+        redeemReward: (transactionId, itemId, cost, freezesGranted = 0) => {
+          let redeemed = false;
+          set((s) => {
+            const transactions = s.rewardTransactions ?? {};
+            const price = Number.isFinite(cost) ? Math.max(0, Math.round(cost)) : 0;
+            const freezes = Number.isFinite(freezesGranted)
+              ? Math.max(0, Math.round(freezesGranted))
+              : 0;
+            if (
+              !transactionId ||
+              transactions[transactionId] ||
+              s.xp < price ||
+              (freezes > 0 && s.streak.freezesLeft >= 9)
+            ) {
+              return {};
+            }
+
+            const now = new Date().toISOString();
+            const xp = s.xp - price;
+            redeemed = true;
+            return {
+              xp,
+              level: levelFromXp(xp),
+              streak: {
+                ...s.streak,
+                freezesLeft: Math.min(9, s.streak.freezesLeft + freezes),
+              },
+              rewardTransactions: {
+                ...transactions,
+                [transactionId]: {
+                  kind: "shop",
+                  referenceId: itemId,
+                  amount: -price,
+                  createdAt: now,
+                },
+              },
+            };
+          });
+          return redeemed;
+        },
+
         addFreeze: (n) => {
           const count = Number.isFinite(n) ? Math.round(n) : 0;
           if (count === 0) return;
@@ -651,7 +788,7 @@ export const useProgressStore = create<ProgressState>()(
     },
     {
       name: "algora-progress",
-      version: 2,
+      version: 4,
       migrate: migrateProgressState,
     },
   ),

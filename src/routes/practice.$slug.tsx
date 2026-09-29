@@ -301,7 +301,7 @@ type Tab = (typeof TABS)[number];
 
 function ChallengeNotFound() {
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background">
+    <div className="flex h-dvh w-full overflow-hidden bg-background">
       <AppSidebar active="Practice" collapsible />
       <div className="flex min-w-0 flex-1 flex-col">
         <AppWorkspaceBar crumbs={["Practice", "Not found"]} />
@@ -453,6 +453,7 @@ function PracticeChallenge() {
       ...(search.from === "lesson" ? { from: "lesson" as const } : {}),
       ...(lessonAlgorithm ? { algorithmSlug: lessonAlgorithm.slug } : {}),
       ...(search.stage ? { stage: search.stage } : {}),
+      ...(search.problem ? { lessonProblemSlug: search.problem } : {}),
     });
     void navigate({ to: "/practice/results" });
   }, [
@@ -470,6 +471,7 @@ function PracticeChallenge() {
     runner,
     setLastResult,
     search.from,
+    search.problem,
     search.stage,
     stored,
     touchStreak,
@@ -487,9 +489,9 @@ function PracticeChallenge() {
       <div className="flex min-w-0 flex-1 flex-col">
         <AppWorkspaceBar crumbs={["Practice", category, problem.title]} timer={timer} />
 
-        <main className="grid min-h-0 flex-1 grid-cols-[minmax(0,470px)_minmax(0,1fr)] gap-4 px-6 py-4">
+        <main className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto px-3 py-3 sm:px-4 lg:grid-cols-[minmax(0,470px)_minmax(0,1fr)] lg:overflow-hidden lg:px-6 lg:py-4">
           {/* Problem pane */}
-          <section className="flex min-h-0 flex-col rounded-2xl border border-hairline bg-card">
+          <section className="flex min-h-[640px] flex-col rounded-2xl border border-hairline bg-card lg:min-h-0">
             <div className="flex h-[52px] shrink-0 items-center gap-7 border-b border-hairline px-6">
               {TABS.map((t) => (
                 <button
@@ -706,7 +708,7 @@ function PracticeChallenge() {
           </section>
 
           {/* Editor column */}
-          <div className="flex min-h-0 flex-col gap-4">
+          <div className="flex min-h-[780px] flex-col gap-4 lg:min-h-0">
             <CodeEditor
               code={code}
               lang={lang}
@@ -735,7 +737,7 @@ function PracticeChallenge() {
                   the tests. You can still write and save Python here.
                 </p>
               )}
-              <div className="flex items-center">
+              <div className="flex flex-wrap items-center gap-3">
                 <button
                   type="button"
                   onClick={handleRun}
@@ -745,7 +747,7 @@ function PracticeChallenge() {
                   <Play className="h-4 w-4 fill-current" strokeWidth={0} />{" "}
                   {runner.status === "running" ? "Running…" : "Run"}
                 </button>
-                <div className="ml-auto flex items-center gap-4">
+                <div className="ml-auto flex items-center gap-2 sm:gap-4">
                   <span className="inline-flex h-10 items-center gap-2 rounded-xl border border-primary/40 bg-card px-4 font-mono text-[12.5px] text-primary">
                     <Star className="h-3.5 w-3.5" strokeWidth={1.8} />{" "}
                     {solved ? "Solved" : `+${xpOffer} XP`}

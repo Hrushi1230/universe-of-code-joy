@@ -15,15 +15,15 @@ export function OnboardingTopBar({
 }) {
   return (
     <header className="shrink-0 border-b border-hairline bg-card">
-      <div className="mx-auto flex h-[68px] max-w-[1280px] items-center justify-between px-8">
-        <Link to="/" className="flex items-center gap-2">
+      <div className="mx-auto flex h-[60px] max-w-[1280px] items-center justify-between gap-3 px-4 sm:h-[68px] sm:px-8">
+        <Link to="/" aria-label="Algora home" className="flex items-center gap-2">
           <AlgoraGlyph />
-          <span className="font-mono text-[22px] font-medium tracking-tight text-foreground">
+          <span className="hidden font-mono text-[22px] font-medium tracking-tight text-foreground sm:inline">
             algora
           </span>
         </Link>
 
-        <nav aria-label="Onboarding progress" className="flex items-center gap-3">
+        <nav aria-label="Onboarding progress" className="flex items-center gap-1.5 sm:gap-3">
           {STEPS.map((label, i) => {
             const index = (i + 1) as 1 | 2 | 3;
             const state: StepState =
@@ -34,7 +34,7 @@ export function OnboardingTopBar({
                 aria-current={state === "active" ? "step" : undefined}
                 className="flex items-center gap-3"
               >
-                {i > 0 && <span className="h-px w-14 bg-hairline" />}
+                {i > 0 && <span className="h-px w-4 bg-hairline sm:w-14" />}
                 <div className="flex items-center gap-2">
                   <span
                     className={[
@@ -52,7 +52,7 @@ export function OnboardingTopBar({
                   </span>
                   <span
                     className={[
-                      "font-mono text-[14px]",
+                      "hidden font-mono text-[14px] sm:inline",
                       state === "active" ? "text-primary" : "text-muted-foreground",
                     ].join(" ")}
                   >
@@ -64,7 +64,7 @@ export function OnboardingTopBar({
           })}
         </nav>
 
-        <div className="font-mono text-[13px] text-muted-foreground">{right}</div>
+        <div className="hidden font-mono text-[13px] text-muted-foreground md:block">{right}</div>
       </div>
     </header>
   );
@@ -72,8 +72,8 @@ export function OnboardingTopBar({
 
 export function OnboardingFooter({ middle }: { middle: string }) {
   return (
-    <footer className="flex h-[48px] shrink-0 items-center justify-center">
-      <p className="font-mono text-[12px] text-muted-foreground">
+    <footer className="flex h-[40px] shrink-0 items-center justify-center px-4 sm:h-[48px]">
+      <p className="text-center font-mono text-[10px] text-muted-foreground sm:text-[12px]">
         © 2026 Algora &nbsp;·&nbsp; {middle} &nbsp;·&nbsp; Reduced-motion friendly
       </p>
     </footer>

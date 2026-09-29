@@ -4,8 +4,8 @@ import * as path from "node:path";
 import { listModules } from "@/engine/registry";
 
 describe("Code line screen reader announcements with aria-current='step' (Criterion S7.6)", () => {
-  describe("CodePane contracts in WorkspacePanels.tsx", () => {
-    const panelsPath = path.resolve(process.cwd(), "src/components/player/WorkspacePanels.tsx");
+  describe("CodePane contracts", () => {
+    const panelsPath = path.resolve(process.cwd(), "src/components/player/CodePane.tsx");
     const panelsContent = fs.readFileSync(panelsPath, "utf-8");
 
     it("verifies CodePane applies aria-current='step' to the active code line", () => {
@@ -18,7 +18,9 @@ describe("Code line screen reader announcements with aria-current='step' (Criter
     const indexContent = fs.readFileSync(indexPath, "utf-8");
 
     it("verifies homepage hero BFS demo applies aria-current='step' to highlighted row", () => {
-      expect(indexContent).toContain('aria-current={row.hl ? "step" : undefined}');
+      expect(indexContent).toContain(
+        'aria-current={activeStep.codeLines.includes(row.n) ? "step" : undefined}',
+      );
     });
   });
 

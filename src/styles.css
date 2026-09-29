@@ -4,6 +4,211 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Problem-specific elevation scene. Blue denotes water, not brand chrome. */
+:root {
+  --water-fill: #a5d6e8;
+  --water-edge: #286b86;
+}
+.rain-water-scene {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  height: 100%;
+  min-height: 260px;
+  max-height: 500px;
+}
+.rain-water-plot {
+  position: relative;
+  flex: 1;
+  min-height: 80px;
+  margin: 12px 8px 64px 24px;
+}
+.rain-water-axis {
+  position: absolute;
+  inset: 0 auto 0 -24px;
+  width: 18px;
+  font: 12px var(--font-mono);
+  color: var(--slate);
+}
+.rain-water-axis span {
+  position: absolute;
+  right: 0;
+  transform: translateY(50%);
+}
+.rain-water-columns {
+  display: grid;
+  position: absolute;
+  inset: 0;
+  border-bottom: 1px solid var(--ink);
+  border-left: 1px solid var(--hairline);
+}
+.rain-water-column {
+  position: relative;
+  min-width: 0;
+}
+.rain-water-ground {
+  position: absolute;
+  inset: auto 0 0;
+  background: var(--slate);
+  border-right: 1px solid var(--card);
+}
+.rain-water-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: var(--water-fill);
+  border-top: 1px solid var(--water-edge);
+  transition:
+    height 300ms ease-out,
+    bottom 300ms ease-out;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 12px var(--font-mono);
+  color: var(--ink);
+}
+.rain-water-fill[style*="height: 0%"] {
+  border-top: 0;
+}
+.rain-water-active {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: 2px;
+  z-index: 1;
+}
+.rain-water-index {
+  position: absolute;
+  bottom: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  font: 12px var(--font-mono);
+  color: var(--slate);
+}
+.rain-water-pointer {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font: 12px var(--font-mono);
+  transition: left 300ms ease-out;
+}
+.rain-water-caption {
+  min-height: 44px;
+  padding: 8px 12px;
+  background: var(--tint);
+  border-radius: 8px;
+}
+.rain-water-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  background: var(--water-fill);
+  border: 1px solid var(--water-edge);
+}
+@media (width < 1024px) {
+  .focused-visualizer {
+    height: 100dvh;
+  }
+  .focused-visualizer main > div:first-child > div:first-child > :not(h1) {
+    display: none;
+  }
+  .focused-visualizer main > div:first-child > div:nth-child(2) {
+    display: none;
+  }
+  .focused-visualizer h1 {
+    font-size: 17px;
+  }
+  .focused-workspace {
+    min-height: 0;
+    grid-template-rows: minmax(0, 1fr) 92px;
+  }
+  .focused-world-row {
+    display: block;
+    position: relative;
+    min-height: 0;
+  }
+  .focused-world-row > section {
+    height: 100%;
+    min-height: 0;
+    padding: 12px;
+  }
+  .focused-world-row > section > h2 {
+    display: none;
+  }
+  .focused-world-row > section > div:last-child {
+    margin-top: 0;
+    padding-top: 0;
+    gap: 0;
+  }
+  .focused-code-column {
+    display: none;
+  }
+  .focused-workspace [aria-label="Playback"] {
+    height: 92px;
+  }
+  .focused-workspace [aria-label="Playback"] > div {
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .focused-workspace [aria-label="Playback"] > div > div:nth-child(2) {
+    display: none;
+  }
+  .focused-workspace [aria-label="Playback"] > div > div:last-child {
+    margin-left: auto;
+  }
+  .focused-prediction {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    border: 1px solid var(--hairline);
+    border-radius: 24px;
+    background: var(--card);
+    padding: 12px;
+  }
+  .rain-water-scene {
+    min-height: 0;
+    max-height: none;
+    gap: 10px;
+  }
+  .rain-water-caption {
+    font-size: 12px;
+    min-height: 44px;
+  }
+}
+@media (width < 1024px) and (height < 600px) {
+  .rain-water-scene {
+    gap: 4px;
+  }
+  .rain-water-scene > div:first-child,
+  .rain-water-scene > div:nth-child(2) {
+    font-size: 10px;
+  }
+  .rain-water-scene output {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+  .rain-water-plot {
+    min-height: 70px;
+    margin: 2px 2px 52px 18px;
+  }
+  .rain-water-caption {
+    min-height: 28px;
+    padding: 4px 6px;
+    font-size: 11px;
+    line-height: 14px;
+  }
+  .rain-water-scene > div:last-child {
+    display: none;
+  }
+  .focused-prediction {
+    padding: 8px;
+  }
+  .focused-prediction section {
+    gap: 4px;
+  }
+}
+
 @theme inline {
   --radius-xs: 4px;
   --radius-sm: var(--radius-sm-token);
@@ -114,8 +319,8 @@
   --hairline: #e4e9e7;
   --ink: #0e1513;
   --slate: #5b6763;
-  --slate-soft: #8a9591;
-  --accent-strong: #0b7f6d;
+  --slate-soft: var(--slate);
+  --accent-strong: #087563;
   --highlight: #14b8a6;
   --tint: #e6f5f2;
 
@@ -124,7 +329,7 @@
   --code-fn: #3f5a54;
 
   /* Semantic */
-  --warning: #b4791a;
+  --warning: #895a14;
   --warning-tint: #fbf3e3;
   --error: #c0453e;
   --error-tint: #fbeceb;
@@ -165,9 +370,9 @@
   --card-foreground: var(--ink);
   --popover: #ffffff;
   --popover-foreground: var(--ink);
-  --primary: #0e9c86;
+  --primary: var(--accent-strong);
   --primary-foreground: #ffffff;
-  --primary-glow: var(--highlight);
+  --primary-glow: var(--accent-strong);
   --primary-tint: var(--tint);
   --primary-tint-strong: #cfeae4;
   --secondary: #f0f3f2;
@@ -175,8 +380,8 @@
   --muted: #f0f3f2;
   --muted-foreground: var(--slate);
   --accent: var(--tint);
-  --accent-foreground: #0e9c86;
-  --teal: #0e9c86;
+  --accent-foreground: var(--accent-strong);
+  --teal: var(--accent-strong);
 
   /* Brand / External Icon Colors */
   --color-google-blue: #4285f4;
@@ -358,6 +563,81 @@
 
   html {
     scroll-behavior: auto !important;
+  }
+}
+
+/* Phone identity forms fit naturally; never clip fields to fake a viewport fit.
+   Marketing pages deliberately retain normal document scrolling. */
+@media (max-width: 767px) {
+  .auth-viewport {
+    min-height: 100svh;
+  }
+  .auth-viewport > header > div {
+    height: 48px;
+  }
+  .auth-viewport > footer,
+  .auth-form-panel > div > div:first-child,
+  .auth-form-panel .auth-promotion,
+  .auth-form-panel > div > p:last-child {
+    display: none;
+  }
+  .auth-form-panel {
+    padding: 12px;
+  }
+  .auth-form-panel > div {
+    padding: 16px;
+  }
+  .auth-mobile-notice {
+    margin: 4px 0 12px;
+  }
+  .auth-form-panel input {
+    font-size: 16px;
+    height: 40px;
+  }
+  .auth-form-panel button[aria-label$="password"] {
+    width: 40px;
+    height: 40px;
+    right: 0;
+    display: grid;
+    place-items: center;
+  }
+  .auth-form-panel [role="alert"] {
+    padding: 6px 8px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    line-height: 16px;
+  }
+}
+
+@media (max-width: 767px) and (max-height: 600px) {
+  .auth-viewport > header > div {
+    height: 44px;
+  }
+  .auth-form-panel {
+    padding: 4px 12px;
+  }
+  .auth-form-panel > div {
+    padding: 8px 12px;
+  }
+  .auth-form-panel form > * {
+    margin-block: 0;
+  }
+  .auth-form-panel form {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .auth-form-panel h1 {
+    line-height: 28px;
+  }
+  .auth-form-panel form > div > * {
+    margin-block: 0;
+  }
+  .auth-form-panel form > div {
+    row-gap: 4px;
+  }
+  .auth-mobile-notice {
+    margin: 4px 0 8px;
   }
 }
 

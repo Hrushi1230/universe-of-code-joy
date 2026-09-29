@@ -9,6 +9,8 @@ export interface StepTimelineProps {
   className?: string;
 }
 
+export const TIMELINE_VISIBLE_PHASES = 5;
+
 /**
  * The meaningful timeline: one node per *phase group* rather than per step, so a
  * run reads as Setup → Find mid → Compare → Eliminate → Found instead of an
@@ -22,7 +24,6 @@ export function StepTimeline({ className }: StepTimelineProps): React.ReactEleme
   const seek = usePlayerStore((s) => s.seek);
   const pause = usePlayerStore((s) => s.pause);
   const { skipCrossedForward } = usePredictionGate();
-  const activeRef = React.useRef<HTMLButtonElement | null>(null);
 
   /* Seeking is a deliberate manual move: playback stops and the pending autoplay
      advance is invalidated by the index change, so nothing arrives late. Jumping
@@ -40,10 +41,16 @@ export function StepTimeline({ className }: StepTimelineProps): React.ReactEleme
   const nodes = React.useMemo(() => (run ? buildTimelineNodes(run.steps) : []), [run]);
 
   const activeNode = activeNodeIndex(nodes, index);
-
-  React.useEffect(() => {
-    activeRef.current?.scrollIntoView({ block: "nearest", inline: "center" });
-  }, [activeNode]);
+  const windowStart = Math.max(
+    0,
+    Math.min(
+      activeNode - Math.floor(TIMELINE_VISIBLE_PHASES / 2),
+      nodes.length - TIMELINE_VISIBLE_PHASES,
+    ),
+  );
+  const visibleNodes = nodes.slice(windowStart, windowStart + TIMELINE_VISIBLE_PHASES);
+  const hiddenBefore = windowStart;
+  const hiddenAfter = Math.max(0, nodes.length - windowStart - visibleNodes.length);
 
   if (!run || run.steps.length === 0) return null;
 
@@ -53,10 +60,14 @@ export function StepTimeline({ className }: StepTimelineProps): React.ReactEleme
       role="group"
       aria-label={`Step timeline, step ${index + 1} of ${run.steps.length}`}
     >
-      <ol className="flex items-center justify-center gap-0 overflow-x-auto">
-        {nodes.map((node, i) => {
-          const isActive = i === activeNode;
-          const isPast = i < activeNode;
+      <ol className="flex items-center justify-center gap-0 overflow-hidden">
+        {hiddenBefore > 0 ? (
+          <li className="mr-1 shrink-0 font-mono text-[9px] text-slate-soft">+{hiddenBefore}</li>
+        ) : null}
+        {visibleNodes.map((node, i) => {
+          const nodeIndex = windowStart + i;
+          const isActive = nodeIndex === activeNode;
+          const isPast = nodeIndex < activeNode;
           return (
             <li key={`${node.label}-${node.from}`} className="flex min-w-0 shrink-0 items-center">
               {i > 0 && (
@@ -69,11 +80,10 @@ export function StepTimeline({ className }: StepTimelineProps): React.ReactEleme
                 />
               )}
               <button
-                ref={isActive ? activeRef : undefined}
                 type="button"
                 onClick={() => seekTo(node.from)}
                 aria-current={isActive ? "step" : undefined}
-                aria-label={`Phase ${i + 1}: ${node.label}`}
+                aria-label={`Phase ${nodeIndex + 1}: ${node.label}`}
                 className={cn(
                   "group flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 transition-colors duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
                   isActive
@@ -122,6 +132,9 @@ export function StepTimeline({ className }: StepTimelineProps): React.ReactEleme
             </li>
           );
         })}
+        {hiddenAfter > 0 ? (
+          <li className="ml-1 shrink-0 font-mono text-[9px] text-slate-soft">+{hiddenAfter}</li>
+        ) : null}
       </ol>
     </div>
   );

@@ -137,7 +137,7 @@ describe("rangeSummary", () => {
 
 describe("against real engine runs", () => {
   it("produces the halving trail for binary search", () => {
-    expect(fullCandidateTrail(runPreset("binary-search", 2))).toEqual([16, 8, 4, 2, 1, 0]);
+    expect(fullCandidateTrail(runPreset("binary-search", 2))).toEqual([12, 6, 3, 1, 0]);
     expect(fullCandidateTrail(runPreset("binary-search", 0))).toEqual([10, 5, 2, 1]);
   });
 

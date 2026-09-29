@@ -1,5 +1,5 @@
 import * as React from "react";
-import { getModule } from "@/engine/registry";
+import { resolveModule } from "@/engine/registry";
 import type { TraceExercise } from "@/content/trace-exercises";
 import {
   buildTraceSession,
@@ -30,7 +30,7 @@ export interface TraceSessionState {
   entry: TraceEntry;
   /** Learner-visible algorithm state right now. */
   view: TraceView;
-  /** How many checkpoints have been resolved from the front. */
+  /** How many resolved explanations have been acknowledged from the front. */
   progress: number;
   total: number;
   completed: boolean;
@@ -54,7 +54,7 @@ export function useTraceSession(exercise: TraceExercise | undefined): TraceSessi
 
   const session = React.useMemo(() => {
     if (!exercise) return null;
-    const mod = getModule(exercise.algorithmSlug);
+    const mod = resolveModule(exercise.moduleSlug ?? exercise.algorithmSlug);
     if (!mod) return null;
     const validation = mod.validate(exercise.inputs);
     if (!validation.ok) return null;

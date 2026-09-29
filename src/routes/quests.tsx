@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import {
   ArrowRight,
   BookOpen,
@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { AppSidebar, AppWorkspaceBar } from "@/components/app-shell";
+import { DemoNotice } from "@/components/demo-notice";
 import { getQuests } from "@/content/quests";
 import type { Quest } from "@/content/types";
 import useHydrated from "@/hooks/useHydrated";
@@ -148,40 +149,48 @@ function Quests() {
   const hydrated = useHydrated();
   const live = useProgressStore((s) => s);
   const state = hydrated ? live : baselineProgress;
-  const setQuestProgress = useProgressStore((s) => s.setQuestProgress);
-  const claimQuest = useProgressStore((s) => s.claimQuest);
-  const awardXp = useProgressStore((s) => s.awardXp);
+  const claimQuestReward = useProgressStore((s) => s.claimQuestReward);
 
   const [tab, setTab] = useState<Tab>("Daily");
   const kind: Quest["kind"] = tab === "Weekly" ? "weekly" : "daily";
   const countdown = useCountdown(kind);
 
   const states = useMemo(() => getQuests().map((q) => questState(q, state)), [state]);
-  const daily = states.filter((s) => s.quest.kind === "daily").slice(0, 4);
+  const daily = states.filter((s) => s.quest.kind === "daily");
   const weeklyAll = states.filter((s) => s.quest.kind === "weekly");
-  const weekly = weeklyAll.slice(0, 4);
+  const weekly = weeklyAll;
   const featured = weeklyAll.find((s) => s.quest.id === "weekly-problems") ?? weeklyAll[0];
 
   const rows: QuestState[] = tab === "Daily" ? daily : tab === "Weekly" ? weekly : [];
 
   const claim = (q: QuestState) => {
-    setQuestProgress(q.quest.id, q.current, q.periodKey);
-    claimQuest(q.quest.id);
-    awardXp(q.quest.xp, `quest:${q.quest.id}`);
-    toast.success(`${q.quest.title} claimed — +${q.quest.xp} XP`, {
-      description: q.quest.description,
-    });
+    if (!hydrated || !q.complete) return;
+    const claimed = claimQuestReward(q.quest.id, q.periodKey, q.current, q.quest.xp);
+    if (claimed) {
+      toast.success(`${q.quest.title} claimed — +${q.quest.xp} XP`, {
+        description: "Saved once for this local quest period.",
+      });
+    } else {
+      toast.info("Reward already claimed for this period");
+    }
+  };
+
+  const taskHref = (id: string): string => {
+    if (id.includes("review")) return "/review";
+    if (id.includes("problem")) return "/practice/";
+    if (id.includes("path")) return "/paths";
+    return "/explore";
   };
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background">
+    <div className="flex min-h-screen w-full bg-background lg:h-screen lg:overflow-hidden">
       <AppSidebar active="Compete" collapsible />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <AppWorkspaceBar crumbs={[]} search />
 
-        <main className="flex min-h-0 flex-1 flex-col overflow-hidden px-8 py-4">
-          <div className="flex shrink-0 items-start justify-between">
+        <main className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-4 sm:px-8">
+          <div className="flex shrink-0 flex-col items-start justify-between gap-3 sm:flex-row">
             <div>
               <h1 className="text-[30px] font-semibold leading-none tracking-tight text-foreground">
                 Quests
@@ -191,17 +200,25 @@ function Quests() {
               </p>
             </div>
             <span className="inline-flex h-11 items-center gap-2 rounded-xl border border-hairline bg-card px-4 font-mono text-[13.5px] text-foreground">
-              <Clock className="h-4 w-4 text-primary" strokeWidth={1.8} /> Resets in {countdown}
+              <Clock className="h-4 w-4 text-primary" strokeWidth={1.8} />
+              {tab === "Special" ? "No active season" : `Resets in ${countdown}`}
             </span>
           </div>
 
-          <div className="mt-4 flex shrink-0 overflow-hidden rounded-xl border border-hairline bg-card">
+          <div className="mt-3">
+            <DemoNotice>
+              Progress, reset periods, claims, and XP are calculated from activity saved on this
+              device. Server-verified rewards come later.
+            </DemoNotice>
+          </div>
+
+          <div className="mt-4 flex w-full shrink-0 overflow-hidden rounded-xl border border-hairline bg-card sm:w-fit">
             {(["Daily", "Weekly", "Special"] as Tab[]).map((t, i) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
                 aria-pressed={tab === t}
-                className={`h-11 w-[116px] font-mono text-[13.5px] transition-colors ${
+                className={`h-11 min-w-0 flex-1 px-3 font-mono text-[13.5px] transition-colors sm:w-[116px] sm:flex-none ${
                   i > 0 ? "border-l border-hairline" : ""
                 } ${
                   tab === t
@@ -228,7 +245,11 @@ function Quests() {
                 const Icon = ICONS[row.quest.icon] ?? Target;
                 const isStreak = row.quest.id === "daily-streak";
                 return (
-                  <div key={row.quest.id} className="flex items-center gap-4 px-5 py-3">
+                  <div
+                    key={row.quest.id}
+                    data-testid={`quest-${row.quest.id}`}
+                    className="flex flex-col items-stretch gap-3 px-4 py-4 sm:flex-row sm:items-center sm:gap-4 sm:px-5 sm:py-3"
+                  >
                     <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-xl border border-hairline bg-primary-tint/60">
                       <Icon className="h-6 w-6 text-primary" strokeWidth={1.7} />
                     </span>
@@ -248,7 +269,7 @@ function Quests() {
                       </div>
                     </div>
 
-                    <span className="flex w-[86px] shrink-0 items-center justify-center gap-1.5 font-mono text-[13px] text-foreground">
+                    <span className="flex shrink-0 items-center gap-1.5 font-mono text-[13px] text-foreground sm:w-[86px] sm:justify-center">
                       {isStreak ? state.streak.current : `${row.current} / ${row.target}`}
                       {isStreak && <Flame className="h-4 w-4 text-primary" strokeWidth={1.8} />}
                     </span>
@@ -257,7 +278,7 @@ function Quests() {
                       +{row.quest.xp} XP
                     </span>
 
-                    <div className="flex w-[150px] shrink-0 items-center justify-end gap-3">
+                    <div className="flex shrink-0 items-center justify-end gap-3 sm:w-[150px]">
                       {row.complete ? (
                         <>
                           <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary">
@@ -276,12 +297,12 @@ function Quests() {
                           </button>
                         </>
                       ) : (
-                        <Link
-                          to="/explore"
+                        <a
+                          href={taskHref(row.quest.id)}
                           className="inline-flex items-center gap-2 font-mono text-[13px] text-primary hover:underline"
                         >
-                          Go <ArrowRight className="h-4 w-4" strokeWidth={2} />
-                        </Link>
+                          Open task <ArrowRight className="h-4 w-4" strokeWidth={2} />
+                        </a>
                       )}
                     </div>
                   </div>
@@ -292,7 +313,7 @@ function Quests() {
 
           {/* Weekly challenge */}
           {featured && (
-            <div className="mt-3 flex shrink-0 items-center gap-6 rounded-2xl border border-hairline bg-primary-tint/60 px-7 py-4">
+            <div className="mt-3 flex shrink-0 flex-col items-start gap-5 rounded-2xl border border-hairline bg-primary-tint/60 px-5 py-4 sm:flex-row sm:items-center sm:px-7">
               <GraphMasterGlyph />
               <div className="min-w-0 flex-1">
                 <div className="font-mono text-[13px] text-primary">Weekly challenge</div>
@@ -316,12 +337,12 @@ function Quests() {
                   Claim
                 </button>
               ) : (
-                <Link
-                  to="/explore"
+                <a
+                  href={taskHref(featured.quest.id)}
                   className="inline-flex h-12 shrink-0 items-center rounded-xl bg-primary px-7 font-mono text-[14px] text-primary-foreground hover:bg-primary-glow"
                 >
                   Continue
-                </Link>
+                </a>
               )}
             </div>
           )}

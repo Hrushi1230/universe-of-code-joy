@@ -1,0 +1,41 @@
+async (page) => {
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Network.enable");
+  await cdp.send("Network.setCacheDisabled", {cacheDisabled:true});
+  await cdp.send("Network.emulateNetworkConditions", {
+    offline:false, latency:150, downloadThroughput:500000, uploadThroughput:125000
+  });
+  await cdp.send("Emulation.setCPUThrottlingRate", {rate:4});
+  await page.setViewportSize({width:390,height:844});
+  await page.addInitScript(() => {
+    window.p6Metrics = {lcp:0,cls:0};
+    new PerformanceObserver(list => {
+      for (const entry of list.getEntries()) window.p6Metrics.lcp = entry.startTime;
+    }).observe({type:"largest-contentful-paint", buffered:true});
+    new PerformanceObserver(list => {
+      for (const entry of list.getEntries()) if (!entry.hadRecentInput) window.p6Metrics.cls += entry.value;
+    }).observe({type:"layout-shift", buffered:true});
+  });
+  const samples = [];
+  try {
+    for (const route of ["/","/explore","/algorithms/binary-search"]) {
+      for (let sample = 1; sample <= 3; sample++) {
+        await cdp.send("Network.clearBrowserCache");
+        await page.goto("http://127.0.0.1:4187"+route);
+        await page.waitForLoadState("networkidle");
+        await page.waitForTimeout(2000);
+        samples.push({route,sample,...await page.evaluate(() => ({
+          ...window.p6Metrics,
+          dcl:performance.getEntriesByType("navigation")[0].domContentLoadedEventEnd,
+          resourceBytes:performance.getEntriesByType("resource").reduce((total,r)=>total+r.transferSize,0)
+        }))});
+      }
+    }
+  } finally {
+    await cdp.send("Emulation.setCPUThrottlingRate", {rate:1});
+    await cdp.send("Network.emulateNetworkConditions", {offline:false,latency:0,downloadThroughput:-1,uploadThroughput:-1});
+    await cdp.send("Network.setCacheDisabled", {cacheDisabled:false});
+    await cdp.detach();
+  }
+  return {profile:"390x844, CPU 4x, 150ms RTT, 4Mbps down, 1Mbps up, cold cache",samples};
+}

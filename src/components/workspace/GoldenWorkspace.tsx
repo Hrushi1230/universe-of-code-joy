@@ -1,10 +1,16 @@
 import * as React from "react";
+import { AboutPane } from "@/components/player/AboutPane";
+import { CodePane } from "@/components/player/CodePane";
+import { ExplainPane } from "@/components/player/ExplainPane";
+import { InputPane } from "@/components/player/InputPane";
 import { AlgorithmWorldPanel } from "@/components/workspace/AlgorithmWorldPanel";
 import { PlaybackBand } from "@/components/workspace/PlaybackBand";
-import { CodePane, ExplainPane, InputPane, AboutPane } from "@/components/player/WorkspacePanels";
 import type { Algorithm } from "@/content/types";
 import type { AlgorithmModule } from "@/engine/types";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { usePredictionGate } from "@/hooks/usePredictionGate";
+import { PredictionGate } from "@/components/player/PredictionGate";
 
 type RightTab = "code" | "input" | "about";
 
@@ -27,7 +33,7 @@ function RightColumn({
   const tabs = TABS.filter((t) => t.id !== "input" || mod);
 
   return (
-    <div className="flex min-h-0 w-full min-w-0 flex-col gap-4">
+    <div className="flex min-h-[620px] w-full min-w-0 flex-col gap-4 lg:h-full lg:min-h-0">
       <div className="flex min-h-0 flex-[55] flex-col overflow-hidden rounded-2xl border border-hairline bg-card shadow-sm">
         <div
           role="tablist"
@@ -56,7 +62,7 @@ function RightColumn({
           role="tabpanel"
           id={`golden-panel-${tab}`}
           aria-labelledby={`golden-tab-${tab}`}
-          className="min-h-0 flex-1 overflow-y-auto"
+          className="min-h-0 flex-1 overflow-hidden"
         >
           {tab === "code" && (
             <CodePane hideTitle className="h-full rounded-none border-0 shadow-none" />
@@ -89,13 +95,46 @@ export function GoldenWorkspace({
   slug,
   className,
 }: GoldenWorkspaceProps): React.ReactElement {
+  // Opt in question-by-question after verifying each scene at phone size.
+  const focused = slug === "trapping-rain-water";
+  const compact = useIsMobile(1024) && focused;
+  const { prediction, entry, showGate } = usePredictionGate();
   return (
-    <div className={cn("flex min-h-0 flex-1 flex-col gap-3", className)}>
-      <div className="grid min-h-0 flex-1 grid-cols-[58fr_42fr] gap-4">
-        <AlgorithmWorldPanel module={mod} algoName={algo.name} className="min-h-0" />
-        <RightColumn algo={algo} module={mod} slug={slug} />
+    <div
+      className={cn(
+        "grid flex-1 grid-cols-1 gap-3 lg:h-full lg:min-h-0 lg:grid-rows-[minmax(0,1fr)_58px]",
+        focused && "focused-workspace",
+        className,
+      )}
+    >
+      <div
+        className={cn(
+          "contents lg:grid lg:min-h-0 lg:overflow-hidden lg:grid-cols-[58fr_42fr] lg:gap-4",
+          focused && "focused-world-row",
+        )}
+      >
+        <AlgorithmWorldPanel
+          module={mod}
+          algoName={algo.name}
+          className="order-1 min-h-[430px] lg:order-none lg:min-h-0"
+        />
+        {compact && showGate && prediction ? (
+          <div className="focused-prediction">
+            <PredictionGate prediction={prediction} entry={entry} />
+          </div>
+        ) : null}
+        {!compact && (
+          <div
+            className={cn(
+              "order-3 min-w-0 lg:order-none lg:h-full lg:min-h-0 lg:overflow-hidden",
+              focused && "focused-code-column",
+            )}
+          >
+            <RightColumn algo={algo} module={mod} slug={slug} />
+          </div>
+        )}
       </div>
-      {mod ? <PlaybackBand /> : null}
+      {mod ? <PlaybackBand className="order-2 lg:order-none" /> : null}
     </div>
   );
 }

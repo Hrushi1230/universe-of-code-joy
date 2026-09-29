@@ -27,6 +27,8 @@ export interface TraceEntry {
   /** 0 = none, 1 = conceptual, 2 = stronger, 3 = answer-level. */
   hintLevel: number;
   outcome?: TraceOutcome;
+  /** True once the learner acknowledges the explanation and advances. */
+  continued: boolean;
 }
 
 export interface TraceState {
@@ -40,6 +42,7 @@ export interface TraceState {
   check: (id: string, correctOptionId: string) => void;
   retry: (id: string) => void;
   reveal: (id: string, correctOptionId: string) => void;
+  continueFrom: (id: string) => void;
   nextHint: (id: string) => void;
   /** Restart: checkpoint 0, no answers, no hints. Exercise input is untouched. */
   restart: () => void;
@@ -51,6 +54,7 @@ export const EMPTY_TRACE_ENTRY: TraceEntry = {
   status: "unanswered",
   attempts: 0,
   hintLevel: 0,
+  continued: false,
 };
 
 /** Statuses that let the trace advance to the next checkpoint. */
@@ -122,6 +126,11 @@ export function createTraceStore(): TraceStoreApi {
         });
       },
 
+      continueFrom: (id) => {
+        if (!isTraceResolved(get().entries[id])) return;
+        patch(id, { continued: true });
+      },
+
       nextHint: (id) => {
         const entry = get().entries[id] ?? EMPTY_TRACE_ENTRY;
         if (isTraceResolved(entry) || entry.hintLevel >= 3) return;
@@ -162,11 +171,11 @@ export function useTraceStore<T>(selector: (state: TraceState) => T): T {
   return useStore(useTraceStoreApi(), selector);
 }
 
-/** Number of checkpoints resolved from the front — the active checkpoint index. */
+/** Number of resolved explanations acknowledged from the front — the active checkpoint index. */
 export function resolvedCount(ids: readonly string[], entries: Record<string, TraceEntry>): number {
   let count = 0;
   for (const id of ids) {
-    if (!isTraceResolved(entries[id])) break;
+    if (!isTraceResolved(entries[id]) || !entries[id]?.continued) break;
     count += 1;
   }
   return count;

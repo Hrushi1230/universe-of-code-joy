@@ -13,7 +13,7 @@ describe("demo learner (S1.9 / S10.1 / S6.10)", () => {
   });
 
   it("contains complete mastery and daily activity records without fabricated placeholders", () => {
-    expect(demoLearner.handle).toBe("ada_codes");
+    expect(demoLearner.handle).toBe("local_learner");
     expect(demoLearner.activity.length).toBeGreaterThan(0);
     expect(Object.keys(demoLearner.mastery).length).toBeGreaterThan(10);
   });

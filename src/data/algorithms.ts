@@ -327,6 +327,8 @@ export const algorithms: Algorithm[] = [
     ],
     estMinutes: 15,
     xp: 90,
+    implementationProblemSlug: "sort-colors",
+    transferProblemSlug: "move-zeroes",
   },
   {
     slug: "sliding-window",

@@ -17,6 +17,15 @@ export type EdgeState = "idle" | "active" | "tree" | "rejected";
 
 export type ArrayFrame = {
   kind: "array";
+  /** Elevation scene: only water already finalized by this execution step. */
+  rainWater?: {
+    depths: number[];
+    leftMax: number;
+    rightMax: number;
+    activeIndex?: number;
+    added: number;
+    done: boolean;
+  };
   values: (number | string)[];
   /** index -> state */
   states: Record<number, CellState>;
@@ -68,6 +77,8 @@ export type ArrayFrame = {
 
 export type TreeFrame = {
   kind: "tree";
+  /** Optional engine-owned canvas for wide or compact tree layouts. */
+  viewBox?: { minX: number; minY: number; width: number; height: number };
   nodes: Array<{
     id: string;
     label: string | number;
@@ -77,6 +88,60 @@ export type TreeFrame = {
     badge?: string;
   }>;
   edges: Array<{ from: string; to: string; state: EdgeState; label?: string }>;
+};
+
+/**
+ * One canonical set of heap slots drives both the complete-tree and backing-
+ * array representations. Values may move between indices, but slot coordinates
+ * stay constant for the full run so a swap never reflows either representation.
+ */
+export type HeapFrame = {
+  kind: "heap";
+  heapType: "min" | "max";
+  /** Active heap prefix; slots at or after this boundary are outside the heap. */
+  heapSize: number;
+  slots: Array<{
+    index: number;
+    value: number | string;
+    x: number;
+    y: number;
+    state: CellState;
+    badge?: string;
+  }>;
+  /** Child index -> edge state. Missing entries use the active heap boundary. */
+  edgeStates?: Record<number, EdgeState>;
+  swapPair?: [number, number];
+};
+
+/**
+ * Node coordinates are engine-owned percentages of the base teaching canvas.
+ * Keep `nodeSlots` constant for every frame in a run so removals and temporary
+ * detached nodes never resize or reflow the list between steps.
+ */
+export type LinkedListFrame = {
+  kind: "linked-list";
+  nodeSlots: number;
+  nodes: Array<{
+    id: string;
+    label: string | number;
+    x: number;
+    y: number;
+    state: CellState;
+    badge?: string;
+  }>;
+  links: Array<{
+    id: string;
+    from: string;
+    to: string | null;
+    state: EdgeState;
+    label?: string;
+    detached?: boolean;
+  }>;
+  pointers: Array<{
+    name: string;
+    nodeId: string | null;
+    color?: "accent" | "warning" | "error";
+  }>;
 };
 
 export type GraphFrame = {
@@ -90,9 +155,17 @@ export type GraphFrame = {
     y: number;
     state: CellState;
     dist?: number | null;
+    parent?: string | null;
+    indegree?: number;
     badge?: string;
   }>;
-  edges: Array<{ from: string; to: string; weight?: number; state: EdgeState }>;
+  edges: Array<{
+    from: string;
+    to: string;
+    weight?: number;
+    state: EdgeState;
+    label?: string;
+  }>;
 };
 
 export type GridFrame = {
@@ -105,17 +178,66 @@ export type GridFrame = {
 
 export type TableFrame = {
   kind: "table";
+  /** One row of indexed state or a row/column matrix. Inferred for legacy fixtures when absent. */
+  layout?: "1d" | "2d";
   title?: string;
   rowLabels: (string | number)[];
   colLabels: (string | number)[];
-  cells: Array<{ r: number; c: number; value: string | number | null; state: CellState }>;
+  cells: Array<{
+    r: number;
+    c: number;
+    value: string | number | null;
+    state: CellState;
+    /** Non-colour teaching role for this step. */
+    role?: "base" | "dependency" | "target" | "write" | "result";
+    annotation?: string;
+  }>;
+  /** The transition being evaluated beneath the stable table. */
+  computation?: {
+    phase: "read" | "compute" | "write";
+    target: { r: number; c: number };
+    dependencies: Array<{ r: number; c: number; label: string }>;
+    formula: string;
+    candidates: Array<{
+      label: string;
+      value: string | number;
+      selected?: boolean;
+    }>;
+    result: string | number | null;
+  };
 };
 
-export type Frame = ArrayFrame | TreeFrame | GraphFrame | GridFrame | TableFrame;
+export type Frame =
+  | ArrayFrame
+  | TreeFrame
+  | HeapFrame
+  | LinkedListFrame
+  | GraphFrame
+  | GridFrame
+  | TableFrame;
+
+export type RecursionState = "enter" | "active" | "return" | "success" | "failure" | "undo";
+
+export type CallStackPanel = {
+  kind: "callstack";
+  label: string;
+  /** Frames are ordered from the root call to the currently executing call. */
+  frames: Array<{
+    id: string;
+    call: string;
+    args: Array<{ name: string; value: string }>;
+    state: RecursionState;
+    /** Branch, candidate, pivot, or other choice being explored. */
+    choice?: string;
+    /** Return value or terminal explanation. */
+    result?: string;
+  }>;
+};
 
 export type AuxPanel =
   | { kind: "stack"; label: string; items: Array<{ id: string; label: string; state?: CellState }> }
   | { kind: "queue"; label: string; items: Array<{ id: string; label: string; state?: CellState }> }
+  | CallStackPanel
   | { kind: "keyvalue"; label: string; rows: Array<{ k: string; v: string; highlight?: boolean }> }
   | { kind: "log"; label: string; lines: string[] }
   /**
@@ -141,7 +263,7 @@ export type Step = {
   /** index in the step list, filled by the builder */
   i: number;
   frame: Frame;
-  /** stack / queue / dist table / log beside the main view */
+  /** stack / queue / recursive calls / dist table / log beside the main view */
   aux?: AuxPanel[];
   /** 1-based line in the algorithm's pseudocode */
   codeLine: number;

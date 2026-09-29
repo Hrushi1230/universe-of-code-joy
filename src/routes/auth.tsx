@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { usePrefsStore } from "@/stores/prefsStore";
 import { authHeroStats, pricingCatalogClaim } from "@/content/marketing-claims";
+import { DemoNotice } from "@/components/demo-notice";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -29,9 +30,9 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-paper text-foreground">
+    <div className="auth-viewport flex min-h-screen flex-col bg-paper text-foreground">
       <AuthTopBar />
-      <main className="flex flex-1 min-h-0 overflow-hidden">
+      <main className="flex flex-1 min-h-0">
         <div className="flex w-full flex-col lg:flex-row">
           <LeftPanel />
           <RightPanel />
@@ -45,7 +46,7 @@ function AuthPage() {
 function AuthTopBar() {
   return (
     <header className="shrink-0 border-b border-hairline bg-card/95 backdrop-blur">
-      <div className="mx-auto flex h-[64px] max-w-[1280px] items-center justify-between px-8">
+      <div className="mx-auto flex h-[64px] max-w-[1280px] items-center justify-between gap-4 px-4 sm:px-8">
         <Link to="/" className="flex items-center gap-2">
           <AlgoraGlyph />
           <span className="font-mono text-[22px] font-medium tracking-tight text-foreground">
@@ -53,7 +54,7 @@ function AuthTopBar() {
           </span>
         </Link>
         <div className="flex items-center gap-2 font-mono text-[13px]">
-          <span className="text-muted-foreground">Already have an account?</span>
+          <span className="hidden text-muted-foreground sm:inline">Already have an account?</span>
           <Link to="/login" className="text-primary hover:underline">
             Log in
           </Link>
@@ -65,7 +66,7 @@ function AuthTopBar() {
 
 function LeftPanel() {
   const [showPassword, setShowPassword] = useState(false);
-  const [agreed, setAgreed] = useState(true);
+  const [agreed, setAgreed] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -85,6 +86,10 @@ function LeftPanel() {
       setError("Password must be at least 8 characters long.");
       return;
     }
+    if (!/\d/.test(password)) {
+      setError("Password must include at least one number.");
+      return;
+    }
     if (!agreed) {
       setError("You must agree to the terms to create an account.");
       return;
@@ -96,7 +101,7 @@ function LeftPanel() {
     if (fullName || email) {
       updateProfile({
         fullName: fullName || "Learner",
-        email: email || "arjun@example.com",
+        email,
       });
     }
 
@@ -107,38 +112,49 @@ function LeftPanel() {
   };
 
   return (
-    <section className="flex flex-1 items-center justify-center px-6 py-6">
+    <section className="auth-form-panel flex flex-1 items-center justify-center px-6 py-6">
       <div className="w-full max-w-[500px] rounded-2xl border border-hairline bg-card p-7 shadow-sm">
         <div className="inline-flex items-center gap-2 rounded-full bg-primary-tint px-3 py-1 font-mono text-[11px] tracking-wider text-primary">
           <span className="text-[10px]">◆</span> CREATE ACCOUNT
         </div>
 
-        <h1 className="mt-4 font-sans text-[32px] font-semibold leading-[1.1] tracking-[-0.02em] text-foreground">
-          Start learning free
-          <span className="ml-1.5 inline-block h-2.5 w-2.5 bg-primary" />.
+        <h1 className="font-sans text-[24px] font-semibold tracking-tight md:mt-4 md:text-[32px] md:leading-[1.1]">
+          <span className="md:hidden">Create your profile</span>
+          <span className="hidden md:inline">
+            Create a local learner profile
+            <span className="ml-1.5 inline-block h-2.5 w-2.5 bg-primary" />.
+          </span>
         </h1>
-
-        <p className="mt-2.5 font-sans text-[15px] text-muted-foreground">
-          {authHeroStats[1].rawText}, {pricingCatalogClaim.value} visualized algorithms, no credit
-          card.
+        <p className="auth-promotion mt-2.5 font-sans text-[15px] text-muted-foreground">
+          {authHeroStats[1].rawText}, {pricingCatalogClaim.rawText}, no credit card.
         </p>
 
-        <div className="mt-5 space-y-2.5">
-          <SocialButton provider="google">Continue with Google</SocialButton>
-          <SocialButton provider="github">Continue with GitHub</SocialButton>
+        <p className="auth-mobile-notice md:hidden text-[12px] text-muted-foreground">
+          Local preview only. No account is created.
+        </p>
+        <div className="hidden md:block mt-4">
+          <DemoNotice>No account or verification email is created yet.</DemoNotice>
         </div>
 
-        <div className="relative my-5 flex items-center">
+        <div className="hidden md:block mt-5 space-y-2.5">
+          <SocialButton provider="google">Google sign-up coming soon</SocialButton>
+          <SocialButton provider="github">GitHub sign-up coming soon</SocialButton>
+        </div>
+
+        <div className="relative my-5 hidden md:flex items-center">
           <div className="flex-1 border-t border-hairline" />
           <span className="px-3 font-mono text-[12px] text-muted-foreground">
-            or sign up with email
+            or set up a local profile
           </span>
           <div className="flex-1 border-t border-hairline" />
         </div>
 
         <form className="space-y-3" onSubmit={handleSubmit}>
           {error && (
-            <div className="rounded-xl border border-red-200 bg-red-50/50 p-3 font-mono text-[12px] text-red-600">
+            <div
+              role="alert"
+              className="rounded-xl border border-red-200 bg-red-50/50 p-3 font-mono text-[12px] text-red-600"
+            >
               {error}
             </div>
           )}
@@ -195,12 +211,13 @@ function LeftPanel() {
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-            <div className="flex items-center justify-between gap-3">
+            <div className="hidden md:flex items-center justify-between gap-3">
               <div className="flex flex-1 items-center gap-1">
                 {[1, 2, 3, 4, 5].map((i) => {
                   const filled = password.length >= i * 2;
@@ -215,7 +232,7 @@ function LeftPanel() {
                 })}
               </div>
               <span className="font-mono text-[11px] text-primary">
-                {password.length >= 8 ? "Strong" : password.length >= 4 ? "Medium" : "Weak"}
+                {password.length >= 8 ? "Length met" : `${password.length}/8 characters`}
               </span>
             </div>
             <p className="font-mono text-[11px] text-muted-foreground">
@@ -235,11 +252,11 @@ function LeftPanel() {
               className="cursor-pointer font-sans text-[13px] leading-snug text-muted-foreground"
             >
               I agree to the{" "}
-              <Link to="/" className="text-primary hover:underline">
+              <Link to="/terms" className="text-primary hover:underline">
                 Terms
               </Link>{" "}
               and{" "}
-              <Link to="/" className="text-primary hover:underline">
+              <Link to="/privacy" className="text-primary hover:underline">
                 Privacy Policy
               </Link>
             </Label>
@@ -250,12 +267,12 @@ function LeftPanel() {
             disabled={loading}
             className="h-10 w-full rounded-xl bg-primary font-sans text-[15px] font-medium text-primary-foreground transition-colors hover:bg-primary-glow disabled:opacity-50"
           >
-            {loading ? "Creating account..." : "Create account"}
+            {loading ? "Opening setup..." : "Continue to local setup"}
           </button>
         </form>
 
         <p className="mt-3 text-center font-mono text-[12px] text-muted-foreground">
-          No credit card. Cancel anytime.
+          Local preview only. No subscription is created.
         </p>
       </div>
     </section>
@@ -269,12 +286,11 @@ function SocialButton({
   provider: "google" | "github";
   children: React.ReactNode;
 }) {
-  const navigate = useNavigate();
   return (
     <button
       type="button"
-      onClick={() => navigate({ to: "/onboarding/goals" })}
-      className="flex h-10 w-full items-center justify-center gap-3 rounded-xl border border-hairline bg-card font-sans text-[14px] font-medium text-foreground transition-colors hover:bg-secondary"
+      disabled
+      className="flex h-10 w-full cursor-not-allowed items-center justify-center gap-3 rounded-xl border border-hairline bg-secondary/50 font-sans text-[14px] font-medium text-muted-foreground"
     >
       {provider === "google" ? <GoogleIcon /> : <GitHubIcon />}
       {children}
@@ -509,7 +525,7 @@ function AuthFooter() {
   return (
     <footer className="shrink-0 h-[44px] border-t border-hairline bg-card flex items-center justify-center">
       <div className="mx-auto max-w-[1280px] px-8 text-center font-mono text-[12px] text-muted-foreground">
-        © 2026 Algora · Secure sign up · Reduced-motion friendly
+        © 2026 Algora · Local preview · Reduced-motion friendly
       </div>
     </footer>
   );

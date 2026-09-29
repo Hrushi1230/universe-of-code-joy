@@ -24,6 +24,7 @@ import {
 import { SiteNav, SiteFooter } from "@/components/site-chrome";
 import { TERMS_OF_SERVICE } from "@/content/legal";
 import type { LegalSection, LegalSubSection } from "@/content/types";
+import { DemoNotice } from "@/components/demo-notice";
 
 export const Route = createFileRoute("/terms")({
   component: TermsPage,
@@ -33,13 +34,12 @@ export const Route = createFileRoute("/terms")({
       {
         name: "description",
         content:
-          "Clear, transparent terms governing the educational use of the Algora algorithm visualizer and learning platform. 100% user code ownership and 14-day refund policy.",
+          "Plain-language conditions for evaluating the current local Algora frontend preview.",
       },
       { property: "og:title", content: "Terms of Service — Algora" },
       {
         property: "og:description",
-        content:
-          "Clear, student-first terms for interactive algorithm visualization and coding practice. You own your code.",
+        content: "Current preview scope, educational limitations, and unavailable service terms.",
       },
       { property: "og:type", content: "website" },
     ],
@@ -145,7 +145,7 @@ function TermsPage() {
         {/* Hero Header */}
         <div className="mt-8 max-w-3xl">
           <div className="inline-flex items-center gap-2 rounded-full bg-primary-tint px-3 py-1 font-mono text-[11px] tracking-wider text-primary">
-            <FileText className="size-3.5" /> EDUCATIONAL TERMS
+            <FileText className="size-3.5" /> LOCAL PREVIEW TERMS
           </div>
           <h1 className="mt-4 font-sans text-[44px] sm:text-[52px] leading-[1.1] tracking-[-0.02em] text-foreground font-semibold">
             {doc.title}
@@ -153,6 +153,13 @@ function TermsPage() {
           <p className="mt-4 font-sans text-[17px] leading-[1.6] text-muted-foreground">
             {doc.subtitle}
           </p>
+
+          <div className="mt-5 max-w-[720px]">
+            <DemoNotice>
+              These terms describe the current repository preview. Final launch terms require
+              service decisions and qualified legal review.
+            </DemoNotice>
+          </div>
 
           <div className="mt-6 flex flex-wrap items-center gap-6 font-mono text-[12px] text-muted-foreground">
             <div>
@@ -169,40 +176,38 @@ function TermsPage() {
         {/* Key Guarantees Callout Card */}
         <div className="mt-8 rounded-2xl border border-hairline bg-card p-6 sm:p-8 shadow-xs">
           <div className="flex items-center gap-2.5 font-mono text-[11px] tracking-wider text-primary font-semibold">
-            <Sparkles className="size-4" /> STUDENT-FIRST PRINCIPLES
+            <Sparkles className="size-4" /> CURRENT PREVIEW BOUNDARIES
           </div>
           <p className="mt-3 font-sans text-[15px] leading-[1.65] text-foreground/90">
             {doc.summaryMarkdown.replace(/\*\*/g, "")}
           </p>
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="rounded-xl border border-hairline/80 bg-paper p-4">
-              <div className="font-mono text-[11px] text-primary font-semibold">CODE OWNERSHIP</div>
+              <div className="font-mono text-[11px] text-primary font-semibold">LOCAL RUNNER</div>
               <div className="mt-1 font-sans text-[13px] text-muted-foreground">
-                You retain 100% intellectual property ownership of all your code solutions.
+                Practice execution stays in the browser preview flow.
               </div>
             </div>
             <div className="rounded-xl border border-hairline/80 bg-paper p-4">
               <div className="font-mono text-[11px] text-primary font-semibold">
-                14-DAY GUARANTEE
+                NO LIVE BILLING
               </div>
               <div className="mt-1 font-sans text-[13px] text-muted-foreground">
-                Full money-back refund on Pro subscriptions within 14 days of purchase.
+                No checkout, subscription, charge, or refund is connected.
+              </div>
+            </div>
+            <div className="rounded-xl border border-hairline/80 bg-paper p-4">
+              <div className="font-mono text-[11px] text-primary font-semibold">LOCAL PROFILES</div>
+              <div className="mt-1 font-sans text-[13px] text-muted-foreground">
+                Identity screens do not create secure production accounts.
               </div>
             </div>
             <div className="rounded-xl border border-hairline/80 bg-paper p-4">
               <div className="font-mono text-[11px] text-primary font-semibold">
-                EASY CANCELLATION
+                NO UPTIME PROMISE
               </div>
               <div className="mt-1 font-sans text-[13px] text-muted-foreground">
-                Self-serve cancellation from Settings anytime with zero friction.
-              </div>
-            </div>
-            <div className="rounded-xl border border-hairline/80 bg-paper p-4">
-              <div className="font-mono text-[11px] text-primary font-semibold">
-                OFFLINE RESILIENCE
-              </div>
-              <div className="mt-1 font-sans text-[13px] text-muted-foreground">
-                Visualizers & local problems remain accessible without internet.
+                Availability, backup, recovery, and offline access are not guaranteed.
               </div>
             </div>
           </div>

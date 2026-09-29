@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { binarySearchModule } from "@/engine/algorithms/binarySearch";
+import { quicksortModule } from "@/engine/algorithms/quicksort";
 import { resolveCodeLine } from "@/engine/builder";
 import { deriveReasoning, type Reasoning } from "@/lib/reasoning";
 import { deriveOperation } from "@/lib/variables";
@@ -201,6 +202,45 @@ describe("deriveReasoning — custom input", () => {
     expect(r.invariant).toBe("If 7 exists, its index is between 0 and 0.");
     const found = reasoningAt(run, indexOf(run, "found"));
     expect(found.invariant).toBe("arr[0] = 7.");
+  });
+});
+
+describe("deriveReasoning — non-search arrays", () => {
+  it("keeps Quick Sort's own teaching copy instead of inventing binary-search reasoning", () => {
+    const validated = quicksortModule.validate({ values: "1, 2, 3, 4" });
+    if (!validated.ok) throw new Error(validated.error);
+    const run = quicksortModule.run(validated.parsed);
+    const step = run.steps[0]!;
+    const reasoning = reasoningAt(run, 0);
+
+    expect(reasoning.happened).toBe(step.narration);
+    expect(reasoning.why).toBe(step.detail);
+    expect(reasoning.happened).not.toMatch(/binary search|target|midpoint/i);
+    expect(reasoning.accessibleSummary).toBe(`Step 1. ${step.narration}`);
+  });
+});
+
+describe("deriveReasoning — non-array frames", () => {
+  it("uses a table module's canonical narration and detail", () => {
+    const step: Step = {
+      i: 0,
+      frame: {
+        kind: "table",
+        layout: "1d",
+        rowLabels: ["dp"],
+        colLabels: [0],
+        cells: [{ r: 0, c: 0, value: 1, state: "active", role: "write" }],
+      },
+      codeLine: 1,
+      narration: "Write the base case.",
+      detail: "Later cells can now depend on it.",
+      phase: "base",
+      counters: {},
+    };
+    const reasoning = deriveReasoning(step, null, 1);
+    expect(reasoning?.happened).toBe(step.narration);
+    expect(reasoning?.why).toBe(step.detail);
+    expect(reasoning?.accessibleSummary).toBe("Step 1. Write the base case.");
   });
 });
 

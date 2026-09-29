@@ -4,6 +4,7 @@ import { Check, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { AlgoraGlyph } from "@/components/site-chrome";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DemoNotice } from "@/components/demo-notice";
 import useHydrated from "@/hooks/useHydrated";
 import { usePrefsStore } from "@/stores/prefsStore";
 
@@ -14,14 +15,12 @@ export const Route = createFileRoute("/reset-password")({
       { title: "Set a new password — Algora" },
       {
         name: "description",
-        content:
-          "Choose a new Algora password. Make it strong — you'll be signed in automatically after resetting.",
+        content: "Preview Algora password validation. Account recovery is not connected.",
       },
       { property: "og:title", content: "Set a new password — Algora" },
       {
         property: "og:description",
-        content:
-          "Choose a new Algora password. Make it strong — you'll be signed in automatically after resetting.",
+        content: "Preview Algora password validation. Account recovery is not connected.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -36,14 +35,22 @@ function ResetPasswordPage() {
 
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [password, setPassword] = useState("Algora2026");
-  const [confirmPassword, setConfirmPassword] = useState("Algora2026");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (password.length < 8) {
       setError("Password must be at least 8 characters long.");
+      return;
+    }
+    if (!/\d/.test(password)) {
+      setError("Password must include at least one number.");
+      return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      setError("Password must include at least one uppercase letter.");
       return;
     }
     if (password !== confirmPassword) {
@@ -57,7 +64,7 @@ function ResetPasswordPage() {
   const matches = password && confirmPassword && password === confirmPassword;
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-paper text-foreground">
+    <div className="flex min-h-screen flex-col bg-paper text-foreground">
       <header className="shrink-0 border-b border-hairline bg-card">
         <div className="mx-auto flex h-[64px] max-w-[1280px] items-center justify-between px-8">
           <Link to="/" className="flex items-center gap-2">
@@ -67,12 +74,12 @@ function ResetPasswordPage() {
             </span>
           </Link>
           <span className="font-mono text-[13px] text-muted-foreground">
-            {hydrated && userEmail ? userEmail : "arjun@stanford.edu"}
+            {hydrated && userEmail ? userEmail : "Local profile"}
           </span>
         </div>
       </header>
 
-      <main className="flex flex-1 min-h-0 items-center justify-center overflow-hidden px-6 py-6">
+      <main className="flex flex-1 min-h-0 items-center justify-center px-6 py-6">
         <div className="w-full max-w-[560px] rounded-2xl border border-hairline bg-card px-10 py-8 shadow-sm">
           <div className="flex justify-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary-tint">
@@ -92,8 +99,12 @@ function ResetPasswordPage() {
           </h1>
 
           <p className="mt-2.5 text-center font-mono text-[13px] text-muted-foreground">
-            Make it strong — you won't need it often.
+            Preview the password rules before account recovery is connected.
           </p>
+
+          <div className="mt-4">
+            <DemoNotice>No account password will be changed.</DemoNotice>
+          </div>
 
           <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
             {error && (
@@ -211,7 +222,7 @@ function ResetPasswordPage() {
               type="submit"
               className="h-12 w-full rounded-xl bg-primary font-mono text-[15px] font-medium text-primary-foreground transition-colors hover:bg-primary-glow"
             >
-              Update password
+              Finish local preview
             </button>
           </form>
 

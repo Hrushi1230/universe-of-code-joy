@@ -15,8 +15,8 @@ export interface VariableItemProps {
 export function VariableItem({ variable, className }: VariableItemProps): React.ReactElement {
   return (
     <div className={cn("flex min-w-0 items-center justify-between gap-3", className)}>
-      <span className="font-mono text-[12px] text-slate">{variable.label}</span>
-      <span
+      <dt className="font-mono text-[12px] text-slate">{variable.label}</dt>
+      <dd
         className={cn(
           "flex items-center gap-1 font-mono text-[14px] tabular-nums",
           variable.changed ? "font-semibold text-accent-strong" : "text-ink",
@@ -36,7 +36,7 @@ export function VariableItem({ variable, className }: VariableItemProps): React.
         <span aria-hidden="true" key={variable.current} className="viz-swap">
           {variable.current}
         </span>
-      </span>
+      </dd>
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { getProblem, getProblems } from "@/content/problems";
 import useHydrated from "@/hooks/useHydrated";
 import { useDueCardCount } from "@/hooks/useProgress";
 import { hasReviewSet } from "@/lib/algorithm-review";
-import { resolveTransferSlug } from "@/lib/lesson-stages";
+import { resolveQuestionTransferSlug, resolveTransferSlug } from "@/lib/lesson-stages";
 import { xpAtLevelStart, xpForLevel } from "@/lib/xp";
 import { baselineProgress, dayKey, useProgressStore } from "@/stores/progressStore";
 import { useResultStore } from "@/stores/resultStore";
@@ -128,13 +128,20 @@ function ChallengeResults() {
      an unrelated challenge. Generic submissions keep the existing behaviour. */
   const lessonAlgorithm =
     last?.from === "lesson" && last.algorithmSlug ? getAlgorithm(last.algorithmSlug) : undefined;
+  const lessonProblem =
+    lessonAlgorithm && last?.lessonProblemSlug ? getProblem(last.lessonProblemSlug) : undefined;
   const lessonStage = last?.from === "lesson" ? last.stage : undefined;
 
   /* Code accepted: the next skill is recognising the pattern elsewhere, so the
      primary action becomes the transfer challenge rather than the lesson. */
   const transferSlug = useMemo(
-    () => (lessonAlgorithm ? resolveTransferSlug(lessonAlgorithm.slug) : null),
-    [lessonAlgorithm],
+    () =>
+      lessonProblem
+        ? resolveQuestionTransferSlug(lessonProblem.slug)
+        : lessonAlgorithm
+          ? resolveTransferSlug(lessonAlgorithm.slug)
+          : null,
+    [lessonAlgorithm, lessonProblem],
   );
   const codeHandoff = Boolean(
     lessonAlgorithm && lessonStage === "code" && transferSlug && transferSlug !== problem?.slug,
@@ -191,23 +198,23 @@ function ChallengeResults() {
   ];
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background">
+    <div className="flex h-dvh w-full overflow-hidden bg-background">
       <AppSidebar active="Practice" collapsible />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <AppWorkspaceBar crumbs={["Practice", problem.title, "Results"]} />
 
-        <main className="flex min-h-0 flex-1 items-start justify-center overflow-hidden px-6 py-4">
-          <section className="relative w-full max-w-[900px] rounded-2xl border border-hairline bg-card px-8 pb-6 pt-5">
+        <main className="flex min-h-0 flex-1 items-start justify-center overflow-y-auto px-3 py-3 sm:px-6 sm:py-4">
+          <section className="relative w-full max-w-[900px] rounded-2xl border border-hairline bg-card px-4 pb-6 pt-5 sm:px-8">
             <Flecks />
 
             {/* Header */}
-            <div className="relative flex items-center justify-center gap-6">
+            <div className="relative flex flex-col items-center justify-center gap-4 text-center sm:flex-row sm:gap-6 sm:text-left">
               <span className="flex h-[74px] w-[74px] shrink-0 items-center justify-center rounded-full bg-primary-tint">
                 <Check className="h-9 w-9 text-primary" strokeWidth={2.4} />
               </span>
               <div>
-                <h1 className="flex items-baseline gap-1.5 font-mono text-[38px] font-medium leading-none tracking-tight text-foreground">
+                <h1 className="flex items-baseline justify-center gap-1.5 font-mono text-[26px] font-medium leading-none tracking-tight text-foreground sm:justify-start sm:text-[38px]">
                   All tests passed
                   <span className="h-[9px] w-[9px] rounded-[2px] bg-primary" />
                 </h1>
@@ -220,7 +227,7 @@ function ChallengeResults() {
             </div>
 
             {/* Stats */}
-            <div className="mt-6 grid grid-cols-4 gap-4">
+            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
               {stats.map((s) => (
                 <div
                   key={s.label}
@@ -247,7 +254,7 @@ function ChallengeResults() {
             </div>
 
             {/* Complexity */}
-            <div className="mt-4 flex items-center gap-5 rounded-2xl border border-hairline bg-card px-5 py-4">
+            <div className="mt-4 flex items-center gap-4 rounded-2xl border border-hairline bg-card px-4 py-4 sm:gap-5 sm:px-5">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-tint">
                 <LineChart className="h-5 w-5 text-primary" strokeWidth={1.9} />
               </span>
@@ -264,11 +271,13 @@ function ChallengeResults() {
                   {algorithm?.oneLiner ?? "Compare your approach against the visualiser."}
                 </p>
               </div>
-              <ComplexityCurve />
+              <span className="hidden sm:block">
+                <ComplexityCurve />
+              </span>
             </div>
 
             {/* XP strip */}
-            <div className="mt-4 flex items-center gap-4 rounded-2xl border border-hairline bg-primary-tint/50 px-5 py-3.5">
+            <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-hairline bg-primary-tint/50 px-4 py-3.5 sm:gap-4 sm:px-5">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary">
                 <Star className="h-4.5 w-4.5 text-primary-foreground" strokeWidth={1.9} />
               </span>
@@ -286,7 +295,7 @@ function ChallengeResults() {
               <span className="inline-flex h-9 shrink-0 items-center rounded-xl border border-primary/40 bg-card px-3.5 font-mono text-[12.5px] text-primary">
                 +{last?.xpAwarded ?? 0} XP
               </span>
-              <span className="shrink-0 font-mono text-[12.5px] text-muted-foreground">
+              <span className="hidden shrink-0 font-mono text-[12.5px] text-muted-foreground sm:inline">
                 {Math.max(0, levelEnd - state.xp).toLocaleString("en-US")} XP to Level {level + 1}
               </span>
             </div>
@@ -294,7 +303,7 @@ function ChallengeResults() {
             {/* What's next */}
             <div className="mt-4 rounded-2xl border border-hairline bg-card p-4">
               <h2 className="text-[15px] font-semibold text-foreground">What&rsquo;s next</h2>
-              <div className="mt-3 grid grid-cols-2 gap-4">
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                 {[
                   nextProblem
                     ? {
@@ -372,15 +381,27 @@ function ChallengeResults() {
                   Why the pattern worked
                 </h2>
                 <ul className="mt-1.5 space-y-1 font-mono text-[12.5px] leading-[1.6] text-muted-foreground">
-                  <li>the candidate indices were ordered,</li>
-                  <li>each comparison removed one side,</li>
-                  <li>low identified the first valid insertion position when the search ended.</li>
+                  {lessonAlgorithm?.slug === "two-pointers" ? (
+                    <>
+                      <li>two endpoints bounded the remaining candidates,</li>
+                      <li>each comparison proved one endpoint could be discarded,</li>
+                      <li>both pointers moved monotonically without revisiting ruled-out work.</li>
+                    </>
+                  ) : (
+                    <>
+                      <li>the candidate indices were ordered,</li>
+                      <li>each comparison removed one side,</li>
+                      <li>
+                        low identified the first valid insertion position when the search ended.
+                      </li>
+                    </>
+                  )}
                 </ul>
               </div>
             )}
 
             {/* Footer buttons */}
-            <div className="mt-5 flex items-center">
+            <div className="mt-5 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
               <Link
                 to="/practice/$slug"
                 params={{ slug: problem.slug }}
@@ -391,7 +412,8 @@ function ChallengeResults() {
               <Link
                 to="/algorithms/$slug"
                 params={{ slug: problem.algorithmSlug }}
-                className="mx-auto inline-flex h-11 items-center rounded-xl border border-primary bg-card px-6 font-sans text-[14px] font-medium text-primary hover:bg-primary-tint"
+                search={lessonProblem ? { problem: lessonProblem.slug } : {}}
+                className="inline-flex h-11 items-center justify-center rounded-xl border border-primary bg-card px-6 font-sans text-[14px] font-medium text-primary hover:bg-primary-tint sm:mx-auto"
               >
                 View walkthrough
               </Link>
@@ -402,6 +424,7 @@ function ChallengeResults() {
                   search={{
                     from: "lesson" as const,
                     algorithm: lessonAlgorithm!.slug,
+                    ...(lessonProblem ? { problem: lessonProblem.slug } : {}),
                     stage: "solve" as const,
                   }}
                   className="inline-flex h-11 items-center gap-2.5 rounded-xl bg-primary px-7 font-sans text-[14px] font-medium text-primary-foreground hover:bg-primary-glow"
@@ -409,10 +432,15 @@ function ChallengeResults() {
                   Apply {lessonAlgorithm?.name} to a new problem{" "}
                   <ArrowRight className="h-4 w-4" strokeWidth={2} />
                 </Link>
-              ) : solveDone && lessonAlgorithm && hasReviewSet(lessonAlgorithm.slug) ? (
+              ) : solveDone &&
+                lessonAlgorithm &&
+                hasReviewSet(lessonAlgorithm.slug, lessonProblem?.slug) ? (
                 <Link
                   to="/review"
-                  search={{ algorithm: lessonAlgorithm.slug }}
+                  search={{
+                    algorithm: lessonAlgorithm.slug,
+                    ...(lessonProblem ? { problem: lessonProblem.slug } : {}),
+                  }}
                   className="inline-flex h-11 items-center gap-2.5 rounded-xl bg-primary px-7 font-sans text-[14px] font-medium text-primary-foreground hover:bg-primary-glow"
                 >
                   Continue to Review <ArrowRight className="h-4 w-4" strokeWidth={2} />
@@ -428,6 +456,7 @@ function ChallengeResults() {
                 <Link
                   to="/algorithms/$slug"
                   params={{ slug: lessonAlgorithm.slug }}
+                  search={lessonProblem ? { problem: lessonProblem.slug } : {}}
                   className="inline-flex h-11 items-center gap-2.5 rounded-xl bg-primary px-7 font-sans text-[14px] font-medium text-primary-foreground hover:bg-primary-glow"
                 >
                   Continue {lessonAlgorithm.name} lesson{" "}

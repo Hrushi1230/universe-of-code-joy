@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { listModules, getModule } from "@/engine/registry";
 import { useAutoplay } from "@/hooks/useAutoplay";
@@ -8,6 +8,9 @@ import { PlaybackBar, StepScrubber, CounterStrip } from "@/components/player";
 import { FrameView, AuxPanels } from "@/components/viz";
 
 export const Route = createFileRoute("/dev/engine")({
+  beforeLoad: () => {
+    if (import.meta.env.PROD) throw notFound();
+  },
   component: DevEngine,
   head: () => ({
     meta: [

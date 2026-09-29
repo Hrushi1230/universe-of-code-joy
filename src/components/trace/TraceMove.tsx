@@ -20,6 +20,16 @@ const KIND_LABEL: Record<TraceCheckpoint["kind"], string> = {
   "choose-mid": "Choose mid",
   compare: "Compare",
   action: "Move boundary",
+  partition: "Choose transition",
+  "pair-sum": "Choose pointer move",
+  "container-area": "Choose limiting wall",
+  "trapped-water": "Choose bounded side",
+  "palindrome-action": "Choose pointer action",
+  "move-zeroes": "Choose output action",
+  "remove-duplicates": "Choose prefix action",
+  "three-sum": "Choose triplet action",
+  "level-order": "Choose queue action",
+  "bst-validation": "Choose bounds result",
   result: "Result",
 };
 
@@ -77,7 +87,7 @@ export function TraceMove({
       aria-labelledby={`trace-heading-${id}`}
       data-player-keys="off"
       data-trace-move={status}
-      className={cn("flex min-h-0 flex-col gap-2 overflow-y-auto", className)}
+      className={cn("flex min-h-0 flex-col gap-2 overflow-hidden", className)}
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
@@ -153,9 +163,30 @@ export function TraceMove({
 
       <div className="flex flex-wrap items-center gap-2 pt-0.5">
         {resolved ? (
-          <p className="font-sans text-[12px] text-slate">
-            {position >= total ? "That completes the trace." : "Continue with the next step below."}
-          </p>
+          <button
+            type="button"
+            onClick={() => storeApi.getState().continueFrom(id)}
+            className="inline-flex h-9 items-center rounded-lg bg-primary px-4 font-sans text-[13px] font-semibold text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
+          >
+            {position >= total ? "Complete trace" : "Next step"}
+          </button>
+        ) : isIncorrect ? (
+          <>
+            <button
+              type="button"
+              onClick={() => storeApi.getState().retry(id)}
+              className="inline-flex h-9 items-center rounded-lg border border-primary/30 bg-card px-4 font-sans text-[13px] font-medium text-primary transition-colors hover:bg-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+            >
+              Try again
+            </button>
+            <button
+              type="button"
+              onClick={() => storeApi.getState().reveal(id, q.correctOptionId)}
+              className="inline-flex h-9 items-center rounded-lg px-2 font-sans text-[12px] text-slate underline decoration-hairline underline-offset-4 transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+            >
+              Show answer
+            </button>
+          </>
         ) : (
           <>
             <button
@@ -175,7 +206,7 @@ export function TraceMove({
                 {entry.hintLevel === 0 ? "Hint" : "Next hint"}
               </button>
             ) : null}
-            {entry.attempts > 0 || entry.hintLevel >= 2 ? (
+            {entry.hintLevel >= 2 ? (
               <button
                 type="button"
                 onClick={() => storeApi.getState().reveal(id, q.correctOptionId)}

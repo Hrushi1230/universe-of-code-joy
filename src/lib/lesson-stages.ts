@@ -13,6 +13,74 @@ import type { Algorithm, Problem } from "@/content/types";
 import { resolvePracticeSlug } from "@/lib/explore-items";
 import type { ProgressData } from "@/stores/progressStore";
 
+interface QuestionStageMapping {
+  code: string;
+  solve: string;
+}
+
+const QUESTION_STAGE_MAPPINGS: Record<string, QuestionStageMapping> = {
+  "binary-tree-level-order": {
+    code: "binary-tree-level-order",
+    solve: "binary-tree-right-side-view",
+  },
+  "binary-tree-right-side-view": {
+    code: "binary-tree-right-side-view",
+    solve: "maximum-depth-of-binary-tree",
+  },
+  "maximum-depth-of-binary-tree": {
+    code: "maximum-depth-of-binary-tree",
+    solve: "invert-binary-tree",
+  },
+  "invert-binary-tree": {
+    code: "invert-binary-tree",
+    solve: "binary-tree-level-order",
+  },
+  "validate-binary-search-tree": {
+    code: "validate-binary-search-tree",
+    solve: "diameter-of-binary-tree",
+  },
+  "sort-colors": { code: "sort-colors", solve: "move-zeroes" },
+  "two-sum": { code: "two-sum", solve: "container-with-most-water" },
+  "container-with-most-water": {
+    code: "container-with-most-water",
+    solve: "trapping-rain-water",
+  },
+  "trapping-rain-water": {
+    code: "trapping-rain-water",
+    solve: "valid-palindrome",
+  },
+  "valid-palindrome": { code: "valid-palindrome", solve: "move-zeroes" },
+  "move-zeroes": { code: "move-zeroes", solve: "remove-duplicates-from-sorted-array" },
+  "remove-duplicates-from-sorted-array": {
+    code: "remove-duplicates-from-sorted-array",
+    solve: "three-sum",
+  },
+  "three-sum": { code: "three-sum", solve: "two-sum" },
+};
+
+function validQuestionStageMapping(problemSlug: string): QuestionStageMapping | null {
+  const mapping = QUESTION_STAGE_MAPPINGS[problemSlug];
+  const source = getProblem(problemSlug);
+  if (!mapping || !source) return null;
+  const code = getProblem(mapping.code);
+  const solve = getProblem(mapping.solve);
+  if (!code || !solve || code.algorithmSlug !== source.algorithmSlug) return null;
+  if (solve.algorithmSlug !== source.algorithmSlug || mapping.code === mapping.solve) return null;
+  return mapping;
+}
+
+/** Question-specific Code target, preserving earlier Golden slices in the same family. */
+export function resolveQuestionImplementationSlug(problemSlug?: string): string | null {
+  if (!problemSlug) return null;
+  return validQuestionStageMapping(problemSlug)?.code ?? null;
+}
+
+/** Question-specific transfer target for Solve. */
+export function resolveQuestionTransferSlug(problemSlug?: string): string | null {
+  if (!problemSlug) return null;
+  return validQuestionStageMapping(problemSlug)?.solve ?? null;
+}
+
 /**
  * The implementation challenge for an algorithm, or null when there is none.
  *

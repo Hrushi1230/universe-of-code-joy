@@ -1,8 +1,10 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { algorithms } from "../src/data/algorithms";
 import { problems } from "../src/data/problems";
 import { getModule, getModuleForProblem } from "../src/engine/registry";
 import type { AlgorithmModule, ArrayFrame } from "../src/engine/types";
+import { pointerLabel } from "../src/lib/pointerLabels";
+import { buildPredictionCheckpoints, derivePrediction } from "../src/lib/prediction";
 
 /**
  * Proves every searching card actually animates in a browser.
@@ -44,14 +46,35 @@ function firstPresetRun(mod: AlgorithmModule) {
   return mod.run(parsed.parsed);
 }
 
-const CANVAS = 'svg[role="img"]';
+const CANVAS = '[data-testid="array-canvas"]';
+const CELL = '[data-testid="array-cell"]';
 const NEXT = 'button[aria-label="Next step (→)"]';
+
+async function advance(
+  page: Page,
+  run: ReturnType<typeof firstPresetRun>,
+  checkpoints: ReturnType<typeof buildPredictionCheckpoints>,
+  stepIndex: number,
+): Promise<void> {
+  const checkpoint = checkpoints.find((candidate) => candidate.stepIndex === stepIndex);
+  if (checkpoint) {
+    const prediction = derivePrediction(run.steps[stepIndex], checkpoint.id);
+    if (!prediction) throw new Error(`prediction ${checkpoint.id} could not be derived`);
+    const answer = prediction.options.find((option) => option.id === prediction.correctOptionId);
+    if (!answer) throw new Error(`prediction ${checkpoint.id} has no correct option`);
+    await page.getByRole("radio", { name: answer.label }).check();
+    await page.getByRole("button", { name: "Check answer" }).click();
+    await page.getByRole("button", { name: "Continue" }).click();
+  }
+  await page.locator(NEXT).first().click();
+}
 
 test.describe("searching visualizers animate in the browser", () => {
   for (const card of cards) {
     test(card.id, async ({ page }) => {
       const run = firstPresetRun(card.module);
       const total = run.steps.length;
+      const checkpoints = buildPredictionCheckpoints(run.steps);
 
       await page.goto(card.url);
 
@@ -63,40 +86,37 @@ test.describe("searching visualizers animate in the browser", () => {
 
       /* Every value of the first frame is drawn as text on the canvas. */
       const frame0 = run.steps[0]!.frame as ArrayFrame;
-      const drawn = await canvas.locator("text").allTextContents();
+      const drawn = await canvas.locator(CELL).allTextContents();
       for (const value of frame0.values) {
         expect(drawn, `value ${String(value)} is not drawn`).toContain(String(value));
       }
       for (const pointer of frame0.pointers) {
-        expect(drawn, `pointer ${pointer.name} is not drawn`).toContain(pointer.name);
+        await expect(canvas.getByText(pointerLabel(pointer.name), { exact: true })).toBeVisible();
       }
 
-      /* One drawn shape per cell, at minimum. */
-      expect(await canvas.locator("rect").count()).toBeGreaterThanOrEqual(frame0.values.length);
+      expect(await canvas.locator(CELL).count()).toBe(frame0.values.length);
 
-      /* Walk the whole run. The live region is the player's own statement of
-         which step it is on, so this checks the browser and the engine agree at
-         every single step — not just that something rendered. */
-      const live = page
-        .locator('div[aria-live="polite"]', { hasText: /^Step \d+ of \d+:/ })
-        .first();
-      const fillsAt: string[][] = [];
+      /* Walk the whole run. The reasoning header is the visible current-step
+         contract; the cell states below prove the renderer changed with it. */
+      const statesAt: string[][] = [];
       for (let i = 0; i < total; i += 1) {
-        const step = run.steps[i]!;
-        await expect(live).toHaveText(`Step ${i + 1} of ${total}: ${step.narration}`);
-        fillsAt.push(
+        await expect(
+          page.getByText(`Step ${i + 1} / ${total}`, { exact: true }).first(),
+        ).toBeVisible();
+        statesAt.push(
           await canvas
-            .locator("rect")
-            .evaluateAll((els) => els.map((el) => getComputedStyle(el).fill)),
+            .locator(CELL)
+            .evaluateAll((els) => els.map((el) => el.getAttribute("data-state") ?? "")),
         );
-        if (i < total - 1) await page.click(NEXT);
+        if (i < total - 1) {
+          await advance(page, run, checkpoints, i);
+        }
       }
 
-      /* A static picture is not an animation: the cell colours must actually
-         differ somewhere across the run. Compared as computed styles, so the
-         CSS variables are resolved to real colours. */
-      const distinct = new Set(fillsAt.map((f) => f.join("|")));
-      expect(distinct.size, "cell colours never changed across the run").toBeGreaterThan(1);
+      /* A static picture is not an animation: semantic cell states must differ
+         somewhere across the run. Styling is already derived from this state. */
+      const distinct = new Set(statesAt.map((states) => states.join("|")));
+      expect(distinct.size, "cell states never changed across the run").toBeGreaterThan(1);
 
       /* Every frame the engine says is a milestone is reachable, and the last
          step is the answer frame. */
@@ -110,6 +130,7 @@ test.describe("koko piles panel", () => {
 
   test("shows every pile, its hour cost, and the verdict against the budget", async ({ page }) => {
     const run = firstPresetRun(mod);
+    const checkpoints = buildPredictionCheckpoints(run.steps);
     await page.goto("/algorithms/binary-search?problem=koko-eating-bananas");
     await expect(page.locator(CANVAS).first()).toBeVisible({ timeout: 30_000 });
 
@@ -126,7 +147,7 @@ test.describe("koko piles panel", () => {
         await expect(page.getByText(panel.total.label, { exact: true })).toBeVisible();
         await expect(page.getByText(panel.total.value, { exact: true }).first()).toBeVisible();
       }
-      if (i < run.steps.length - 1) await page.click(NEXT);
+      if (i < run.steps.length - 1) await advance(page, run, checkpoints, i);
     }
   });
 
@@ -145,8 +166,8 @@ test.describe("koko piles panel", () => {
     const panelBox = await row.boundingBox();
     expect(panelBox).not.toBeNull();
 
-    /* Leftmost drawn cell: the smallest x among the cell rects. */
-    const cellBoxes = await canvas.locator("rect").evaluateAll((els) =>
+    /* Leftmost drawn cell: the smallest x among the rendered array cells. */
+    const cellBoxes = await canvas.locator(CELL).evaluateAll((els) =>
       els.map((el) => {
         const r = el.getBoundingClientRect();
         return { x: r.x, y: r.y, w: r.width, h: r.height };

@@ -125,6 +125,37 @@ describe("xp and mastery", () => {
   });
 });
 
+describe("idempotent local rewards", () => {
+  it("credits one quest reward per quest period", () => {
+    expect(store.getState().claimQuestReward("daily-xp", "2026-01-10", 100, 25)).toBe(true);
+    expect(store.getState().claimQuestReward("daily-xp", "2026-01-10", 100, 25)).toBe(false);
+    expect(store.getState().xp).toBe(25);
+    expect(store.getState().quests["daily-xp"]?.claimedAt).toBeTruthy();
+    expect(store.getState().rewardTransactions?.["quest:daily-xp:2026-01-10"]).toBeDefined();
+
+    expect(store.getState().claimQuestReward("daily-xp", "2026-01-11", 100, 25)).toBe(true);
+    expect(store.getState().xp).toBe(50);
+  });
+
+  it("records one XP award for an achievement", () => {
+    expect(store.getState().unlockAchievementReward("first-steps", 100, 25)).toBe(true);
+    expect(store.getState().unlockAchievementReward("first-steps", 100, 25)).toBe(false);
+    expect(store.getState().xp).toBe(25);
+    expect(store.getState().achievements["first-steps"]?.unlockedAt).toBeTruthy();
+  });
+
+  it("deduplicates a confirmed shop transaction and checks affordability", () => {
+    store.setState({ xp: 400, level: 1 });
+    expect(store.getState().redeemReward("shop:freeze:intent-1", "freeze", 200, 1)).toBe(true);
+    expect(store.getState().redeemReward("shop:freeze:intent-1", "freeze", 200, 1)).toBe(false);
+    expect(store.getState().xp).toBe(200);
+    expect(store.getState().streak.freezesLeft).toBe(3);
+
+    expect(store.getState().redeemReward("shop:freeze:intent-2", "freeze", 300, 1)).toBe(false);
+    expect(store.getState().xp).toBe(200);
+  });
+});
+
 describe("activity + unknown slugs", () => {
   it("every action upserts today and xp accumulates", () => {
     const key = dayKey();
@@ -196,6 +227,7 @@ describe("store migration v1 -> v2 (S5.8)", () => {
     expect(migrated.reviewCards).toEqual({});
     expect(migrated.quests).toEqual({});
     expect(migrated.achievements).toEqual({});
+    expect(migrated.rewardTransactions).toEqual({});
     expect(migrated.bookmarks).toEqual([]);
   });
 
@@ -205,6 +237,48 @@ describe("store migration v1 -> v2 (S5.8)", () => {
     expect(corrupt.level).toBe(1);
     expect(corrupt.streak.current).toBe(0);
     expect(corrupt.streak.freezesLeft).toBe(2);
+  });
+
+  it("removes the legacy demo seed while preserving later local activity", () => {
+    const migrated = migrateProgressState(
+      {
+        xp: 4870,
+        level: 5,
+        streak: { current: 12, longest: 21, lastActiveISO: null, freezesLeft: 2 },
+        algorithms: {
+          seeded: {
+            status: "learning",
+            stepsWatched: 24,
+            lessonDone: false,
+            quizScore: null,
+            problemsSolved: [],
+            lastSeenISO: "2024-09-03T00:00:00.000Z",
+            masteryPct: 15,
+          },
+          "binary-search": {
+            status: "learning",
+            stepsWatched: 4,
+            lessonDone: false,
+            quizScore: null,
+            problemsSolved: [],
+            lastSeenISO: "2026-09-12T10:00:00.000Z",
+            masteryPct: 15,
+          },
+        },
+        activity: {
+          "2025-03-01": { xp: 120, minutes: 35, steps: 0, solved: 1 },
+          "2026-09-12": { xp: 50, minutes: 10, steps: 4, solved: 0 },
+        },
+        achievements: {},
+      },
+      2,
+    );
+
+    expect(migrated.xp).toBe(50);
+    expect(migrated.activity["2025-03-01"]).toBeUndefined();
+    expect(migrated.activity["2026-09-12"]?.xp).toBe(50);
+    expect(migrated.algorithms["seeded"]).toBeUndefined();
+    expect(migrated.algorithms["binary-search"]).toBeDefined();
   });
 });
 

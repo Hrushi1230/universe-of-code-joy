@@ -51,7 +51,7 @@ describe("Legal Content & Schema Validation (S10.7 & S6.7)", () => {
     }
   });
 
-  it("includes required local-first privacy disclosures in Privacy Policy", () => {
+  it("describes only the current local-preview privacy behavior", () => {
     const doc = PRIVACY_POLICY;
     const allMarkdown = [
       doc.summaryMarkdown,
@@ -61,15 +61,17 @@ describe("Legal Content & Schema Validation (S10.7 & S6.7)", () => {
 
     expect(allMarkdown).toContain("algora-progress");
     expect(allMarkdown).toContain("algora-prefs");
-    expect(allMarkdown).toContain("algora-auth");
     expect(allMarkdown).toContain("localStorage");
     expect(allMarkdown).toContain("Web Worker");
     expect(allMarkdown).toContain("GDPR");
     expect(allMarkdown).toContain("CCPA");
-    expect(allMarkdown).toContain("privacy@algora.io");
+    expect(allMarkdown).toContain("not connected");
+    expect(allMarkdown).not.toContain("Stripe");
+    expect(allMarkdown).not.toContain("privacy@algora.io");
+    expect(allMarkdown).not.toContain("within 24 hours");
   });
 
-  it("includes required terms and user code ownership in Terms of Service", () => {
+  it("keeps unavailable commercial and legal terms explicit", () => {
     const doc = TERMS_OF_SERVICE;
     const allMarkdown = [
       doc.summaryMarkdown,
@@ -77,12 +79,13 @@ describe("Legal Content & Schema Validation (S10.7 & S6.7)", () => {
       ...doc.sections.flatMap((s) => s.subsections?.map((sub) => sub.contentMarkdown) ?? []),
     ].join(" ");
 
-    expect(allMarkdown).toContain("100%");
-    expect(allMarkdown).toContain("ownership");
-    expect(allMarkdown).toContain("14");
+    expect(allMarkdown).toContain("No checkout");
     expect(allMarkdown).toContain("refund");
-    expect(allMarkdown).toContain("Campus");
-    expect(allMarkdown).toContain("legal@algora.io");
+    expect(allMarkdown).toContain("not connected");
+    expect(allMarkdown).not.toContain("14-day");
+    expect(allMarkdown).not.toContain("99.9%");
+    expect(allMarkdown).not.toContain("legal@algora.io");
+    expect(allMarkdown).not.toContain("binding individual arbitration");
   });
 
   it("provides synchronous and asynchronous legal accessors (S10.2)", async () => {

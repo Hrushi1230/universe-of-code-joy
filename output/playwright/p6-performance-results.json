@@ -1,0 +1,77 @@
+{
+  "profile": "390x844, CPU 4x, 150ms RTT, 4Mbps down, 1Mbps up, cold cache",
+  "samples": [
+    {
+      "route": "/",
+      "sample": 1,
+      "lcp": 680,
+      "cls": 0.0013873240512688048,
+      "dcl": 657.1000000000931,
+      "resourceBytes": 370248
+    },
+    {
+      "route": "/",
+      "sample": 2,
+      "lcp": 600,
+      "cls": 0.0014015115274036627,
+      "dcl": 574.4000000000233,
+      "resourceBytes": 370248
+    },
+    {
+      "route": "/",
+      "sample": 3,
+      "lcp": 592,
+      "cls": 0.0013873240512688048,
+      "dcl": 585.6000000000931,
+      "resourceBytes": 370248
+    },
+    {
+      "route": "/explore",
+      "sample": 1,
+      "lcp": 792,
+      "cls": 0.07639534276607582,
+      "dcl": 797.5999999999767,
+      "resourceBytes": 395421
+    },
+    {
+      "route": "/explore",
+      "sample": 2,
+      "lcp": 756,
+      "cls": 0.07639534276607582,
+      "dcl": 746.9000000000233,
+      "resourceBytes": 395421
+    },
+    {
+      "route": "/explore",
+      "sample": 3,
+      "lcp": 752,
+      "cls": 0.07639534276607582,
+      "dcl": 727.8000000000466,
+      "resourceBytes": 395421
+    },
+    {
+      "route": "/algorithms/binary-search",
+      "sample": 1,
+      "lcp": 620,
+      "cls": 0.03252228143318207,
+      "dcl": 576.2000000000698,
+      "resourceBytes": 446406
+    },
+    {
+      "route": "/algorithms/binary-search",
+      "sample": 2,
+      "lcp": 572,
+      "cls": 0.03252228143318207,
+      "dcl": 558.6999999999534,
+      "resourceBytes": 446406
+    },
+    {
+      "route": "/algorithms/binary-search",
+      "sample": 3,
+      "lcp": 556,
+      "cls": 0.03243050828496592,
+      "dcl": 543.6999999999534,
+      "resourceBytes": 446406
+    }
+  ]
+}

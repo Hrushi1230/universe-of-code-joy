@@ -938,6 +938,8 @@ export function validateMarketingClaim(claim: unknown): {
 export const REVIEW_ITEM_KINDS = [
   "concept",
   "boundary",
+  "classification",
+  "invariant",
   "midpoint",
   "termination",
   "code",
@@ -955,6 +957,7 @@ export const ReviewItemSchema = z
   .object({
     id: z.string().min(1, "Review item id is required"),
     algorithmSlug: SlugSchema,
+    problemSlug: SlugSchema.optional(),
     kind: ReviewItemKindSchema,
     prompt: z.string().min(1, "Review prompt is required"),
     given: z.array(z.string().min(1, "Given line cannot be empty")),

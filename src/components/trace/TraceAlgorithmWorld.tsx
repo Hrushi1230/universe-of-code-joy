@@ -1,5 +1,6 @@
 import * as React from "react";
 import { ArrayCanvas } from "@/components/viz/ArrayCanvas";
+import { FrameView } from "@/components/viz/FrameView";
 import type { TraceSession, TraceView } from "@/lib/trace";
 import { traceFrame } from "@/lib/trace";
 import { cn } from "@/lib/utils";
@@ -45,19 +46,25 @@ export function TraceAlgorithmWorld({
         </p>
       </div>
 
-      <div className="relative mt-4 flex min-h-0 flex-1 flex-col justify-start gap-6 overflow-y-auto overflow-x-hidden pt-2">
+      <div className="relative mt-4 flex min-h-0 flex-1 flex-col justify-start gap-6 overflow-hidden pt-2">
         <div className="flex shrink-0 justify-center">
-          <ArrayCanvas frame={frame} movedPointers={movedPointers} revealDecision={false} />
+          {view.treeFrame ? (
+            <FrameView frame={view.treeFrame} />
+          ) : (
+            <ArrayCanvas frame={frame} movedPointers={movedPointers} revealDecision={false} />
+          )}
         </div>
 
         {/* The state table the learner is maintaining by hand. Values only —
             never the next value, and never the calculation that produces it. */}
         <dl className="mx-auto flex shrink-0 items-stretch gap-3">
-          {[
-            { label: "low", value: String(view.low) },
-            { label: "mid", value: view.mid === null ? "—" : String(view.mid) },
-            { label: "high", value: String(view.high) },
-          ].map((cell) => (
+          {(
+            view.variables ?? [
+              { label: "low", value: String(view.low) },
+              { label: "mid", value: view.mid === null ? "—" : String(view.mid) },
+              { label: "high", value: String(view.high) },
+            ]
+          ).map((cell) => (
             <div
               key={cell.label}
               className="min-w-[86px] rounded-xl border border-hairline bg-paper px-3 py-2 text-center"

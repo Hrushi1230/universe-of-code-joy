@@ -1,5 +1,23 @@
 import * as React from "react";
-import * as Icons from "lucide-react";
+import {
+  ArrowDownUp,
+  Binary,
+  CaseSensitive,
+  GitBranch,
+  Grid3x3,
+  Hash,
+  Layers,
+  Link,
+  Mountain,
+  Route,
+  Rows3,
+  Search,
+  Sigma,
+  Sparkles,
+  Target,
+  Waypoints,
+  type LucideIcon,
+} from "lucide-react";
 import { FrameView } from "@/components/viz/FrameView";
 import { CATEGORY_META, getAlgorithm } from "@/content/algorithms";
 import type { AlgorithmRun } from "@/engine/types";
@@ -50,12 +68,29 @@ const MAX_CONCURRENT = 3;
 const STEP_MS = 450;
 const MAX_STEPS = 6;
 
+const categoryIcons: Record<string, LucideIcon> = {
+  ArrowDownUp,
+  Binary,
+  CaseSensitive,
+  GitBranch,
+  Grid3x3,
+  Hash,
+  Layers,
+  Link,
+  Mountain,
+  Route,
+  Rows3,
+  Search,
+  Sigma,
+  Sparkles,
+  Target,
+  Waypoints,
+};
+
 function CategoryFallback({ slug }: { slug: string }): React.ReactElement {
   const algo = getAlgorithm(slug);
   const iconName = algo ? CATEGORY_META[algo.category].icon : "Sparkles";
-  const Icon =
-    (Icons as unknown as Record<string, React.ComponentType<Icons.LucideProps>>)[iconName] ??
-    Icons.Sparkles;
+  const Icon = categoryIcons[iconName] ?? Sparkles;
   return (
     <div className="flex size-full items-center justify-center rounded-lg bg-tint">
       <Icon size={24} strokeWidth={1.5} className="text-primary" aria-hidden />

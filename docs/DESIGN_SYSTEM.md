@@ -1,6 +1,6 @@
 # ALGORA LEARNING DESIGN SYSTEM
 
-Version 1.0
+Version 1.1 — P6 contrast corrections, 2026-09-14
 
 Product principle:
 See the algorithm think.
@@ -58,13 +58,15 @@ Secondary text:
 
 Tertiary text:
 
-`--slate-soft: #8A9591`
+`--slate-soft: var(--slate)` — readable tertiary text; hierarchy uses size/spacing, not failing contrast.
 
 ## 03. BRAND ACCENT
 
 Primary:
 
-`--accent-strong: #0B7F6D`
+`--accent-strong: #087563`
+
+Primary text/buttons and their hover foreground/background pair use this readable teal. Keep the brighter highlight for graphics, not small text on pale surfaces.
 
 Interactive highlight:
 
@@ -94,7 +96,7 @@ Success:
 
 Warning:
 
-`#B4791A`
+`#895A14` — readable on the warning tint.
 
 Error / comparison conflict:
 
@@ -478,8 +480,8 @@ Requirements:
 - JS / TypeScript / Python
 - Active line uses tinted background, not saturated block colour
 - No dark editor theme
-- Automatic scroll to active line
-- Never scroll excessively between consecutive lines
+- Keep the active line visible within the fixed code panel; use bounded code pages or focused views where needed
+- No page or internal scrolling in the learning visualizer; retain readable text and the visible bottom controller
 - Accessible aria-current behaviour
 - Code font always JetBrains Mono
 

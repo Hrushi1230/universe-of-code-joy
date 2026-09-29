@@ -9,137 +9,42 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as VisualizerRouteImport } from './routes/visualizer'
-import { Route as VerifyEmailRouteImport } from './routes/verify-email'
-import { Route as TermsRouteImport } from './routes/terms'
-import { Route as ReviewRouteImport } from './routes/review'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as QuestsRouteImport } from './routes/quests'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as PricingRouteImport } from './routes/pricing'
-import { Route as PathsRouteImport } from './routes/paths'
-import { Route as NotificationsRouteImport } from './routes/notifications'
-import { Route as MasteryMapRouteImport } from './routes/mastery-map'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as LeaguesRouteImport } from './routes/leagues'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as ExploreRouteImport } from './routes/explore'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as ContactRouteImport } from './routes/contact'
-import { Route as CampusRouteImport } from './routes/campus'
-import { Route as BlogRouteImport } from './routes/blog'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as SettingsIndexRouteImport } from './routes/settings.index'
-import { Route as PracticeIndexRouteImport } from './routes/practice.index'
-import { Route as SettingsBillingRouteImport } from './routes/settings.billing'
-import { Route as PracticeResultsRouteImport } from './routes/practice.results'
-import { Route as PracticeSlugRouteImport } from './routes/practice.$slug'
-import { Route as OnboardingPathRouteImport } from './routes/onboarding/path'
-import { Route as OnboardingGoalsRouteImport } from './routes/onboarding/goals'
-import { Route as OnboardingAssessmentRouteImport } from './routes/onboarding/assessment'
-import { Route as DevEngineRouteImport } from './routes/dev.engine'
+import { Route as AchievementsRouteImport } from './routes/achievements'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BlogRouteImport } from './routes/blog'
+import { Route as CampusRouteImport } from './routes/campus'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ExploreRouteImport } from './routes/explore'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as LeaguesRouteImport } from './routes/leagues'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as MasteryMapRouteImport } from './routes/mastery-map'
+import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as PathsRouteImport } from './routes/paths'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as QuestsRouteImport } from './routes/quests'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ReviewRouteImport } from './routes/review'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
+import { Route as VisualizerRouteImport } from './routes/visualizer'
 import { Route as AlgorithmsSlugRouteImport } from './routes/algorithms.$slug'
+import { Route as DevEngineRouteImport } from './routes/dev.engine'
+import { Route as OnboardingAssessmentRouteImport } from './routes/onboarding/assessment'
+import { Route as OnboardingGoalsRouteImport } from './routes/onboarding/goals'
+import { Route as OnboardingPathRouteImport } from './routes/onboarding/path'
+import { Route as PracticeIndexRouteImport } from './routes/practice.index'
+import { Route as PracticeSlugRouteImport } from './routes/practice.$slug'
+import { Route as PracticeResultsRouteImport } from './routes/practice.results'
+import { Route as SettingsIndexRouteImport } from './routes/settings.index'
+import { Route as SettingsBillingRouteImport } from './routes/settings.billing'
 
-const VisualizerRoute = VisualizerRouteImport.update({
-  id: '/visualizer',
-  path: '/visualizer',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const VerifyEmailRoute = VerifyEmailRouteImport.update({
-  id: '/verify-email',
-  path: '/verify-email',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReviewRoute = ReviewRouteImport.update({
-  id: '/review',
-  path: '/review',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const QuestsRoute = QuestsRouteImport.update({
-  id: '/quests',
-  path: '/quests',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PricingRoute = PricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PathsRoute = PathsRouteImport.update({
-  id: '/paths',
-  path: '/paths',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NotificationsRoute = NotificationsRouteImport.update({
-  id: '/notifications',
-  path: '/notifications',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MasteryMapRoute = MasteryMapRouteImport.update({
-  id: '/mastery-map',
-  path: '/mastery-map',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LeaguesRoute = LeaguesRouteImport.update({
-  id: '/leagues',
-  path: '/leagues',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ExploreRoute = ExploreRouteImport.update({
-  id: '/explore',
-  path: '/explore',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContactRoute = ContactRouteImport.update({
-  id: '/contact',
-  path: '/contact',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CampusRoute = CampusRouteImport.update({
-  id: '/campus',
-  path: '/campus',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BlogRoute = BlogRouteImport.update({
-  id: '/blog',
-  path: '/blog',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AchievementsRoute = AchievementsRouteImport.update({
@@ -147,49 +52,109 @@ const AchievementsRoute = AchievementsRouteImport.update({
   path: '/achievements',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SettingsIndexRoute = SettingsIndexRouteImport.update({
-  id: '/settings/',
-  path: '/settings/',
+const BlogRoute = BlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PracticeIndexRoute = PracticeIndexRouteImport.update({
-  id: '/practice/',
-  path: '/practice/',
+const CampusRoute = CampusRouteImport.update({
+  id: '/campus',
+  path: '/campus',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SettingsBillingRoute = SettingsBillingRouteImport.update({
-  id: '/settings/billing',
-  path: '/settings/billing',
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PracticeResultsRoute = PracticeResultsRouteImport.update({
-  id: '/practice/results',
-  path: '/practice/results',
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PracticeSlugRoute = PracticeSlugRouteImport.update({
-  id: '/practice/$slug',
-  path: '/practice/$slug',
+const ExploreRoute = ExploreRouteImport.update({
+  id: '/explore',
+  path: '/explore',
   getParentRoute: () => rootRouteImport,
 } as any)
-const OnboardingPathRoute = OnboardingPathRouteImport.update({
-  id: '/onboarding/path',
-  path: '/onboarding/path',
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const OnboardingGoalsRoute = OnboardingGoalsRouteImport.update({
-  id: '/onboarding/goals',
-  path: '/onboarding/goals',
+const LeaguesRoute = LeaguesRouteImport.update({
+  id: '/leagues',
+  path: '/leagues',
   getParentRoute: () => rootRouteImport,
 } as any)
-const OnboardingAssessmentRoute = OnboardingAssessmentRouteImport.update({
-  id: '/onboarding/assessment',
-  path: '/onboarding/assessment',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MasteryMapRoute = MasteryMapRouteImport.update({
+  id: '/mastery-map',
+  path: '/mastery-map',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PathsRoute = PathsRouteImport.update({
+  id: '/paths',
+  path: '/paths',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuestsRoute = QuestsRouteImport.update({
+  id: '/quests',
+  path: '/quests',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReviewRoute = ReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VisualizerRoute = VisualizerRouteImport.update({
+  id: '/visualizer',
+  path: '/visualizer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AlgorithmsSlugRoute = AlgorithmsSlugRouteImport.update({
+  id: '/algorithms/$slug',
+  path: '/algorithms/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevEngineRoute = DevEngineRouteImport.update({
@@ -197,9 +162,44 @@ const DevEngineRoute = DevEngineRouteImport.update({
   path: '/dev/engine',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AlgorithmsSlugRoute = AlgorithmsSlugRouteImport.update({
-  id: '/algorithms/$slug',
-  path: '/algorithms/$slug',
+const OnboardingAssessmentRoute = OnboardingAssessmentRouteImport.update({
+  id: '/onboarding/assessment',
+  path: '/onboarding/assessment',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingGoalsRoute = OnboardingGoalsRouteImport.update({
+  id: '/onboarding/goals',
+  path: '/onboarding/goals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingPathRoute = OnboardingPathRouteImport.update({
+  id: '/onboarding/path',
+  path: '/onboarding/path',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PracticeIndexRoute = PracticeIndexRouteImport.update({
+  id: '/practice/',
+  path: '/practice/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PracticeSlugRoute = PracticeSlugRouteImport.update({
+  id: '/practice/$slug',
+  path: '/practice/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PracticeResultsRoute = PracticeResultsRouteImport.update({
+  id: '/practice/results',
+  path: '/practice/results',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsIndexRoute = SettingsIndexRouteImport.update({
+  id: '/settings/',
+  path: '/settings/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsBillingRoute = SettingsBillingRouteImport.update({
+  id: '/settings/billing',
+  path: '/settings/billing',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -448,144 +448,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/visualizer': {
-      id: '/visualizer'
-      path: '/visualizer'
-      fullPath: '/visualizer'
-      preLoaderRoute: typeof VisualizerRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/verify-email': {
-      id: '/verify-email'
-      path: '/verify-email'
-      fullPath: '/verify-email'
-      preLoaderRoute: typeof VerifyEmailRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/review': {
-      id: '/review'
-      path: '/review'
-      fullPath: '/review'
-      preLoaderRoute: typeof ReviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/quests': {
-      id: '/quests'
-      path: '/quests'
-      fullPath: '/quests'
-      preLoaderRoute: typeof QuestsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pricing': {
-      id: '/pricing'
-      path: '/pricing'
-      fullPath: '/pricing'
-      preLoaderRoute: typeof PricingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/paths': {
-      id: '/paths'
-      path: '/paths'
-      fullPath: '/paths'
-      preLoaderRoute: typeof PathsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/notifications': {
-      id: '/notifications'
-      path: '/notifications'
-      fullPath: '/notifications'
-      preLoaderRoute: typeof NotificationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mastery-map': {
-      id: '/mastery-map'
-      path: '/mastery-map'
-      fullPath: '/mastery-map'
-      preLoaderRoute: typeof MasteryMapRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/leagues': {
-      id: '/leagues'
-      path: '/leagues'
-      fullPath: '/leagues'
-      preLoaderRoute: typeof LeaguesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/explore': {
-      id: '/explore'
-      path: '/explore'
-      fullPath: '/explore'
-      preLoaderRoute: typeof ExploreRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contact': {
-      id: '/contact'
-      path: '/contact'
-      fullPath: '/contact'
-      preLoaderRoute: typeof ContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/campus': {
-      id: '/campus'
-      path: '/campus'
-      fullPath: '/campus'
-      preLoaderRoute: typeof CampusRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/blog': {
-      id: '/blog'
-      path: '/blog'
-      fullPath: '/blog'
-      preLoaderRoute: typeof BlogRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/achievements': {
@@ -595,67 +462,151 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AchievementsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/settings/': {
-      id: '/settings/'
-      path: '/settings'
-      fullPath: '/settings/'
-      preLoaderRoute: typeof SettingsIndexRouteImport
+    '/blog': {
+      id: '/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof BlogRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/practice/': {
-      id: '/practice/'
-      path: '/practice'
-      fullPath: '/practice/'
-      preLoaderRoute: typeof PracticeIndexRouteImport
+    '/campus': {
+      id: '/campus'
+      path: '/campus'
+      fullPath: '/campus'
+      preLoaderRoute: typeof CampusRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/settings/billing': {
-      id: '/settings/billing'
-      path: '/settings/billing'
-      fullPath: '/settings/billing'
-      preLoaderRoute: typeof SettingsBillingRouteImport
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/practice/results': {
-      id: '/practice/results'
-      path: '/practice/results'
-      fullPath: '/practice/results'
-      preLoaderRoute: typeof PracticeResultsRouteImport
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/practice/$slug': {
-      id: '/practice/$slug'
-      path: '/practice/$slug'
-      fullPath: '/practice/$slug'
-      preLoaderRoute: typeof PracticeSlugRouteImport
+    '/explore': {
+      id: '/explore'
+      path: '/explore'
+      fullPath: '/explore'
+      preLoaderRoute: typeof ExploreRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/onboarding/path': {
-      id: '/onboarding/path'
-      path: '/onboarding/path'
-      fullPath: '/onboarding/path'
-      preLoaderRoute: typeof OnboardingPathRouteImport
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/onboarding/goals': {
-      id: '/onboarding/goals'
-      path: '/onboarding/goals'
-      fullPath: '/onboarding/goals'
-      preLoaderRoute: typeof OnboardingGoalsRouteImport
+    '/leagues': {
+      id: '/leagues'
+      path: '/leagues'
+      fullPath: '/leagues'
+      preLoaderRoute: typeof LeaguesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/onboarding/assessment': {
-      id: '/onboarding/assessment'
-      path: '/onboarding/assessment'
-      fullPath: '/onboarding/assessment'
-      preLoaderRoute: typeof OnboardingAssessmentRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mastery-map': {
+      id: '/mastery-map'
+      path: '/mastery-map'
+      fullPath: '/mastery-map'
+      preLoaderRoute: typeof MasteryMapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/paths': {
+      id: '/paths'
+      path: '/paths'
+      fullPath: '/paths'
+      preLoaderRoute: typeof PathsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/quests': {
+      id: '/quests'
+      path: '/quests'
+      fullPath: '/quests'
+      preLoaderRoute: typeof QuestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/review': {
+      id: '/review'
+      path: '/review'
+      fullPath: '/review'
+      preLoaderRoute: typeof ReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/visualizer': {
+      id: '/visualizer'
+      path: '/visualizer'
+      fullPath: '/visualizer'
+      preLoaderRoute: typeof VisualizerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/algorithms/$slug': {
+      id: '/algorithms/$slug'
+      path: '/algorithms/$slug'
+      fullPath: '/algorithms/$slug'
+      preLoaderRoute: typeof AlgorithmsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dev/engine': {
@@ -665,11 +616,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevEngineRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/algorithms/$slug': {
-      id: '/algorithms/$slug'
-      path: '/algorithms/$slug'
-      fullPath: '/algorithms/$slug'
-      preLoaderRoute: typeof AlgorithmsSlugRouteImport
+    '/onboarding/assessment': {
+      id: '/onboarding/assessment'
+      path: '/onboarding/assessment'
+      fullPath: '/onboarding/assessment'
+      preLoaderRoute: typeof OnboardingAssessmentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding/goals': {
+      id: '/onboarding/goals'
+      path: '/onboarding/goals'
+      fullPath: '/onboarding/goals'
+      preLoaderRoute: typeof OnboardingGoalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding/path': {
+      id: '/onboarding/path'
+      path: '/onboarding/path'
+      fullPath: '/onboarding/path'
+      preLoaderRoute: typeof OnboardingPathRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/practice/': {
+      id: '/practice/'
+      path: '/practice'
+      fullPath: '/practice/'
+      preLoaderRoute: typeof PracticeIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/practice/$slug': {
+      id: '/practice/$slug'
+      path: '/practice/$slug'
+      fullPath: '/practice/$slug'
+      preLoaderRoute: typeof PracticeSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/practice/results': {
+      id: '/practice/results'
+      path: '/practice/results'
+      fullPath: '/practice/results'
+      preLoaderRoute: typeof PracticeResultsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/': {
+      id: '/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof SettingsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/billing': {
+      id: '/settings/billing'
+      path: '/settings/billing'
+      fullPath: '/settings/billing'
+      preLoaderRoute: typeof SettingsBillingRouteImport
       parentRoute: typeof rootRouteImport
     }
   }

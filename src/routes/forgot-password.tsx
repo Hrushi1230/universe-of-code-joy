@@ -4,6 +4,7 @@ import { KeyRound, Mail } from "lucide-react";
 import { AlgoraGlyph } from "@/components/site-chrome";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DemoNotice } from "@/components/demo-notice";
 
 export const Route = createFileRoute("/forgot-password")({
   component: ForgotPasswordPage,
@@ -12,14 +13,12 @@ export const Route = createFileRoute("/forgot-password")({
       { title: "Forgot password — Algora" },
       {
         name: "description",
-        content:
-          "Reset your Algora password. Enter your account email and we'll send a secure reset link.",
+        content: "Preview account recovery. Reset email delivery is not connected yet.",
       },
       { property: "og:title", content: "Forgot password — Algora" },
       {
         property: "og:description",
-        content:
-          "Reset your Algora password. Enter your account email and we'll send a secure reset link.",
+        content: "Preview account recovery. Reset email delivery is not connected yet.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -39,7 +38,7 @@ function ForgotPasswordPage() {
   };
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-paper text-foreground">
+    <div className="flex min-h-screen flex-col bg-paper text-foreground">
       <header className="shrink-0 border-b border-hairline bg-card">
         <div className="mx-auto flex h-[64px] max-w-[1280px] items-center justify-between px-8">
           <Link to="/" className="flex items-center gap-2">
@@ -57,7 +56,7 @@ function ForgotPasswordPage() {
         </div>
       </header>
 
-      <main className="flex flex-1 min-h-0 items-center justify-center overflow-hidden px-6">
+      <main className="flex flex-1 min-h-0 items-center justify-center px-6 py-6">
         <div className="w-full max-w-[440px]">
           <div className="rounded-2xl border border-hairline bg-card px-8 py-9 shadow-sm">
             <div className="flex justify-center">
@@ -79,9 +78,13 @@ function ForgotPasswordPage() {
 
             <p className="mx-auto mt-3 max-w-[320px] text-center font-mono text-[13px] leading-relaxed text-muted-foreground">
               {sent
-                ? `We've sent a password reset link to ${email}.`
-                : "Enter your account email and we'll send a secure reset link."}
+                ? `A demo reset step is ready for ${email}. No email was sent.`
+                : "Enter an email to preview the recovery flow on this device."}
             </p>
+
+            <div className="mt-4">
+              <DemoNotice>Password recovery is not connected to an account service.</DemoNotice>
+            </div>
 
             {!sent ? (
               <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
@@ -110,7 +113,7 @@ function ForgotPasswordPage() {
                   type="submit"
                   className="h-12 w-full rounded-xl bg-primary font-mono text-[15px] font-medium text-primary-foreground transition-colors hover:bg-primary-glow"
                 >
-                  Send reset link
+                  Prepare demo reset
                 </button>
 
                 <Link
@@ -139,18 +142,18 @@ function ForgotPasswordPage() {
             )}
 
             <p className="mt-4 text-center font-mono text-[12px] text-muted-foreground">
-              The link expires in 30 minutes.
+              This preview does not issue a recovery link or token.
             </p>
           </div>
 
           <p className="mt-6 text-center font-mono text-[13px] text-muted-foreground">
-            Didn't get it? Check spam or{" "}
+            Need to change the preview address?{" "}
             <button
               type="button"
               onClick={() => setSent(false)}
               className="text-primary hover:underline"
             >
-              resend
+              Edit email
             </button>
           </p>
         </div>

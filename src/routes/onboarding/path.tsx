@@ -1,16 +1,6 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import {
-  ArrowLeftRight,
-  ArrowRight,
-  BarChart3,
-  CalendarDays,
-  Grid2x2,
-  Info,
-  Lock,
-  RectangleHorizontal,
-  Star,
-} from "lucide-react";
+import { ArrowRight, BarChart3, CalendarDays, Info, Route as RouteIcon, Star } from "lucide-react";
 import {
   OnboardingFooter,
   OnboardingTopBar,
@@ -18,6 +8,17 @@ import {
   TealPeriod,
 } from "@/components/onboarding-chrome";
 import useHydrated from "@/hooks/useHydrated";
+import { getAlgorithm } from "@/content/algorithms";
+import { getPath, getPaths } from "@/content/paths";
+import {
+  calibratedLevel,
+  defaultOnboardingState,
+  readOnboardingState,
+  recommendationReason,
+  recommendPath,
+  writeOnboardingState,
+  type OnboardingState,
+} from "@/lib/onboarding";
 import { usePrefsStore } from "@/stores/prefsStore";
 import { useProgressStore } from "@/stores/progressStore";
 
@@ -29,13 +30,13 @@ export const Route = createFileRoute("/onboarding/path")({
       {
         name: "description",
         content:
-          "Step 3 of 3: your Interview Prep Fast-Track path — 42 lessons across 6 skills, tuned to about 4 hours a week.",
+          "Step 3 of 3: review a recommendation derived from your saved goal, pace, and diagnostic answers.",
       },
       { property: "og:title", content: "Your personalized path — Algora onboarding" },
       {
         property: "og:description",
         content:
-          "Your Interview Prep Fast-Track path is ready: skill roadmap, first lessons, and weekly XP goal.",
+          "Review your locally generated learning-path recommendation and start a real catalog lesson.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -43,26 +44,12 @@ export const Route = createFileRoute("/onboarding/path")({
   }),
 });
 
-const STATS = [
-  { icon: BarChart3, label: "Level start", value: "Intermediate", teal: false },
-  { icon: CalendarDays, label: "Est. completion", value: "7 weeks", teal: false },
-  { icon: Star, label: "Weekly XP goal", value: "1,200 XP", teal: true },
-];
-
-const ROADMAP = [
-  { n: 1, state: "current", top: "Start here:", title: "Arrays &\nTwo Pointers" },
-  { n: 2, state: "next", top: "Up next", title: "Hashing &\nSets" },
-  { n: 3, state: "next", top: "Up next", title: "Sliding Window" },
-  { n: 4, state: "locked", top: "Locked", title: "Binary Search\n& Variants" },
-  { n: 5, state: "locked", top: "Locked", title: "Graphs" },
-  { n: 6, state: "locked", top: "Locked", title: "Dynamic\nProgramming" },
-] as const;
-
-const LESSONS = [
-  { icon: ArrowLeftRight, title: "Two Pointers", time: "20m" },
-  { icon: RectangleHorizontal, title: "Sliding Window", time: "25m" },
-  { icon: Grid2x2, title: "BFS on Grids", time: "30m" },
-];
+const COMMITMENT_LABELS = {
+  casual: "1–2 hours / week",
+  steady: "3–5 hours / week",
+  focused: "6–9 hours / week",
+  intense: "10+ hours / week",
+} as const;
 
 function XpRing() {
   const r = 24;
@@ -107,33 +94,85 @@ function PathResultPage() {
   const hydrated = useHydrated();
   const userEmail = usePrefsStore((s) => s.profile.email);
   const setActivePath = useProgressStore((s) => s.setActivePath);
+  const [onboarding, setOnboarding] = useState<OnboardingState>(defaultOnboardingState);
+
+  useEffect(() => {
+    const saved = readOnboardingState();
+    const recommendedPathSlug = saved.recommendedPathSlug ?? recommendPath(saved.goals);
+    const next = writeOnboardingState({ recommendedPathSlug });
+    setOnboarding(next);
+  }, []);
+
+  const path =
+    getPath(onboarding.recommendedPathSlug ?? recommendPath(onboarding.goals)) ?? getPaths()[0]!;
+  const lessonSlugs = useMemo(
+    () => path.modules.flatMap((module) => module.itemSlugs).filter((slug) => getAlgorithm(slug)),
+    [path],
+  );
+  const firstLessons = lessonSlugs.slice(0, 3).map((slug) => getAlgorithm(slug)!);
+  const stats = [
+    {
+      icon: BarChart3,
+      label: "Starting point",
+      value: calibratedLevel(
+        onboarding.level,
+        onboarding.assessmentScore,
+        onboarding.assessmentTotal,
+        onboarding.assessmentSkipped,
+      ),
+      teal: false,
+    },
+    { icon: CalendarDays, label: "Catalog path", value: `${path.weeks} weeks`, teal: false },
+    {
+      icon: Star,
+      label: "Saved pace",
+      value: COMMITMENT_LABELS[onboarding.commitment],
+      teal: true,
+    },
+  ];
 
   const handleStartLearning = useCallback(() => {
-    setActivePath("interview-fast-track");
-    navigate({ to: "/dashboard" });
-  }, [setActivePath, navigate]);
+    setActivePath(path.slug);
+    writeOnboardingState({ recommendedPathSlug: path.slug });
+    const firstSlug = lessonSlugs[0];
+    if (firstSlug) navigate({ to: "/algorithms/$slug", params: { slug: firstSlug } });
+    else navigate({ to: "/dashboard" });
+  }, [lessonSlugs, navigate, path.slug, setActivePath]);
+
+  const handleRetake = useCallback(() => {
+    writeOnboardingState({
+      assessmentAnswers: [],
+      assessmentScore: null,
+      assessmentSkipped: false,
+    });
+    navigate({ to: "/onboarding/assessment" });
+  }, [navigate]);
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-paper text-foreground">
       <OnboardingTopBar
         current={3}
-        right={<span>Signed in as {hydrated && userEmail ? userEmail : "arjun@stanford.edu"}</span>}
+        right={
+          <span>
+            {hydrated && userEmail ? `Local profile · ${userEmail}` : "Saved on this device"}
+          </span>
+        }
       />
 
-      <main className="flex flex-1 min-h-0 items-center justify-center overflow-hidden px-6">
-        <div className="w-full max-w-[960px] rounded-2xl border border-hairline bg-card px-9 py-6 shadow-sm">
+      <main className="flex min-h-0 flex-1 items-start justify-center overflow-y-auto px-4 py-4 sm:items-center sm:px-6">
+        <div className="w-full max-w-[960px] rounded-2xl border border-hairline bg-card px-5 py-5 shadow-sm sm:px-9 sm:py-6">
           <StepBadge>YOUR PATH IS READY</StepBadge>
 
-          <h1 className="mt-3 font-sans text-[34px] font-semibold leading-[1.1] tracking-[-0.03em] text-foreground">
-            Your personalized path: Interview Prep Fast-Track
+          <h1 className="mt-3 font-sans text-[27px] font-semibold leading-[1.1] tracking-[-0.03em] text-foreground sm:text-[34px]">
+            Your recommended path: {path.title}
             <TealPeriod />
           </h1>
           <p className="mt-2 font-mono text-[13.5px] text-muted-foreground">
-            Built from your goals and assessment — 42 lessons across 6 skills, tuned to ~4h/week.
+            {recommendationReason(onboarding)}
           </p>
 
-          <div className="mt-4 grid grid-cols-3 gap-4">
-            {STATS.map(({ icon: Icon, label, value, teal }) => (
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+            {stats.map(({ icon: Icon, label, value, teal }) => (
               <div
                 key={label}
                 className="flex items-center gap-3 rounded-xl border border-hairline bg-card px-4 py-3"
@@ -156,47 +195,37 @@ function PathResultPage() {
             ))}
           </div>
 
-          <div className="mt-4 grid grid-cols-[minmax(0,1.75fr)_minmax(0,1fr)] gap-4">
-            <div className="rounded-xl border border-hairline bg-card px-5 py-4">
+          <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.75fr)_minmax(0,1fr)]">
+            <div className="overflow-hidden rounded-xl border border-hairline bg-card px-5 py-4">
               <div className="text-[14px] font-semibold text-foreground">Your skill roadmap</div>
 
-              <div className="mt-4 flex items-start justify-between">
-                {ROADMAP.map((step, i) => (
-                  <div key={step.n} className="flex items-start">
+              <div
+                tabIndex={0}
+                role="region"
+                aria-label="Recommended path timeline"
+                className="mt-4 flex overflow-x-auto pb-2"
+              >
+                {path.modules.slice(0, 6).map((module, i) => (
+                  <div key={module.title} className="flex items-start">
                     {i > 0 && (
-                      <span
-                        className={[
-                          "mt-[18px] h-[2px] w-3 shrink-0",
-                          step.state === "locked" ? "bg-hairline" : "bg-primary",
-                        ].join(" ")}
-                      />
+                      <span className="mt-[18px] h-[2px] w-3 shrink-0 bg-primary-tint-strong" />
                     )}
-                    <div className="flex w-[76px] shrink-0 flex-col items-center text-center">
-                      {step.state === "locked" && (
-                        <Lock className="mb-1 h-3.5 w-3.5 text-muted-foreground/70" />
-                      )}
+                    <div className="flex w-[92px] shrink-0 flex-col items-center text-center">
                       <span
                         className={[
                           "flex h-9 w-9 items-center justify-center rounded-full font-mono text-[14px]",
-                          step.state === "current"
+                          i === 0
                             ? "bg-primary text-primary-foreground"
-                            : step.state === "next"
-                              ? "bg-primary-tint-strong text-foreground"
-                              : "bg-secondary text-muted-foreground",
+                            : "bg-primary-tint-strong text-foreground",
                         ].join(" ")}
                       >
-                        {step.n}
+                        {i + 1}
                       </span>
-                      <span
-                        className={[
-                          "mt-2 whitespace-nowrap font-mono text-[11px]",
-                          step.state === "locked" ? "text-muted-foreground" : "text-primary",
-                        ].join(" ")}
-                      >
-                        {step.top}
+                      <span className="mt-2 whitespace-nowrap font-mono text-[11px] text-primary">
+                        {i === 0 ? "Start here" : "Then"}
                       </span>
-                      <span className="mt-0.5 whitespace-pre-line font-mono text-[11px] leading-[15px] text-foreground">
-                        {step.title}
+                      <span className="mt-0.5 line-clamp-2 font-mono text-[11px] leading-[15px] text-foreground">
+                        {module.title.replace(/^Week \d+(?:-\d+)?: |^Module \d+: /, "")}
                       </span>
                     </div>
                   </div>
@@ -208,10 +237,7 @@ function PathResultPage() {
                   <span className="h-2.5 w-2.5 rounded-full bg-primary" /> Current
                 </span>
                 <span className="flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full bg-primary-tint-strong" /> Up next
-                </span>
-                <span className="flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/40" /> Locked
+                  <span className="h-2.5 w-2.5 rounded-full bg-primary-tint-strong" /> Later modules
                 </span>
               </div>
             </div>
@@ -219,14 +245,14 @@ function PathResultPage() {
             <div className="rounded-xl border border-hairline bg-card px-5 py-4">
               <div className="text-[14px] font-semibold text-foreground">First 3 lessons</div>
               <div className="mt-3 space-y-2.5">
-                {LESSONS.map(({ icon: Icon, title, time }) => (
-                  <div key={title} className="flex items-center gap-3">
+                {firstLessons.map((lesson) => (
+                  <div key={lesson.slug} className="flex items-center gap-3">
                     <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-card">
-                      <Icon className="h-4.5 w-4.5 text-primary" strokeWidth={1.7} />
+                      <RouteIcon className="h-4.5 w-4.5 text-primary" strokeWidth={1.7} />
                     </span>
-                    <span className="flex-1 text-[14px] text-foreground">{title}</span>
+                    <span className="flex-1 text-[14px] text-foreground">{lesson.name}</span>
                     <span className="rounded-md border border-hairline px-2.5 py-1 font-mono text-[11px] text-muted-foreground">
-                      {time}
+                      {lesson.estMinutes}m
                     </span>
                   </div>
                 ))}
@@ -235,24 +261,38 @@ function PathResultPage() {
               <div className="mt-4 flex items-center gap-3 border-t border-hairline pt-4">
                 <XpRing />
                 <div className="flex-1">
-                  <div className="font-mono text-[13px] text-primary">0 / 1,200 XP</div>
-                  <div className="mt-2 h-1.5 w-full rounded-full bg-secondary" />
+                  <div className="font-mono text-[13px] text-primary">
+                    {lessonSlugs.length} catalog algorithms
+                  </div>
+                  <div className="mt-1 font-mono text-[11px] text-muted-foreground">
+                    Progress is recorded locally when you begin.
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           <p className="mt-3 flex items-center gap-2 font-mono text-[12.5px] text-muted-foreground">
-            <Info className="h-4 w-4" /> You can adjust goals anytime in settings.
+            <Info className="h-4 w-4" /> You can adjust goals or retake the diagnostic before
+            starting.
           </p>
 
-          <div className="mt-4 flex items-start justify-between border-t border-hairline pt-4">
-            <Link
-              to="/onboarding/goals"
-              className="flex h-11 items-center rounded-xl border border-primary bg-card px-7 font-mono text-[14px] text-primary transition-colors hover:bg-primary-tint/60"
-            >
-              Adjust goals
-            </Link>
+          <div className="mt-4 flex flex-wrap items-start justify-between gap-4 border-t border-hairline pt-4">
+            <div className="flex flex-wrap gap-2">
+              <Link
+                to="/onboarding/goals"
+                className="flex h-11 items-center rounded-xl border border-primary bg-card px-5 font-mono text-[14px] text-primary transition-colors hover:bg-primary-tint/60 sm:px-7"
+              >
+                Adjust goals
+              </Link>
+              <button
+                type="button"
+                onClick={handleRetake}
+                className="flex h-11 items-center rounded-xl border border-hairline bg-card px-5 font-mono text-[14px] text-foreground transition-colors hover:bg-secondary"
+              >
+                Retake diagnostic
+              </button>
+            </div>
             <div className="flex flex-col items-center">
               <button
                 type="button"
@@ -261,8 +301,9 @@ function PathResultPage() {
               >
                 Start learning <ArrowRight className="h-4 w-4" />
               </button>
-              <span className="mt-2 font-mono text-[11.5px] text-muted-foreground">
-                Jump straight into your first visualized lesson.
+              <span className="mt-2 max-w-[260px] text-center font-mono text-[11.5px] text-muted-foreground">
+                Opens {firstLessons[0]?.name ?? "the first available lesson"} and saves this path
+                locally.
               </span>
             </div>
           </div>

@@ -1,4 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { motion, useInView } from "framer-motion";
+import { useIsReducedMotion as useReducedMotion } from "@/hooks/useReducedMotionSync";
 import {
   Play,
   Pause,
@@ -10,9 +13,11 @@ import {
   CalendarCheck,
   ArrowRight,
   ChevronDown,
+  RotateCcw,
 } from "lucide-react";
 import { AlgoraGlyph, SiteNav, SiteFooter } from "@/components/site-chrome";
 import { heroProofStats, universitySocialProofClaim } from "@/content/marketing-claims";
+import { HOME_BFS_STEPS, type HomeBfsNode } from "@/lib/home-bfs";
 
 export const Route = createFileRoute("/")({
   component: AlgoraLanding,
@@ -38,20 +43,19 @@ export const Route = createFileRoute("/")({
 /* --------------------------------- Nav ---------------------------------- */
 
 /* --------------------------- Visualizer card ----------------------------- */
-function TreeSvg() {
+function TreeSvg({ step }: { step: number }) {
+  const reduceMotion = useReducedMotion();
+  const frame = HOME_BFS_STEPS[step];
   // 1 root, children 2 & 3; 2's children: 4,5; 3's children: 6,7; 4's child: 8
-  const nodes: Record<
-    number,
-    { x: number; y: number; state: "current" | "visited" | "unvisited" }
-  > = {
-    1: { x: 300, y: 40, state: "current" },
-    2: { x: 180, y: 110, state: "visited" },
-    3: { x: 420, y: 110, state: "unvisited" },
-    4: { x: 110, y: 180, state: "visited" },
-    5: { x: 250, y: 180, state: "unvisited" },
-    6: { x: 360, y: 180, state: "unvisited" },
-    7: { x: 490, y: 180, state: "unvisited" },
-    8: { x: 60, y: 250, state: "unvisited" },
+  const nodes: Record<number, { x: number; y: number }> = {
+    1: { x: 300, y: 40 },
+    2: { x: 180, y: 110 },
+    3: { x: 420, y: 110 },
+    4: { x: 110, y: 180 },
+    5: { x: 250, y: 180 },
+    6: { x: 360, y: 180 },
+    7: { x: 490, y: 180 },
+    8: { x: 60, y: 250 },
   };
   const edges: [number, number][] = [
     [1, 2],
@@ -62,6 +66,10 @@ function TreeSvg() {
     [3, 7],
     [4, 8],
   ];
+  const current = frame.current;
+  const visited = new Set<HomeBfsNode>(frame.visited);
+  const stateFor = (id: number) =>
+    id === current ? "current" : visited.has(id as HomeBfsNode) ? "visited" : "unvisited";
   const fill = (s: string) =>
     s === "current"
       ? "var(--primary)"
@@ -75,10 +83,10 @@ function TreeSvg() {
       viewBox="0 0 560 290"
       className="w-full"
       role="img"
-      aria-label="Interactive algorithm tree visualization"
+      aria-label={`Interactive breadth-first traversal. ${current === null ? "No node is current." : `Node ${current} is current.`} ${visited.size} nodes visited. Queue: ${frame.queue.length > 0 ? frame.queue.join(", ") : "empty"}.`}
     >
       {edges.map(([a, b]) => (
-        <line
+        <motion.line
           key={`${a}-${b}`}
           x1={nodes[a].x}
           y1={nodes[a].y}
@@ -86,42 +94,121 @@ function TreeSvg() {
           y2={nodes[b].y}
           stroke="var(--viz-edge)"
           strokeWidth="1.25"
+          initial={false}
+          animate={{
+            stroke: visited.has(b as HomeBfsNode) ? "var(--primary)" : "var(--viz-edge)",
+          }}
+          transition={{ duration: reduceMotion ? 0 : 0.35 }}
         />
       ))}
-      {Object.entries(nodes).map(([id, n]) => (
-        <g key={id}>
-          <circle
-            cx={n.x}
-            cy={n.y}
-            r={20}
-            fill={fill(n.state)}
-            stroke={stroke(n.state)}
-            strokeWidth="1.75"
-          />
-          <text
-            x={n.x}
-            y={n.y + 5}
-            textAnchor="middle"
-            fill={textColor(n.state)}
-            fontSize="14"
-            fontFamily="JetBrains Mono, monospace"
-            fontWeight="500"
+      {Object.entries(nodes).map(([id, n]) => {
+        const state = stateFor(Number(id));
+        return (
+          <motion.g
+            key={id}
+            initial={false}
+            animate={{ scale: reduceMotion ? 1 : state === "current" ? 1.12 : 1 }}
+            transition={{ duration: reduceMotion ? 0 : 0.25 }}
+            style={{ transformBox: "fill-box", transformOrigin: "center" }}
           >
-            {id}
-          </text>
-        </g>
-      ))}
+            <motion.circle
+              cx={n.x}
+              cy={n.y}
+              r={20}
+              fill={fill(state)}
+              stroke={stroke(state)}
+              animate={{ fill: fill(state), stroke: stroke(state) }}
+              transition={{ duration: reduceMotion ? 0 : 0.25 }}
+              strokeWidth="1.75"
+            />
+            <text
+              x={n.x}
+              y={n.y + 5}
+              textAnchor="middle"
+              fill={textColor(state)}
+              fontSize="14"
+              fontFamily="JetBrains Mono, monospace"
+              fontWeight="500"
+            >
+              {id}
+            </text>
+          </motion.g>
+        );
+      })}
     </svg>
   );
 }
 
-function VisualizerCard() {
+function VisualizerCard({ autoStartKey = 0 }: { autoStartKey?: number }) {
+  const reduceMotion = useReducedMotion();
+  const cardRef = useRef<HTMLDivElement>(null);
+  const inView = useInView(cardRef, { amount: 0.35 });
+  const started = useRef(false);
+  const [step, setStep] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(1);
+
+  useEffect(() => {
+    if (inView && !reduceMotion && !started.current) {
+      started.current = true;
+      setPlaying(true);
+    }
+    if (!inView) setPlaying(false);
+    if (reduceMotion) setPlaying(false);
+  }, [inView, reduceMotion]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) setPlaying(false);
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, []);
+
+  useEffect(() => {
+    if (!autoStartKey) return;
+    started.current = true;
+    setStep(0);
+    setPlaying(!reduceMotion);
+  }, [autoStartKey, reduceMotion]);
+
+  useEffect(() => {
+    if (!playing) return;
+    const timer = window.setTimeout(() => {
+      setStep((currentStep) => {
+        if (currentStep >= HOME_BFS_STEPS.length - 1) {
+          setPlaying(false);
+          return currentStep;
+        }
+        return currentStep + 1;
+      });
+    }, 1050 / speed);
+    return () => window.clearTimeout(timer);
+  }, [playing, speed, step]);
+
+  const activeStep = HOME_BFS_STEPS[step];
+  const play = () => {
+    started.current = true;
+    if (step === HOME_BFS_STEPS.length - 1) setStep(0);
+    setPlaying(!reduceMotion);
+  };
+
   return (
-    <div className="rounded-2xl border border-hairline bg-card p-5 shadow-[0_1px_2px_rgba(14,21,19,0.04),0_8px_28px_-12px_rgba(14,21,19,0.08)]">
+    <motion.div
+      ref={cardRef}
+      id="home-traversal"
+      data-testid="home-traversal"
+      initial={reduceMotion ? false : { opacity: 0.65, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: reduceMotion ? 0 : 0.45, delay: reduceMotion ? 0 : 0.12 }}
+      className="rounded-2xl border border-hairline bg-card p-3 shadow-[0_1px_2px_rgba(14,21,19,0.04),0_8px_28px_-12px_rgba(14,21,19,0.08)] sm:p-5"
+    >
       {/* Header */}
       <div className="mb-4 flex items-start justify-between">
-        <div className="font-mono text-sm text-foreground">Step 4 / 11</div>
-        <div className="flex items-center gap-4 font-mono text-[11px] text-muted-foreground">
+        <div className="font-mono text-sm text-foreground">
+          Step {step + 1} / {HOME_BFS_STEPS.length}
+        </div>
+        <div className="hidden items-center gap-4 font-mono text-[11px] text-muted-foreground sm:flex">
           <LegendDot color="var(--primary)" label="Current" />
           <LegendDot color="var(--primary-tint-strong)" label="Visited" />
           <LegendDot color="var(--card)" label="Unvisited" ring />
@@ -129,16 +216,16 @@ function VisualizerCard() {
       </div>
 
       {/* Two-panel body: left = editor, right = graph */}
-      <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] gap-4">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
         {/* LEFT: Code editor */}
         <div className="overflow-hidden rounded-xl border border-hairline">
           <div className="flex items-center justify-between border-b border-hairline bg-paper px-3 py-1.5">
             <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
               bfs.py
             </span>
-            <button className="flex items-center gap-1 font-mono text-xs text-muted-foreground">
+            <span className="flex items-center gap-1 font-mono text-xs text-muted-foreground">
               Python <ChevronDown size={12} />
-            </button>
+            </span>
           </div>
           <div className="bg-card font-mono text-[12px] leading-[1.7]">
             {[
@@ -178,7 +265,6 @@ function VisualizerCard() {
               },
               {
                 n: 7,
-                hl: true,
                 t: <>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node = q.popleft()</>,
               },
               {
@@ -189,13 +275,22 @@ function VisualizerCard() {
                 n: 9,
                 t: (
                   <>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;q.extend([node.left,
-                    node.right])
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;children = (node.left,
+                    node.right)
                   </>
                 ),
               },
               {
                 n: 10,
+                t: (
+                  <>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;q.extend(child for child in
+                    children if child)
+                  </>
+                ),
+              },
+              {
+                n: 11,
                 t: (
                   <>
                     &nbsp;&nbsp;&nbsp;&nbsp;<Kw>return</Kw> order
@@ -205,10 +300,10 @@ function VisualizerCard() {
             ].map((row) => (
               <div
                 key={row.n}
-                aria-current={row.hl ? "step" : undefined}
-                className={`flex ${row.hl ? "bg-primary-tint" : ""}`}
+                aria-current={activeStep.codeLines.includes(row.n) ? "step" : undefined}
+                className={`flex ${activeStep.codeLines.includes(row.n) ? "bg-primary-tint" : ""}`}
               >
-                <div className="w-9 shrink-0 select-none border-r border-hairline px-2 text-right text-muted-foreground/70">
+                <div className="w-9 shrink-0 select-none border-r border-hairline px-2 text-right text-muted-foreground">
                   {row.n}
                 </div>
                 <div className="px-3 text-foreground">{row.t}</div>
@@ -220,28 +315,62 @@ function VisualizerCard() {
         {/* RIGHT: Tree + playback */}
         <div className="flex flex-col">
           <div className="flex-1 rounded-xl border border-hairline bg-paper p-3">
-            <TreeSvg />
+            <TreeSvg step={step} />
+            <div className="mt-1 min-h-6 text-center font-mono text-[11px] text-muted-foreground">
+              Queue: {activeStep.queue.length > 0 ? activeStep.queue.join(" → ") : "empty"}
+            </div>
           </div>
-          <div className="mt-3 flex items-center gap-3">
+          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="flex items-center gap-1">
-              <IconBtn aria-label="Pause (Space)">
+              <IconBtn
+                aria-label="Pause traversal"
+                onClick={() => setPlaying(false)}
+                disabled={!playing}
+              >
                 <Pause size={13} strokeWidth={2} />
               </IconBtn>
-              <IconBtn aria-label="Play (Space)">
+              <IconBtn
+                aria-label="Play traversal"
+                onClick={play}
+                disabled={playing || Boolean(reduceMotion)}
+              >
                 <Play size={13} strokeWidth={2} />
               </IconBtn>
-              <IconBtn aria-label="Next step (→)">
+              <IconBtn
+                aria-label="Next traversal step"
+                onClick={() => {
+                  started.current = true;
+                  setPlaying(false);
+                  setStep((currentStep) => Math.min(currentStep + 1, HOME_BFS_STEPS.length - 1));
+                }}
+                disabled={step === HOME_BFS_STEPS.length - 1}
+              >
                 <SkipForward size={13} strokeWidth={2} />
               </IconBtn>
+              <IconBtn
+                aria-label="Replay traversal"
+                onClick={() => {
+                  started.current = true;
+                  setStep(0);
+                  setPlaying(!reduceMotion);
+                }}
+              >
+                <RotateCcw size={13} strokeWidth={2} />
+              </IconBtn>
             </div>
-            <div className="flex flex-1 items-center gap-2">
+            <div className="flex w-full min-w-0 flex-1 items-center gap-2 sm:w-auto">
               <span className="font-mono text-[11px] text-muted-foreground">Speed</span>
-              <div className="relative flex-1">
-                <div className="h-[3px] w-full rounded-full bg-secondary" />
-                <div className="absolute left-0 top-0 h-[3px] w-[70%] rounded-full bg-primary" />
-                <div className="absolute left-[calc(70%-6px)] top-1/2 h-3 w-3 -translate-y-1/2 rounded-full border-2 border-primary bg-card" />
-              </div>
-              <span className="font-mono text-[11px] text-foreground">1.0x</span>
+              <input
+                aria-label="Traversal speed"
+                type="range"
+                min="0.5"
+                max="2"
+                step="0.5"
+                value={speed}
+                onChange={(event) => setSpeed(Number(event.target.value))}
+                className="h-7 min-w-0 flex-1 accent-primary"
+              />
+              <span className="w-8 font-mono text-[11px] text-foreground">{speed.toFixed(1)}x</span>
             </div>
           </div>
         </div>
@@ -250,12 +379,14 @@ function VisualizerCard() {
       {/* Explanation full width */}
       <div className="mt-4 rounded-xl border border-primary-tint-strong bg-primary-tint/50 p-4">
         <div className="mb-1 font-sans text-sm font-semibold text-primary">Explanation</div>
-        <p className="font-sans text-[13.5px] leading-relaxed text-foreground/80">
-          We dequeue the front node (1) from the queue and visit it. Then we enqueue its children
-          (2, 3) to explore them next. This is Breadth-First Search (BFS).
+        <p
+          className="min-h-[42px] font-sans text-[13.5px] leading-relaxed text-foreground/80"
+          aria-live={playing ? "off" : "polite"}
+        >
+          {activeStep.explanation}
         </p>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -283,34 +414,70 @@ function IconBtn({
   children,
   "aria-label": ariaLabel,
   onClick,
+  disabled,
 }: {
   children: React.ReactNode;
   "aria-label"?: string;
   onClick?: () => void;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       aria-label={ariaLabel}
       onClick={onClick}
-      className="flex h-7 w-7 items-center justify-center rounded-md border border-hairline bg-card text-foreground hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+      disabled={disabled}
+      className="flex h-9 w-9 items-center justify-center rounded-md border border-hairline bg-card text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-40 sm:h-7 sm:w-7"
     >
       {children}
     </button>
   );
 }
 
+function RevealSection({ children, className }: { children: React.ReactNode; className: string }) {
+  const reduceMotion = useReducedMotion();
+  return (
+    <motion.section
+      className={className}
+      initial={false}
+      whileInView={reduceMotion ? undefined : { opacity: [0.65, 1], y: [24, 0] }}
+      viewport={{ once: true, amount: 0.14 }}
+      transition={{ duration: reduceMotion ? 0 : 0.5, ease: [0.22, 1, 0.36, 1] }}
+    >
+      {children}
+    </motion.section>
+  );
+}
+
 /* --------------------------------- Hero --------------------------------- */
 function Hero() {
+  const reduceMotion = useReducedMotion();
+  const [autoStartKey, setAutoStartKey] = useState(0);
+
+  const watchTraversal = () => {
+    setAutoStartKey((key) => key + 1);
+    window.requestAnimationFrame(() => {
+      document.getElementById("home-traversal")?.scrollIntoView({
+        behavior: reduceMotion ? "auto" : "smooth",
+        block: "center",
+      });
+    });
+  };
+
   return (
-    <section className="mx-auto max-w-[1320px] px-8 pt-16 pb-20">
-      <div className="grid grid-cols-[minmax(0,0.85fr)_minmax(0,1.35fr)] gap-12 items-start">
+    <section className="mx-auto max-w-[1320px] px-4 pb-16 pt-10 sm:px-8 sm:pb-20 sm:pt-16">
+      <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.35fr)] lg:gap-12">
         {/* Left */}
-        <div className="pt-2">
+        <motion.div
+          className="pt-2"
+          initial={false}
+          animate={reduceMotion ? undefined : { opacity: [0.65, 1], x: [-18, 0] }}
+          transition={{ duration: reduceMotion ? 0 : 0.48 }}
+        >
           <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-primary-tint-strong bg-primary-tint px-3 py-1.5 font-mono text-[11px] tracking-wide text-primary">
             <span className="text-primary">◆</span> ALGORITHM MASTERY, GAMIFIED
           </div>
-          <h1 className="font-display text-[60px] font-semibold leading-[1.0] tracking-[-0.025em] text-foreground">
+          <h1 className="font-display text-[46px] font-semibold leading-[1.0] tracking-[-0.025em] text-foreground sm:text-[60px]">
             See the
             <br />
             algorithm
@@ -323,23 +490,30 @@ function Hero() {
             plain-English explanation.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <button className="rounded-lg bg-primary px-5 py-3 text-[14px] font-medium text-primary-foreground hover:bg-primary-glow transition-colors">
+            <Link
+              to="/auth"
+              className="rounded-lg bg-primary px-5 py-3 text-[14px] font-medium text-primary-foreground hover:bg-primary-glow transition-colors"
+            >
               Start free — no card
-            </button>
-            <button className="flex items-center gap-2 rounded-lg border border-hairline bg-card px-5 py-3 text-[14px] font-medium text-foreground hover:bg-secondary transition-colors">
+            </Link>
+            <button
+              type="button"
+              onClick={watchTraversal}
+              className="flex items-center gap-2 rounded-lg border border-hairline bg-card px-5 py-3 text-[14px] font-medium text-foreground hover:bg-secondary transition-colors"
+            >
               <Play size={14} fill="currentColor" /> Watch a traversal
             </button>
           </div>
-          <div className="mt-8 flex items-center gap-x-4 font-mono text-[12px] text-muted-foreground">
+          <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-[12px] text-muted-foreground">
             <span>{heroProofStats[0].rawText}</span>
             <span className="size-1 rounded-full bg-primary/70" />
             <span>{heroProofStats[1].rawText}</span>
             <span className="size-1 rounded-full bg-primary/70" />
             <span>{heroProofStats[2].rawText}</span>
           </div>
-        </div>
+        </motion.div>
         {/* Right */}
-        <VisualizerCard />
+        <VisualizerCard autoStartKey={autoStartKey} />
       </div>
     </section>
   );
@@ -348,145 +522,71 @@ function Hero() {
 /* ------------------------------ Social proof ---------------------------- */
 function SocialProof() {
   return (
-    <section className="mx-auto max-w-[1280px] px-8 py-10">
+    <RevealSection className="mx-auto max-w-[1280px] px-4 py-10 sm:px-8">
       <div className="mb-8 text-center font-sans text-sm text-muted-foreground">
         {universitySocialProofClaim.label}
       </div>
-      <div className="flex items-center justify-center gap-16 text-muted-foreground/80">
-        <MitLockup />
-        <StanfordLockup />
-        <BerkeleyLockup />
-        <CmuLockup />
-        <WaterlooLockup />
+      <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-7 text-muted-foreground/80 lg:gap-16">
+        {universitySocialProofClaim.institutions.map((topic) => (
+          <div
+            key={topic.id}
+            aria-label={topic.fullName}
+            className="rounded-full border border-hairline bg-card px-5 py-2 font-mono text-[12px] text-foreground/75"
+          >
+            {topic.name}
+          </div>
+        ))}
       </div>
-    </section>
-  );
-}
-
-function MitLockup() {
-  return (
-    <div className="flex items-center gap-2.5 h-10" aria-label="MIT">
-      {/* Three-bar seal */}
-      <svg viewBox="0 0 44 28" className="h-7" fill="currentColor" aria-hidden="true">
-        <rect x="0" y="4" width="6" height="20" />
-        <rect x="9" y="4" width="6" height="14" />
-        <rect x="18" y="4" width="6" height="20" />
-        <rect x="27" y="4" width="6" height="14" />
-        <rect x="27" y="20" width="17" height="4" />
-        <rect x="36" y="4" width="8" height="14" />
-      </svg>
-      <div className="leading-tight">
-        <div className="font-serif text-[13px] font-semibold tracking-tight text-current">
-          Massachusetts
-        </div>
-        <div className="font-serif text-[13px] font-semibold tracking-tight text-current">
-          Institute of
-        </div>
-        <div className="font-serif text-[13px] font-semibold tracking-tight text-current">
-          Technology
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StanfordLockup() {
-  return (
-    <div className="flex flex-col items-center leading-none" aria-label="Stanford University">
-      <div className="font-serif text-[26px] font-semibold tracking-tight text-current">
-        Stanford
-      </div>
-      <div className="font-serif text-[15px] mt-1 tracking-wide text-current">University</div>
-    </div>
-  );
-}
-
-function BerkeleyLockup() {
-  return (
-    <div className="flex flex-col items-center leading-none" aria-label="Berkeley">
-      <div className="font-serif italic text-[30px] font-semibold tracking-tight text-current">
-        Berkeley
-      </div>
-      <div className="font-sans text-[9px] mt-1.5 tracking-[0.2em] text-current">
-        UNIVERSITY OF CALIFORNIA
-      </div>
-    </div>
-  );
-}
-
-function CmuLockup() {
-  return (
-    <div className="flex items-center gap-2 h-10" aria-label="Carnegie Mellon University">
-      {/* Simple shield */}
-      <svg
-        viewBox="0 0 24 32"
-        className="h-9"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        aria-hidden="true"
-      >
-        <path
-          d="M2 3 L22 3 L22 18 Q22 26 12 30 Q2 26 2 18 Z"
-          fill="currentColor"
-          fillOpacity="0.15"
-        />
-        <line x1="12" y1="6" x2="12" y2="24" />
-        <line x1="4" y1="14" x2="20" y2="14" />
-      </svg>
-      <div className="font-serif text-[13px] font-semibold leading-tight tracking-tight text-current">
-        <div>Carnegie</div>
-        <div>Mellon</div>
-        <div>University</div>
-      </div>
-    </div>
-  );
-}
-
-function WaterlooLockup() {
-  return (
-    <div className="flex items-center gap-2 h-10" aria-label="University of Waterloo">
-      <svg
-        viewBox="0 0 24 32"
-        className="h-9"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        aria-hidden="true"
-      >
-        <path d="M2 3 L22 3 L22 18 Q22 26 12 30 Q2 26 2 18 Z" />
-        <path d="M7 10 L9 20 L12 12 L15 20 L17 10" />
-      </svg>
-      <div className="leading-tight font-sans">
-        <div className="text-[9px] tracking-[0.22em] text-current">UNIVERSITY OF</div>
-        <div className="text-[18px] font-bold tracking-[0.06em] text-current">WATERLOO</div>
-      </div>
-    </div>
+    </RevealSection>
   );
 }
 
 /* ------------------------------- Gamification --------------------------- */
 function GamificationSection() {
   return (
-    <section className="mx-auto max-w-[1280px] px-8 py-20">
-      <h2 className="mb-14 text-center font-display text-[44px] font-semibold tracking-[-0.02em] text-foreground">
+    <RevealSection className="mx-auto max-w-[1280px] px-4 py-16 sm:px-8 sm:py-20">
+      <h2 className="mb-10 text-center font-display text-[34px] font-semibold tracking-[-0.02em] text-foreground sm:mb-14 sm:text-[44px]">
         Progress you can feel
       </h2>
-      <div className="grid grid-cols-4 gap-5">
-        <GameCard title="Mastery Map" sub="Build skills. Unlock nodes." link="View all skills">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        <GameCard
+          title="Mastery Map"
+          sub="Build skills. Unlock nodes."
+          link="View all skills"
+          href="/mastery-map"
+          index={0}
+        >
           <MasteryMap />
         </GameCard>
-        <GameCard title="XP & Levels" sub="Every step earns XP." link="See rewards">
+        <GameCard
+          title="XP & Levels"
+          sub="Every step earns XP."
+          link="See rewards"
+          href="/dashboard"
+          index={1}
+        >
           <XpRing />
         </GameCard>
-        <GameCard title="Streak" sub="Consistency compounds." link="View calendar">
+        <GameCard
+          title="Streak"
+          sub="Consistency compounds."
+          link="View calendar"
+          href="/dashboard"
+          index={2}
+        >
           <StreakBlock />
         </GameCard>
-        <GameCard title="Leagues" sub="Compete. Climb. Win." link="View leaderboard">
+        <GameCard
+          title="Leagues"
+          sub="Compete. Climb. Win."
+          link="View leaderboard"
+          href="/leagues"
+          index={3}
+        >
           <Leaderboard />
         </GameCard>
       </div>
-    </section>
+    </RevealSection>
   );
 }
 
@@ -494,31 +594,44 @@ function GameCard({
   title,
   sub,
   link,
+  href,
+  index,
   children,
 }: {
   title: string;
   sub: string;
   link: string;
+  href: "/mastery-map" | "/dashboard" | "/leagues";
+  index: number;
   children: React.ReactNode;
 }) {
+  const reduceMotion = useReducedMotion();
   return (
-    <div className="flex flex-col rounded-2xl border border-hairline bg-card p-6">
+    <motion.div
+      className="flex flex-col rounded-2xl border border-hairline bg-card p-6"
+      initial={false}
+      whileInView={reduceMotion ? undefined : { opacity: [0.65, 1], y: [18, 0] }}
+      whileHover={reduceMotion ? undefined : { y: -5 }}
+      viewport={{ once: true, amount: 0.3 }}
+      transition={{ duration: reduceMotion ? 0 : 0.38, delay: reduceMotion ? 0 : index * 0.06 }}
+    >
       <div className="text-center">
         <div className="font-display text-lg font-semibold text-foreground">{title}</div>
         <div className="mt-1 font-mono text-[11px] text-muted-foreground">{sub}</div>
       </div>
       <div className="flex-1 py-5">{children}</div>
-      <a
-        href="#"
+      <Link
+        to={href}
         className="mt-auto flex items-center justify-center gap-1 font-mono text-[13px] text-primary hover:text-primary-glow"
       >
         {link} <ArrowRight size={12} />
-      </a>
-    </div>
+      </Link>
+    </motion.div>
   );
 }
 
 function MasteryMap() {
+  const reduceMotion = useReducedMotion();
   const nodes = [
     { x: 100, y: 20, unlocked: true },
     { x: 55, y: 75, unlocked: true },
@@ -544,7 +657,7 @@ function MasteryMap() {
       aria-label="Skill tree milestone map"
     >
       {edges.map(([a, b], i) => (
-        <line
+        <motion.line
           key={i}
           x1={nodes[a].x}
           y1={nodes[a].y}
@@ -553,10 +666,24 @@ function MasteryMap() {
           stroke="var(--viz-edge)"
           strokeWidth="1"
           strokeDasharray={!nodes[b].unlocked ? "3 3" : ""}
+          initial={false}
+          whileInView={reduceMotion ? undefined : { pathLength: [0, 1] }}
+          viewport={{ once: true }}
+          transition={{ duration: reduceMotion ? 0 : 0.45, delay: reduceMotion ? 0 : i * 0.06 }}
         />
       ))}
       {nodes.map((n, i) => (
-        <g key={i}>
+        <motion.g
+          key={i}
+          initial={false}
+          whileInView={reduceMotion ? undefined : { opacity: [0.5, 1], scale: [0.7, 1] }}
+          viewport={{ once: true }}
+          transition={{
+            duration: reduceMotion ? 0 : 0.28,
+            delay: reduceMotion ? 0 : 0.15 + i * 0.05,
+          }}
+          style={{ transformBox: "fill-box", transformOrigin: "center" }}
+        >
           <circle
             cx={n.x}
             cy={n.y}
@@ -585,13 +712,14 @@ function MasteryMap() {
               <path d="M1.5 3 V1.5 A2.5 2.5 0 0 1 6.5 1.5 V3" />
             </g>
           )}
-        </g>
+        </motion.g>
       ))}
     </svg>
   );
 }
 
 function XpRing() {
+  const reduceMotion = useReducedMotion();
   const pct = 2150 / 2400;
   const r = 52;
   const c = 2 * Math.PI * r;
@@ -600,7 +728,7 @@ function XpRing() {
       <div className="relative">
         <svg width="140" height="140" viewBox="0 0 140 140" aria-hidden="true">
           <circle cx="70" cy="70" r={r} fill="none" stroke="var(--viz-idle)" strokeWidth="8" />
-          <circle
+          <motion.circle
             cx="70"
             cy="70"
             r={r}
@@ -610,6 +738,10 @@ function XpRing() {
             strokeLinecap="round"
             strokeDasharray={c}
             strokeDashoffset={c * (1 - pct)}
+            initial={false}
+            whileInView={reduceMotion ? undefined : { strokeDashoffset: [c, c * (1 - pct)] }}
+            viewport={{ once: true }}
+            transition={{ duration: reduceMotion ? 0 : 0.8, ease: "easeOut" }}
             transform="rotate(-90 70 70)"
           />
         </svg>
@@ -626,6 +758,7 @@ function XpRing() {
 }
 
 function StreakBlock() {
+  const reduceMotion = useReducedMotion();
   const days = ["M", "T", "W", "T", "F", "S", "S"];
   return (
     <div className="flex flex-col items-center">
@@ -633,12 +766,19 @@ function StreakBlock() {
       <div className="mt-2 font-display text-xl font-semibold text-foreground">23-day streak</div>
       <div className="mt-4 grid grid-cols-7 gap-2">
         {days.map((d, i) => (
-          <div key={i} className="flex flex-col items-center gap-1">
+          <motion.div
+            key={i}
+            className="flex flex-col items-center gap-1"
+            initial={false}
+            whileInView={reduceMotion ? undefined : { opacity: [0.5, 1], y: [5, 0] }}
+            viewport={{ once: true }}
+            transition={{ duration: reduceMotion ? 0 : 0.25, delay: reduceMotion ? 0 : i * 0.05 }}
+          >
             <span className="font-mono text-[10px] text-muted-foreground">{d}</span>
             <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary">
               <Check size={9} className="text-primary-foreground" strokeWidth={3} />
             </span>
-          </div>
+          </motion.div>
         ))}
       </div>
     </div>
@@ -646,6 +786,7 @@ function StreakBlock() {
 }
 
 function Leaderboard() {
+  const reduceMotion = useReducedMotion();
   const rows = [
     { rank: 1, initial: "A", name: "Arjun", xp: "3,250" },
     { rank: 2, initial: "M", name: "Mei", xp: "3,120" },
@@ -653,15 +794,22 @@ function Leaderboard() {
   ];
   return (
     <div className="space-y-1.5 text-[12.5px]">
-      {rows.map((r) => (
-        <div key={r.rank} className="flex items-center gap-2 px-1.5 py-1">
+      {rows.map((r, index) => (
+        <motion.div
+          key={r.rank}
+          className="flex items-center gap-2 px-1.5 py-1"
+          initial={false}
+          whileInView={reduceMotion ? undefined : { opacity: [0.5, 1], x: [-8, 0] }}
+          viewport={{ once: true }}
+          transition={{ duration: reduceMotion ? 0 : 0.28, delay: reduceMotion ? 0 : index * 0.08 }}
+        >
           <span className="w-4 font-mono text-muted-foreground">{r.rank}</span>
           <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-tint font-mono text-[10px] text-primary">
             {r.initial}
           </span>
           <span className="flex-1 font-sans text-foreground">{r.name}</span>
           <span className="font-mono text-foreground">{r.xp} XP</span>
-        </div>
+        </motion.div>
       ))}
       <div className="flex items-center gap-2 rounded-lg bg-primary-tint px-1.5 py-1.5">
         <span className="w-4 font-mono text-primary">12</span>
@@ -682,46 +830,55 @@ function Features() {
       icon: <Code2 size={22} className="text-primary" strokeWidth={1.75} />,
       title: "Synced code + visuals",
       body: "See every line of code reflected in the visualization in real time.",
+      href: "/algorithms/binary-search" as const,
     },
     {
       icon: <SlidersHorizontal size={22} className="text-primary" strokeWidth={1.75} />,
       title: "Step-through debugger",
       body: "Control execution step-by-step and inspect state as you go.",
+      href: "/visualizer" as const,
     },
     {
       icon: <CalendarCheck size={22} className="text-primary" strokeWidth={1.75} />,
       title: "Spaced-repetition review",
       body: "Reinforce what you learn with smart reviews that last.",
+      href: "/review" as const,
     },
   ];
   return (
-    <section className="mx-auto max-w-[1280px] px-8 py-14">
-      <div className="grid grid-cols-3 divide-x divide-hairline">
+    <RevealSection className="mx-auto max-w-[1280px] px-4 py-14 sm:px-8">
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-0 md:divide-x md:divide-hairline">
         {feats.map((f, i) => (
-          <div key={i} className="px-8 first:pl-0 last:pr-0">
+          <motion.div
+            key={i}
+            className="border-b border-hairline pb-8 last:border-0 last:pb-0 md:border-b-0 md:px-8 md:pb-0 md:first:pl-0 md:last:pr-0"
+            whileHover={{ y: -4 }}
+            transition={{ duration: 0.2 }}
+          >
             {f.icon}
             <div className="mt-4 font-display text-[17px] font-semibold text-foreground">
               {f.title}
             </div>
             <p className="mt-2 font-sans text-sm leading-relaxed text-muted-foreground">{f.body}</p>
             <a
-              href="#"
+              href={f.href}
               className="mt-4 inline-flex items-center gap-1 font-mono text-[13px] text-primary hover:text-primary-glow"
             >
               Learn more <ArrowRight size={12} />
             </a>
-          </div>
+          </motion.div>
         ))}
       </div>
-    </section>
+    </RevealSection>
   );
 }
 
 /* ------------------------------- CTA band ------------------------------- */
 function CtaBand() {
+  const reduceMotion = useReducedMotion();
   return (
-    <section className="mx-auto max-w-[1280px] px-8 py-10">
-      <div className="relative flex items-center justify-between rounded-2xl border border-primary-tint-strong bg-primary-tint px-14 py-10">
+    <RevealSection className="mx-auto max-w-[1280px] px-4 py-10 sm:px-8">
+      <div className="relative flex flex-col items-center justify-between gap-7 rounded-2xl border border-primary-tint-strong bg-primary-tint px-6 py-9 sm:px-10 lg:flex-row lg:px-14 lg:py-10">
         {/* left illustration */}
         <div className="rounded-lg border border-primary-tint-strong bg-card p-3">
           <div className="mb-1.5 flex gap-1">
@@ -730,26 +887,46 @@ function CtaBand() {
             <span className="h-1.5 w-1.5 rounded-full bg-primary-tint-strong" />
           </div>
           <div className="flex items-center gap-2">
-            <Play size={20} className="text-primary" fill="var(--primary)" />
+            <motion.span
+              initial={false}
+              whileInView={reduceMotion ? undefined : { x: [-4, 0], opacity: [0.5, 1] }}
+              viewport={{ once: true }}
+              transition={{ duration: reduceMotion ? 0 : 0.4 }}
+            >
+              <Play size={20} className="text-primary" fill="var(--primary)" />
+            </motion.span>
             <AlgoraGlyph size={28} />
           </div>
         </div>
 
         {/* Center */}
-        <div className="flex flex-1 flex-col items-center">
-          <h3 className="font-display text-[28px] font-semibold text-foreground">
+        <div className="flex flex-1 flex-col items-center text-center">
+          <h3 className="font-display text-[24px] font-semibold text-foreground sm:text-[28px]">
             Start your first traversal today
           </h3>
-          <button className="mt-5 rounded-lg bg-primary px-6 py-3 text-[15px] font-medium text-primary-foreground hover:bg-primary-glow transition-colors">
+          <Link
+            to="/auth"
+            className="mt-5 rounded-lg bg-primary px-6 py-3 text-[15px] font-medium text-primary-foreground hover:bg-primary-glow transition-colors"
+          >
             Create free account
-          </button>
+          </Link>
           <p className="mt-3 font-mono text-[12px] text-muted-foreground">
             No credit card. Reduced-motion friendly.
           </p>
         </div>
 
         {/* Right flag */}
-        <svg width="80" height="80" viewBox="0 0 80 80" className="text-primary" aria-hidden="true">
+        <motion.svg
+          width="80"
+          height="80"
+          viewBox="0 0 80 80"
+          className="text-primary"
+          aria-hidden="true"
+          initial={false}
+          whileInView={reduceMotion ? undefined : { rotate: [-8, 0], opacity: [0.5, 1] }}
+          viewport={{ once: true }}
+          transition={{ duration: reduceMotion ? 0 : 0.45 }}
+        >
           <circle
             cx="40"
             cy="40"
@@ -761,9 +938,9 @@ function CtaBand() {
           />
           <line x1="40" y1="18" x2="40" y2="58" stroke="currentColor" strokeWidth="1.5" />
           <path d="M40 22 L58 28 L40 34 Z" fill="currentColor" />
-        </svg>
+        </motion.svg>
       </div>
-    </section>
+    </RevealSection>
   );
 }
 

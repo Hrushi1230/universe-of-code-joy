@@ -6,7 +6,7 @@ export function SettingsNav({ active }: { active: SettingsNavKey }) {
   return (
     <nav
       aria-label="Settings"
-      className="w-[220px] shrink-0 space-y-1 self-start rounded-2xl border border-hairline bg-card p-3"
+      className="grid w-full shrink-0 grid-cols-3 gap-1 self-start rounded-2xl border border-hairline bg-card p-2 lg:w-[220px] lg:grid-cols-1 lg:p-3"
     >
       {ITEMS.map(({ label, icon: Icon, to, muted }) => {
         const isActive = label === active;
@@ -15,7 +15,7 @@ export function SettingsNav({ active }: { active: SettingsNavKey }) {
             key={label}
             to={to}
             className={[
-              "relative flex items-center gap-3 rounded-xl px-3 py-2.5 font-mono text-[13.5px] transition-colors",
+              "relative flex min-h-11 items-center justify-center gap-2 rounded-xl px-2 py-2.5 font-mono text-[12px] transition-colors sm:text-[13px] lg:justify-start lg:gap-3 lg:px-3 lg:text-[13.5px]",
               isActive
                 ? "bg-primary-tint text-primary"
                 : muted

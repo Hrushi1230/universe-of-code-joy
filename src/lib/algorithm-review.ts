@@ -6,7 +6,7 @@
  * set of per-question outcomes into one grade for `progressStore.gradeCard`,
  * which owns ease, interval and due date.
  */
-import { getReviewItemsByAlgorithm } from "@/content/review-items";
+import { getReviewItemsByAlgorithm, getReviewItemsByProblem } from "@/content/review-items";
 import type { ReviewItem } from "@/content/types";
 import type { ReviewCard } from "@/stores/progressStore";
 
@@ -17,13 +17,15 @@ import type { ReviewCard } from "@/stores/progressStore";
 export type ReviewOutcome = "first-try" | "retry" | "revealed" | "incorrect";
 
 /** The curated set for an algorithm; empty means the Review stage stays inert. */
-export function reviewSetFor(algorithmSlug: string): ReviewItem[] {
-  return getReviewItemsByAlgorithm(algorithmSlug);
+export function reviewSetFor(algorithmSlug: string, problemSlug?: string): ReviewItem[] {
+  return problemSlug
+    ? getReviewItemsByProblem(problemSlug).filter((item) => item.algorithmSlug === algorithmSlug)
+    : getReviewItemsByAlgorithm(algorithmSlug);
 }
 
 /** True when this algorithm has a review set at all. */
-export function hasReviewSet(algorithmSlug: string): boolean {
-  return reviewSetFor(algorithmSlug).length > 0;
+export function hasReviewSet(algorithmSlug: string, problemSlug?: string): boolean {
+  return reviewSetFor(algorithmSlug, problemSlug).length > 0;
 }
 
 /**

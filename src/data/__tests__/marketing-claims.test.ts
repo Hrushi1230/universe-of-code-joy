@@ -58,7 +58,7 @@ describe("marketing claims registry & audit (S10.3 / S10.4 — G10 Content Integ
     expect(isClaimsRegistryAudited()).toBe(true);
 
     const auditLog = getClaimsAuditLog();
-    expect(auditLog.reviewedBy).toBe("Algora Content Integrity & Legal Audit Team");
+    expect(auditLog.reviewedBy).toBe("Repository evidence audit");
     expect(auditLog.criterion).toContain("S10.4");
     expect(auditLog.unverifiedCount).toBe(0);
     expect(auditLog.substantiatedCount).toBe(auditLog.totalClaimsCount);
@@ -77,9 +77,9 @@ describe("marketing claims registry & audit (S10.3 / S10.4 — G10 Content Integ
   it("retrieves individual substantiated claims by ID or throws on missing ID", () => {
     const claim = getMarketingClaim<MetricMarketingClaim>("hero-learners");
     expect(claim.id).toBe("hero-learners");
-    expect(claim.value).toBe("100%");
-    expect(claim.label).toBe("in-browser");
-    expect(claim.rawText).toBe("100% in-browser");
+    expect(claim.value).toBe("Local");
+    expect(claim.label).toBe("browser runner");
+    expect(claim.rawText).toBe("In-browser runner");
     expect(claim.status).toBe("SUBSTANTIATED");
     expect(claim.evidence).toContain("Pure client-side Web Worker runner architecture");
 
@@ -90,37 +90,35 @@ describe("marketing claims registry & audit (S10.3 / S10.4 — G10 Content Integ
 
   it("exports properly structured substantiated grouped constants for page consumption", () => {
     expect(heroProofStats.map((s) => s.rawText)).toEqual([
-      "100% in-browser",
-      "30+ lessons",
-      "60fps animation",
+      "In-browser runner",
+      "56 practice questions",
+      "0.5–2× playback",
     ]);
-    expect(authHeroStats.map((s) => s.value)).toEqual(["100%", "30+", "60fps"]);
+    expect(authHeroStats.map((s) => s.value)).toEqual(["Local", "56", "0.5–2×"]);
 
     expect(campusHeroStats.map((s) => s.rawText)).toEqual([
-      "CS1 & CS2 syllabus ready",
-      "Unlimited cohort seats",
+      "Core DSA topic coverage",
+      "Sample cohort preview",
     ]);
 
     expect(campusOutcomesStats.map((s) => ({ v: s.value, c: s.label }))).toEqual([
       { v: "3-way", c: "synchronized code, canvas & explanation" },
-      { v: "0ms", c: "local sandbox runner latency" },
-      { v: "100%", c: "browser-based with zero install" },
+      { v: "Local", c: "Web Worker runner" },
+      { v: "Browser", c: "no native install" },
     ]);
 
-    expect(campusTestimonialClaim.author).toBe("Algora Curriculum Architecture");
-    expect(campusTestimonialClaim.role).toBe("Pedagogy & Visual Systems");
-    expect(campusTestimonialClaim.initials).toBe("CA");
+    expect(campusTestimonialClaim.author).toBe("Algora learning principle");
+    expect(campusTestimonialClaim.role).toBe("Product specification");
+    expect(campusTestimonialClaim.initials).toBe("LP");
     expect(campusTestimonialClaim.status).toBe("SUBSTANTIATED");
 
     expect(campusCohortDemoClaim.courseCode).toBe("CS 2110");
     expect(campusCohortDemoClaim.term).toBe("Sample Dashboard");
     expect(campusCohortDemoClaim.roster.length).toBe(5);
 
-    expect(blogNewsletterClaim.rawText).toBe(
-      "Get algorithm breakdowns & visual guides. Unsubscribe anytime.",
-    );
-    expect(pricingCatalogClaim.rawText).toBe("Complete algorithm catalog & visualizers");
-    expect(universitySocialProofClaim.label).toBe("Designed for standard CS curricula at");
+    expect(blogNewsletterClaim.rawText).toBe("Newsletter sign-up is coming soon.");
+    expect(pricingCatalogClaim.rawText).toBe("34 runnable visualizer modules");
+    expect(universitySocialProofClaim.label).toBe("Built around core algorithm foundations");
     expect(universitySocialProofClaim.institutions.length).toBe(5);
   });
 });

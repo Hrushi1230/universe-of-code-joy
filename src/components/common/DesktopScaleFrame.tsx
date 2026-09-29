@@ -13,23 +13,24 @@ export function DesktopScaleFrame({
   className,
   designWidth = DESIGN_WIDTH,
   designHeight = DESIGN_HEIGHT,
+  scaleNarrow = true,
 }: {
   children: React.ReactNode;
   className?: string;
   designWidth?: number;
   designHeight?: number;
+  /** False for screens that provide a real responsive reflow. */
+  scaleNarrow?: boolean;
 }): React.ReactElement {
   const { ref, scale } = useFitScale(designWidth);
-  const isScaled = scale < 1;
+  const isScaled = scaleNarrow && scale < 1;
 
   return (
     <div
       ref={ref}
       className={cn(
         "w-full",
-        isScaled
-          ? "flex h-full flex-col justify-center overflow-x-hidden overflow-y-auto"
-          : "h-full",
+        isScaled ? "flex h-full flex-col justify-center overflow-hidden" : "h-full",
         className,
       )}
     >

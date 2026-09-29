@@ -75,7 +75,7 @@ function PracticeIndexPage() {
       <div className="flex min-w-0 flex-1 flex-col">
         <AppWorkspaceBar crumbs={["Practice"]} />
 
-        <main className="flex-1 overflow-y-auto bg-paper px-4 py-8 sm:px-8">
+        <main tabIndex={0} className="flex-1 overflow-y-auto bg-paper px-4 py-8 sm:px-8">
           <div className="mx-auto max-w-[1000px]">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
@@ -122,7 +122,12 @@ function PracticeIndexPage() {
 
             {/* Problem Table */}
             <div className="rounded-2xl border border-hairline bg-card shadow-1 overflow-hidden">
-              <div className="overflow-x-auto">
+              <div
+                tabIndex={0}
+                role="region"
+                aria-label="Practice question table"
+                className="overflow-x-auto"
+              >
                 <table className="w-full text-left font-sans text-sm">
                   <thead>
                     <tr className="border-b border-hairline bg-paper/50">

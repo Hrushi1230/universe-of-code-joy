@@ -3,14 +3,13 @@ import { parseNumberList } from "@/engine/algorithms/binarySearch";
 import type {
   AlgorithmModule,
   AlgorithmRun,
-  AuxPanel,
   CellState,
   CodeLineMap,
-  TreeFrame,
+  HeapFrame,
   ValidationResult,
 } from "@/engine/types";
 
-const MAX_ITEMS = 15;
+const MAX_ITEMS = 12;
 
 /**
  * Pseudocode -> listing line. Both listings split siftDown into its own
@@ -120,40 +119,39 @@ function nodePosition(index: number, total: number): { x: number; y: number } {
 function frameFor(
   values: number[],
   heapSize: number,
-  marks: { active?: number; compare?: number[]; sortedFrom?: number } | null,
-): TreeFrame {
+  marks: {
+    active?: number;
+    compare?: number[];
+    sortedFrom?: number;
+    swapPair?: [number, number];
+  } | null,
+): HeapFrame {
   const total = values.length;
-  const nodes: TreeFrame["nodes"] = values.map((value, index) => {
+  const slots: HeapFrame["slots"] = values.map((value, index) => {
     let state: CellState = "idle";
     if (marks?.sortedFrom !== undefined && index >= marks.sortedFrom) state = "sorted";
     else if (index >= heapSize) state = "sorted";
     if (marks?.compare?.includes(index)) state = "compare";
     if (marks?.active === index) state = "active";
     const pos = nodePosition(index, total);
-    return { id: `n${index}`, label: value, x: pos.x, y: pos.y, state, badge: `#${index}` };
+    return { index, value, x: pos.x, y: pos.y, state };
   });
 
-  const edges: TreeFrame["edges"] = [];
+  const edgeStates: NonNullable<HeapFrame["edgeStates"]> = {};
   for (let i = 1; i < total; i += 1) {
     const parent = Math.floor((i - 1) / 2);
-    const inHeap = i < heapSize;
-    edges.push({ from: `n${parent}`, to: `n${i}`, state: inHeap ? "tree" : "idle" });
+    const swappingAcrossEdge =
+      marks?.swapPair?.includes(parent) === true && marks.swapPair.includes(i);
+    edgeStates[i] = swappingAcrossEdge ? "active" : i < heapSize ? "tree" : "idle";
   }
-  return { kind: "tree", nodes, edges };
-}
-
-function auxFor(values: number[], heapSize: number): AuxPanel[] {
-  return [
-    {
-      kind: "keyvalue",
-      label: "Backing array",
-      rows: values.map((value, index) => ({
-        k: `a[${index}]`,
-        v: String(value),
-        highlight: index >= heapSize,
-      })),
-    },
-  ];
+  return {
+    kind: "heap",
+    heapType: "max",
+    heapSize,
+    slots,
+    edgeStates,
+    swapPair: marks?.swapPair,
+  };
 }
 
 function run(parsed: Record<string, unknown>): AlgorithmRun {
@@ -164,7 +162,6 @@ function run(parsed: Record<string, unknown>): AlgorithmRun {
 
   b.emit({
     frame: frameFor(values, n, null),
-    aux: auxFor(values, n),
     codeLine: 2,
     narration: "We read the list as a binary tree, where each value sits above its two children.",
     detail:
@@ -193,7 +190,6 @@ function run(parsed: Record<string, unknown>): AlgorithmRun {
 
       b.emit({
         frame: frameFor(values, size, { active: i, compare }),
-        aux: auxFor(values, size),
         codeLine: 11,
         narration:
           compare.length === 0
@@ -206,8 +202,11 @@ function run(parsed: Record<string, unknown>): AlgorithmRun {
 
       b.bump("swaps");
       b.emit({
-        frame: frameFor(values, size, { active: largest, compare: [i] }),
-        aux: auxFor(values, size),
+        frame: frameFor(values, size, {
+          active: largest,
+          compare: [i],
+          swapPair: [i, largest],
+        }),
         codeLine: 14,
         narration: `${values[largest]!} is bigger than its parent ${values[i]!}, so the two swap places.`,
         phase,
@@ -223,7 +222,6 @@ function run(parsed: Record<string, unknown>): AlgorithmRun {
     b.bump("siftDowns");
     b.emit({
       frame: frameFor(values, n, { active: i }),
-      aux: auxFor(values, n),
       codeLine: 4,
       narration: `We fix the little sub-tree rooted at ${values[i]!} so its parent is the biggest of the three.`,
       phase: "build-heap",
@@ -234,7 +232,6 @@ function run(parsed: Record<string, unknown>): AlgorithmRun {
 
   b.emit({
     frame: frameFor(values, n, null),
-    aux: auxFor(values, n),
     codeLine: 5,
     narration: `The tree is now a max-heap, so the biggest value ${values[0]!} sits right at the top.`,
     phase: "heap-ready",
@@ -244,8 +241,11 @@ function run(parsed: Record<string, unknown>): AlgorithmRun {
   for (let end = n - 1; end > 0; end -= 1) {
     b.bump("swaps");
     b.emit({
-      frame: frameFor(values, end + 1, { active: 0, compare: [end] }),
-      aux: auxFor(values, end + 1),
+      frame: frameFor(values, end + 1, {
+        active: 0,
+        compare: [end],
+        swapPair: [0, end],
+      }),
       codeLine: 6,
       narration: `The largest value ${values[0]!} swaps down to the end of the list, where it is finished.`,
       phase: "extract-max",
@@ -261,7 +261,6 @@ function run(parsed: Record<string, unknown>): AlgorithmRun {
 
   b.emit({
     frame: frameFor(values, 0, { sortedFrom: 0 }),
-    aux: auxFor(values, 0),
     codeLine: 8,
     narration: "Every value has been pulled off the heap in order, so the list is sorted.",
     phase: "done",

@@ -16,12 +16,19 @@ export interface TraceWorkspaceProps {
   /** Implementation challenge the completion CTA opens; null hides it. */
   codeSlug?: string | null;
   algorithmSlug?: string;
+  problemSlug?: string;
   className?: string;
 }
 
 /** Boundary names whose index differs between two learner-visible views. */
 function movedBetween(prev: TraceView | null, next: TraceView): string[] {
   if (!prev) return [];
+  if (prev.frame && next.frame) {
+    const before = new Map(prev.frame.pointers.map((pointer) => [pointer.name, pointer.index]));
+    return next.frame.pointers
+      .filter((pointer) => before.get(pointer.name) !== pointer.index)
+      .map((pointer) => pointer.name);
+  }
   const moved: string[] = [];
   if (prev.low !== next.low) moved.push("lo");
   if (prev.high !== next.high) moved.push("hi");
@@ -39,6 +46,7 @@ export function TraceWorkspace({
   algoName,
   codeSlug = null,
   algorithmSlug,
+  problemSlug,
   className,
 }: TraceWorkspaceProps): React.ReactElement {
   const storeApi = useTraceStoreApi();
@@ -97,7 +105,7 @@ export function TraceWorkspace({
             </button>
           </div>
 
-          {/* Progress through the learner's own steps, never through engine steps. */}
+          {/* Progress through acknowledged learner steps, never through guided-player steps. */}
           <div className="shrink-0">
             <div
               role="progressbar"
@@ -115,7 +123,7 @@ export function TraceWorkspace({
             </div>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-hidden">
             {completed || !checkpoint ? (
               <TraceSummaryCard
                 session={session}
@@ -125,6 +133,7 @@ export function TraceWorkspace({
                 onRestart={() => storeApi.getState().restart()}
                 codeSlug={codeSlug}
                 algorithmSlug={algorithmSlug}
+                problemSlug={problemSlug}
                 algoName={algoName}
               />
             ) : (

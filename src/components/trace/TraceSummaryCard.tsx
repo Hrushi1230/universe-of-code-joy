@@ -15,6 +15,7 @@ export interface TraceSummaryCardProps {
   codeSlug?: string | null;
   /** Algorithm this trace belongs to, used for the CTA label and origin context. */
   algorithmSlug?: string;
+  problemSlug?: string;
   algoName?: string;
   className?: string;
 }
@@ -31,11 +32,13 @@ export function TraceSummaryCard({
   onRestart,
   codeSlug = null,
   algorithmSlug,
+  problemSlug,
   algoName = "this algorithm",
   className,
 }: TraceSummaryCardProps): React.ReactElement {
   const { summary } = session;
-  const path = summary.candidateCounts.join(" → ");
+  const pathValues = summary.pathValues ?? summary.candidateCounts;
+  const path = pathValues.join(" → ");
 
   const stats: Array<{ label: string; value: string }> = [
     { label: "steps", value: String(steps) },
@@ -59,15 +62,16 @@ export function TraceSummaryCard({
       </div>
 
       <p className="font-sans text-[13px] leading-relaxed text-ink">
-        {summary.found
-          ? `You executed binary search by hand and found ${session.target} at index ${summary.foundIndex}.`
-          : `You executed binary search by hand and ruled out every candidate: ${session.target} is not in this list.`}
+        {summary.completionText ??
+          (summary.found
+            ? `You executed binary search by hand and found ${session.target} at index ${summary.foundIndex}.`
+            : `You executed binary search by hand and ruled out every candidate: ${session.target} is not in this list.`)}
       </p>
 
       {path ? (
         <p className="font-mono text-[11px] text-slate">
-          candidates: {path}
-          {summary.found ? "" : " → 0"}
+          {summary.pathLabel ?? "candidates"}: {path}
+          {summary.pathValues || summary.found ? "" : " → 0"}
         </p>
       ) : null}
 
@@ -89,8 +93,7 @@ export function TraceSummaryCard({
           express the same transitions themselves. One obvious next action. */}
       {codeSlug ? (
         <p className="font-sans text-[12.5px] leading-relaxed text-slate">
-          You just tracked low, mid and high by hand. Now express those same state transitions in
-          code.
+          You just tracked each decision by hand. Now express those same state transitions in code.
         </p>
       ) : null}
 
@@ -102,6 +105,7 @@ export function TraceSummaryCard({
             search={{
               from: "lesson" as const,
               ...(algorithmSlug ? { algorithm: algorithmSlug } : {}),
+              ...(problemSlug ? { problem: problemSlug } : {}),
               stage: "code" as const,
             }}
             className="inline-flex h-9 w-fit items-center gap-1.5 rounded-lg bg-primary px-3.5 font-sans text-[13px] font-medium text-primary-foreground transition-colors hover:bg-primary-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"

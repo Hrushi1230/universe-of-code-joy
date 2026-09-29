@@ -5,12 +5,13 @@ import type {
   AlgorithmRun,
   ArrayFrame,
   AuxPanel,
+  CallStackPanel,
   CellState,
   CodeLineMap,
   ValidationResult,
 } from "@/engine/types";
 
-const MAX_ITEMS = 25;
+const MAX_ITEMS = 12;
 
 /** Pseudocode -> listing line. The braced listings close the early return first. */
 const CODE_MAP: CodeLineMap = {
@@ -126,19 +127,12 @@ function frameFor(
   return frame;
 }
 
-function auxFor(stack: string[]): AuxPanel[] {
+function auxFor(frames: CallStackPanel["frames"]): AuxPanel[] {
   return [
     {
-      kind: "stack",
-      label: "Partitions waiting",
-      items:
-        stack.length > 0
-          ? stack.map((label, index) => ({
-              id: `${label}-${index}`,
-              label,
-              state: "frontier" as CellState,
-            }))
-          : [],
+      kind: "callstack",
+      label: "Recursive calls",
+      frames,
     },
   ];
 }
@@ -147,12 +141,13 @@ function run(parsed: Record<string, unknown>): AlgorithmRun {
   const original = parsed["values"] as number[];
   const values = [...original];
   const placed = new Set<number>();
-  const pending: string[] = [];
+  const calls: CallStackPanel["frames"] = [];
+  let callSequence = 0;
   const b = new StepBuilder(PSEUDOCODE, CODE_BY_LANG, CODE_MAP);
 
   b.emit({
     frame: frameFor(values, placed, { lo: 0, hi: values.length - 1 }, null),
-    aux: auxFor(pending),
+    aux: auxFor(calls),
     codeLine: 1,
     narration: "We start with the whole list as one big partition to sort.",
     detail:
@@ -162,24 +157,63 @@ function run(parsed: Record<string, unknown>): AlgorithmRun {
   });
 
   const sortRange = (lo: number, hi: number): void => {
-    if (lo > hi) return;
+    const call: CallStackPanel["frames"][number] = {
+      id: `quicksort-${callSequence}`,
+      call: "quicksort",
+      args: [
+        { name: "lo", value: String(lo) },
+        { name: "hi", value: String(hi) },
+      ],
+      state: "enter",
+    };
+    callSequence += 1;
+    calls.push(call);
+    b.emit({
+      frame: frameFor(values, placed, lo <= hi ? { lo, hi } : null, null),
+      aux: auxFor(calls),
+      codeLine: 1,
+      narration:
+        lo <= hi
+          ? `We enter quicksort for the partition from ${lo} to ${hi}.`
+          : `We enter quicksort with crossed boundaries ${lo} and ${hi}, so this branch is empty.`,
+      phase: "enter",
+    });
+
+    if (lo > hi) {
+      call.state = "return";
+      call.result = "empty range";
+      b.emit({
+        frame: frameFor(values, placed, null, null),
+        aux: auxFor(calls),
+        codeLine: 3,
+        narration: "The boundaries have crossed, so this empty recursive call returns immediately.",
+        phase: "return",
+      });
+      calls.pop();
+      return;
+    }
     if (lo === hi) {
       placed.add(lo);
+      call.state = "success";
+      call.result = `${values[lo]!} fixed`;
       b.emit({
         frame: frameFor(values, placed, { lo, hi }, null),
-        aux: auxFor(pending),
+        aux: auxFor(calls),
         codeLine: 3,
         narration: `A partition holding only ${values[lo]!} is already in the right place.`,
-        phase: "recurse",
+        phase: "return",
       });
+      calls.pop();
       return;
     }
 
     const pivot = values[hi]!;
+    call.state = "active";
+    call.choice = `pivot a[${hi}] = ${pivot}`;
     b.bump("partitions");
     b.emit({
       frame: frameFor(values, placed, { lo, hi }, { pivot: hi }),
-      aux: auxFor(pending),
+      aux: auxFor(calls),
       codeLine: 4,
       narration: `We choose the last value ${pivot} as the pivot for the partition from ${lo} to ${hi}.`,
       phase: "choose-pivot",
@@ -192,7 +226,7 @@ function run(parsed: Record<string, unknown>): AlgorithmRun {
       b.emit({
         frame: frameFor(values, placed, { lo, hi }, { pivot: hi, i, j }),
         codeLine: 7,
-        aux: auxFor(pending),
+        aux: auxFor(calls),
         narration: `We check whether ${values[j]!} is smaller than the pivot ${pivot}.`,
         phase: "partition",
       });
@@ -201,7 +235,7 @@ function run(parsed: Record<string, unknown>): AlgorithmRun {
           b.bump("swaps");
           b.emit({
             frame: frameFor(values, placed, { lo, hi }, { pivot: hi, i, j, swap: [i, j] }),
-            aux: auxFor(pending),
+            aux: auxFor(calls),
             codeLine: 8,
             narration: `${values[j]!} belongs on the small side, so it swaps into the boundary slot.`,
             phase: "partition",
@@ -217,7 +251,7 @@ function run(parsed: Record<string, unknown>): AlgorithmRun {
     b.bump("swaps");
     b.emit({
       frame: frameFor(values, placed, { lo, hi }, { pivot: hi, i, swap: [i, hi] }),
-      aux: auxFor(pending),
+      aux: auxFor(calls),
       codeLine: 10,
       narration: `The pivot ${pivot} swaps into the boundary, which is exactly where it belongs forever.`,
       phase: "partition",
@@ -228,21 +262,31 @@ function run(parsed: Record<string, unknown>): AlgorithmRun {
     values[hi] = tmp;
     placed.add(i);
 
-    if (i - 1 > lo) pending.push(`[${lo}..${i - 1}]`);
-    if (hi > i + 1) pending.push(`[${i + 1}..${hi}]`);
+    call.choice = `left [${lo}..${i - 1}], then right [${i + 1}..${hi}]`;
 
     b.emit({
       frame: frameFor(values, placed, { lo, hi }, { pivot: i }),
-      aux: auxFor(pending),
+      aux: auxFor(calls),
       codeLine: 11,
       narration: `Everything left of ${pivot} is smaller and everything right is bigger, so we sort each side on its own.`,
       phase: "recurse",
       isMilestone: true,
     });
 
-    pending.pop();
     sortRange(lo, i - 1);
     sortRange(i + 1, hi);
+
+    call.state = "return";
+    call.choice = undefined;
+    call.result = `[${lo}..${hi}] sorted`;
+    b.emit({
+      frame: frameFor(values, placed, { lo, hi }, null),
+      aux: auxFor(calls),
+      codeLine: 13,
+      narration: `Both recursive branches are complete, so the sorted partition from ${lo} to ${hi} returns to its caller.`,
+      phase: "return",
+    });
+    calls.pop();
   };
 
   sortRange(0, values.length - 1);
@@ -250,7 +294,7 @@ function run(parsed: Record<string, unknown>): AlgorithmRun {
   for (let k = 0; k < values.length; k += 1) placed.add(k);
   b.emit({
     frame: frameFor(values, placed, null, null),
-    aux: auxFor([]),
+    aux: auxFor(calls),
     codeLine: 13,
     narration: "Every partition has been sorted, so the whole list is in order.",
     phase: "done",

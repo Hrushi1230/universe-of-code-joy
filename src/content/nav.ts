@@ -1,5 +1,4 @@
 import {
-  AlertTriangle,
   Award,
   Bell,
   Code2,
@@ -9,8 +8,6 @@ import {
   Map as MapIcon,
   Notebook,
   Settings,
-  ShieldCheck,
-  SlidersHorizontal,
   Trophy,
   User,
   type LucideIcon,
@@ -123,7 +120,7 @@ export const SITE_NAV: SiteNavItem[] = [
   { label: "Learn", to: "/" },
   { label: "Visualizer", to: "/visualizer" },
   { label: "Paths", to: "/paths" },
-  { label: "Compete", to: "/" },
+  { label: "Compete", to: "/leagues" },
   { label: "Pricing", to: "/pricing" },
   { label: "For educators", to: "/campus" },
 ];
@@ -148,10 +145,8 @@ export const FOOTER_ROUTE_MAP: Record<string, string> = {
   Visualizer: "/visualizer",
   Paths: "/paths",
   Compete: "/leagues",
-  About: "/",
-  Blog: "/",
+  Blog: "/blog",
   Careers: "/contact",
-  Changelog: "/",
   "Data Structures": "/explore",
   Algorithms: "/explore",
   "Interview Prep": "/paths",
@@ -164,12 +159,12 @@ export function getFooterLinkTarget(label: string): string {
 }
 
 export const SITE_FOOTER_COLS: SiteFooterCol[] = [
-  { h: "PRODUCT", links: ["Visualizer", "Paths", "Compete", "Pricing", "Changelog"] },
+  { h: "PRODUCT", links: ["Visualizer", "Paths", "Compete", "Pricing"] },
   {
     h: "LEARN",
-    links: ["Data Structures", "Algorithms", "Interview Prep", "Study Plans", "Glossary"],
+    links: ["Data Structures", "Algorithms", "Interview Prep", "Study Plans"],
   },
-  { h: "COMPANY", links: ["About", "Blog", "Careers", "Contact"] },
+  { h: "COMPANY", links: ["Blog", "Contact"] },
   { h: "LEGAL", links: ["Terms", "Privacy", "Security", "Cookies"] },
 ];
 
@@ -190,11 +185,8 @@ export interface SettingsNavItem {
 
 export const SETTINGS_NAV: SettingsNavItem[] = [
   { label: "Profile", icon: User, to: "/settings" },
-  { label: "Security", icon: ShieldCheck, to: "/settings" },
-  { label: "Preferences", icon: SlidersHorizontal, to: "/settings" },
   { label: "Notifications", icon: Bell, to: "/notifications" },
   { label: "Billing", icon: CreditCard, to: "/settings/billing" },
-  { label: "Danger zone", icon: AlertTriangle, to: "/settings", muted: true },
 ];
 
 /**

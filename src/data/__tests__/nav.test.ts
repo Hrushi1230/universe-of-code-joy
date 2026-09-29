@@ -23,6 +23,12 @@ describe("canonical navigation (S0.3 / S1.9)", () => {
     }
   });
 
+  it("routes named destinations to their actual pages", () => {
+    expect(SITE_NAV.find((item) => item.label === "Compete")?.to).toBe("/leagues");
+    expect(SITE_FOOTER_COLS.flatMap((column) => column.links)).not.toContain("About");
+    expect(SITE_FOOTER_COLS.flatMap((column) => column.links)).not.toContain("Changelog");
+  });
+
   it("defines SETTINGS_NAV with icons and routes", () => {
     expect(SETTINGS_NAV.length).toBeGreaterThan(0);
     for (const item of SETTINGS_NAV) {

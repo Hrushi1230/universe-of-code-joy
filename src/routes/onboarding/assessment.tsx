@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import {
@@ -7,6 +7,7 @@ import {
   StepBadge,
   TealPeriod,
 } from "@/components/onboarding-chrome";
+import { readOnboardingState, writeOnboardingState } from "@/lib/onboarding";
 
 export const Route = createFileRoute("/onboarding/assessment")({
   component: AssessmentPage,
@@ -197,90 +198,144 @@ function CodeCard() {
 
 const QUESTIONS = [
   {
-    question: "What does this traversal visit first?",
+    question: "Which node is visited first?",
     answers: [
-      { letter: "A", text: "The left subtree entirely", correct: false },
-      { letter: "B", text: "Level by level, breadth-first", correct: true },
-      { letter: "C", text: "The deepest node first", correct: false },
-      { letter: "D", text: "A random node", correct: false },
+      { letter: "A", text: "Node 1, the root", correct: true },
+      { letter: "B", text: "Node 2, the left child", correct: false },
+      { letter: "C", text: "Node 4, the leftmost leaf", correct: false },
+      { letter: "D", text: "Node 7, the rightmost leaf", correct: false },
     ],
+    explanation: "Breadth-first traversal starts with the root placed in the queue.",
+  },
+  {
+    question: "After node 1, which nodes leave the queue next?",
+    answers: [
+      { letter: "A", text: "4, then 5", correct: false },
+      { letter: "B", text: "2, then 3", correct: true },
+      { letter: "C", text: "3, then 2", correct: false },
+      { letter: "D", text: "7, then 6", correct: false },
+    ],
+    explanation: "The root enqueues its children left to right, so 2 is dequeued before 3.",
+  },
+  {
+    question: "What is the traversal's time complexity for n nodes?",
+    answers: [
+      { letter: "A", text: "O(1)", correct: false },
+      { letter: "B", text: "O(log n)", correct: false },
+      { letter: "C", text: "O(n)", correct: true },
+      { letter: "D", text: "O(n²)", correct: false },
+    ],
+    explanation: "Every node enters and leaves the queue once, so the work grows linearly.",
   },
 ];
 
 function AssessmentPage() {
   const navigate = useNavigate();
-  const [questionIndex] = useState(0);
+  const [questionIndex, setQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [score, setScore] = useState(0);
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    const saved = readOnboardingState();
+    if (saved.assessmentAnswers.length >= QUESTIONS.length) {
+      navigate({ to: "/onboarding/path", replace: true });
+      return;
+    }
+    const completed = Math.min(saved.assessmentAnswers.length, QUESTIONS.length - 1);
+    setQuestionIndex(completed);
+    setScore(saved.assessmentScore ?? 0);
+  }, [navigate]);
 
   const q = QUESTIONS[questionIndex];
-  const totalQuestions = 8;
-  const displayIndex = 4; /* Show as Q4 of 8 to match the original design */
+  const totalQuestions = QUESTIONS.length;
+  const displayIndex = questionIndex + 1;
   const pct = Math.round((displayIndex / totalQuestions) * 100);
+  const selected = q.answers.find((answer) => answer.letter === selectedAnswer);
 
   const handleNext = useCallback(() => {
-    /* Score this answer */
+    if (!selectedAnswer) return;
     const answer = q.answers.find((a) => a.letter === selectedAnswer);
-    const newScore = score + (answer?.correct ? 1 : 0);
-    setScore(newScore);
-
-    /* Store assessment results for the path page to read */
-    const onboarding = JSON.parse(sessionStorage.getItem("algora-onboarding") || "{}");
-    sessionStorage.setItem(
-      "algora-onboarding",
-      JSON.stringify({
-        ...onboarding,
+    if (!checked) {
+      const newScore = score + (answer?.correct ? 1 : 0);
+      const saved = readOnboardingState();
+      writeOnboardingState({
+        assessmentAnswers: [...saved.assessmentAnswers.slice(0, questionIndex), selectedAnswer],
         assessmentScore: newScore,
         assessmentTotal: totalQuestions,
-      }),
-    );
+        assessmentSkipped: false,
+      });
+      setScore(newScore);
+      setChecked(true);
+      return;
+    }
 
+    if (questionIndex < totalQuestions - 1) {
+      setQuestionIndex((index) => index + 1);
+      setSelectedAnswer(null);
+      setChecked(false);
+      return;
+    }
     navigate({ to: "/onboarding/path" });
-  }, [q.answers, selectedAnswer, score, navigate]);
+  }, [checked, q.answers, questionIndex, selectedAnswer, score, totalQuestions, navigate]);
 
   const handleSkip = useCallback(() => {
-    const onboarding = JSON.parse(sessionStorage.getItem("algora-onboarding") || "{}");
-    sessionStorage.setItem(
-      "algora-onboarding",
-      JSON.stringify({
-        ...onboarding,
-        assessmentScore: 0,
-        assessmentTotal: totalQuestions,
-        skipped: true,
-      }),
-    );
+    writeOnboardingState({
+      assessmentAnswers: [],
+      assessmentScore: null,
+      assessmentTotal: totalQuestions,
+      assessmentSkipped: true,
+    });
     navigate({ to: "/onboarding/path" });
-  }, [navigate]);
+  }, [navigate, totalQuestions]);
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-paper text-foreground">
-      <OnboardingTopBar current={2} right={<Link to="/onboarding/path">Skip assessment</Link>} />
+      <OnboardingTopBar
+        current={2}
+        right={
+          <button type="button" onClick={handleSkip} className="hover:text-foreground">
+            Skip assessment
+          </button>
+        }
+      />
 
-      <main className="flex flex-1 min-h-0 items-center justify-center overflow-hidden px-6">
-        <div className="w-full max-w-[940px] rounded-2xl border border-hairline bg-card px-9 py-6 shadow-sm">
-          <div className="flex items-center justify-between">
+      <main className="flex min-h-0 flex-1 items-start justify-center overflow-y-auto px-4 py-4 sm:items-center sm:px-6">
+        <div className="w-full max-w-[940px] rounded-2xl border border-hairline bg-card px-5 py-5 shadow-sm sm:px-9 sm:py-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <StepBadge>
               QUESTION {displayIndex} OF {totalQuestions}
             </StepBadge>
             <div className="flex items-center gap-3">
-              <div className="h-1.5 w-[300px] overflow-hidden rounded-full bg-secondary">
+              <div className="h-1.5 w-32 overflow-hidden rounded-full bg-secondary sm:w-[300px]">
                 <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
               </div>
               <span className="font-mono text-[12px] text-muted-foreground">{pct}%</span>
             </div>
           </div>
 
-          <h1 className="mt-3 font-sans text-[32px] font-semibold leading-[1.1] tracking-[-0.025em] text-foreground">
+          <h1 className="mt-3 font-sans text-[26px] font-semibold leading-[1.1] tracking-[-0.025em] text-foreground sm:text-[32px]">
             {q.question}
             <TealPeriod />
           </h1>
           <p className="mt-2 font-mono text-[13.5px] text-muted-foreground">
             No pressure — this just calibrates your starting point.
           </p>
+          <button
+            type="button"
+            onClick={handleSkip}
+            className="mt-3 font-mono text-[12px] text-muted-foreground underline underline-offset-4 md:hidden"
+          >
+            Skip this diagnostic
+          </button>
 
-          <div className="mt-4 grid grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)] gap-4">
+          <div className="mt-4 hidden grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)] gap-4 sm:grid">
             <TreeCard />
             <CodeCard />
+          </div>
+
+          <div className="mt-4 sm:hidden">
+            <TreeCard />
           </div>
 
           <div className="mt-4 space-y-2.5">
@@ -290,7 +345,8 @@ function AssessmentPage() {
                 <button
                   key={letter}
                   type="button"
-                  onClick={() => setSelectedAnswer(letter)}
+                  onClick={() => !checked && setSelectedAnswer(letter)}
+                  disabled={checked}
                   className={[
                     "flex w-full items-center gap-4 rounded-xl border px-4 py-3 text-left transition-colors",
                     selected
@@ -321,6 +377,19 @@ function AssessmentPage() {
             })}
           </div>
 
+          {checked && selected ? (
+            <div
+              role="status"
+              className={`mt-4 rounded-xl border px-4 py-3 font-mono text-[13px] ${
+                selected.correct
+                  ? "border-primary/40 bg-primary-tint/50 text-primary"
+                  : "border-amber-300 bg-amber-50 text-amber-900"
+              }`}
+            >
+              <strong>{selected.correct ? "Correct." : "Not quite."}</strong> {q.explanation}
+            </div>
+          ) : null}
+
           <div className="mt-5 flex items-center justify-between">
             <Link
               to="/onboarding/goals"
@@ -330,18 +399,16 @@ function AssessmentPage() {
             </Link>
             <button
               type="button"
-              onClick={handleSkip}
-              className="font-mono text-[13px] text-muted-foreground underline underline-offset-4"
-            >
-              I'm not sure — skip
-            </button>
-            <button
-              type="button"
               onClick={handleNext}
               disabled={selectedAnswer === null}
               className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-8 font-mono text-[14px] font-medium text-primary-foreground transition-colors hover:bg-primary-glow disabled:opacity-50"
             >
-              Next question <ArrowRight className="h-4 w-4" />
+              {checked
+                ? questionIndex === totalQuestions - 1
+                  ? "See recommendation"
+                  : "Next question"
+                : "Check answer"}{" "}
+              <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         </div>

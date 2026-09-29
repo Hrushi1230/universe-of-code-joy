@@ -21,6 +21,7 @@ import {
 import { SiteNav, SiteFooter } from "@/components/site-chrome";
 import { PRIVACY_POLICY } from "@/content/legal";
 import type { LegalSection, LegalSubSection } from "@/content/types";
+import { DemoNotice } from "@/components/demo-notice";
 
 export const Route = createFileRoute("/privacy")({
   component: PrivacyPage,
@@ -30,13 +31,12 @@ export const Route = createFileRoute("/privacy")({
       {
         name: "description",
         content:
-          "Algora is built on a local-first architecture. Read our full privacy policy: zero third-party ad tracking, local storage transparency, and 100% data portability.",
+          "Read what the current local Algora browser preview stores and which services are not connected.",
       },
       { property: "og:title", content: "Privacy Policy — Algora" },
       {
         property: "og:description",
-        content:
-          "How Algora protects your personal data, honors local-first privacy, and never sells your learning history.",
+        content: "Repository-accurate privacy information for the current local Algora preview.",
       },
       { property: "og:type", content: "website" },
     ],
@@ -140,7 +140,7 @@ function PrivacyPage() {
         {/* Hero Header */}
         <div className="mt-8 max-w-3xl">
           <div className="inline-flex items-center gap-2 rounded-full bg-primary-tint px-3 py-1 font-mono text-[11px] tracking-wider text-primary">
-            <ShieldCheck className="size-3.5" /> ZERO SURVEILLANCE LEARNING
+            <ShieldCheck className="size-3.5" /> LOCAL PREVIEW PRIVACY
           </div>
           <h1 className="mt-4 font-sans text-[44px] sm:text-[52px] leading-[1.1] tracking-[-0.02em] text-foreground font-semibold">
             {doc.title}
@@ -148,6 +148,13 @@ function PrivacyPage() {
           <p className="mt-4 font-sans text-[17px] leading-[1.6] text-muted-foreground">
             {doc.subtitle}
           </p>
+
+          <div className="mt-5 max-w-[720px]">
+            <DemoNotice>
+              This is repository-accurate preview information, not final launch legal advice or a
+              compliance certification.
+            </DemoNotice>
+          </div>
 
           <div className="mt-6 flex flex-wrap items-center gap-6 font-mono text-[12px] text-muted-foreground">
             <div>
@@ -173,7 +180,7 @@ function PrivacyPage() {
             <div className="rounded-xl border border-hairline/80 bg-paper p-4">
               <div className="font-mono text-[11px] text-primary font-semibold">LOCAL-FIRST</div>
               <div className="mt-1 font-sans text-[13px] text-muted-foreground">
-                All algorithm states & XP reside in browser localStorage.
+                Progress and preferences use browser localStorage.
               </div>
             </div>
             <div className="rounded-xl border border-hairline/80 bg-paper p-4">
@@ -181,19 +188,21 @@ function PrivacyPage() {
                 ZERO AD TRACKING
               </div>
               <div className="mt-1 font-sans text-[13px] text-muted-foreground">
-                No Google Analytics, no Facebook pixels, no ad brokers.
+                No analytics or advertising provider is configured in this build.
               </div>
             </div>
             <div className="rounded-xl border border-hairline/80 bg-paper p-4">
-              <div className="font-mono text-[11px] text-primary font-semibold">1-CLICK EXPORT</div>
+              <div className="font-mono text-[11px] text-primary font-semibold">
+                LOCAL INSPECTION
+              </div>
               <div className="mt-1 font-sans text-[13px] text-muted-foreground">
-                Full machine-readable JSON backup anytime from Settings.
+                Browser developer tools can inspect the two current records.
               </div>
             </div>
             <div className="rounded-xl border border-hairline/80 bg-paper p-4">
-              <div className="font-mono text-[11px] text-primary font-semibold">INSTANT PURGE</div>
+              <div className="font-mono text-[11px] text-primary font-semibold">LOCAL REMOVAL</div>
               <div className="mt-1 font-sans text-[13px] text-muted-foreground">
-                Single-button local wipe & 24h cloud erasure guarantee.
+                Clearing site storage removes local preview data; no cloud record exists.
               </div>
             </div>
           </div>

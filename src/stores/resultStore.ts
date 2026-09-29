@@ -21,6 +21,8 @@ export interface SubmissionResult {
   algorithmSlug?: string;
   /** Which lesson stage sent them here, so results can offer the right next step. */
   stage?: "code" | "solve";
+  /** Question-specific Golden slice that originated the practice handoff. */
+  lessonProblemSlug?: string;
 }
 
 interface ResultState {

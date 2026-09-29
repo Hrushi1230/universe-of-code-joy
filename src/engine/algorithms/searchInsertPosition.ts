@@ -9,7 +9,7 @@ import type {
   ValidationResult,
 } from "@/engine/types";
 
-const MAX_ITEMS = 25;
+const MAX_ITEMS = 12;
 
 const PSEUDOCODE: string[] = [
   "function searchInsert(a, target)",
@@ -326,7 +326,7 @@ export const searchInsertPositionModule: AlgorithmModule = {
       label: "Sorted numbers",
       kind: "numbers",
       default: "10, 20, 30, 40, 50, 60, 70, 80, 90",
-      help: "Up to 25 numbers. Unsorted input is sorted for you.",
+      help: "Up to 12 numbers. Unsorted input is sorted for you.",
       max: MAX_ITEMS,
     },
     { name: "target", label: "Target", kind: "number", default: 35, min: -9999, max: 9999 },

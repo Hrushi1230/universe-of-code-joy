@@ -213,6 +213,8 @@ export interface LegalDocument {
 export type ReviewItemKind =
   | "concept"
   | "boundary"
+  | "classification"
+  | "invariant"
   | "midpoint"
   | "termination"
   | "code"
@@ -235,6 +237,8 @@ export interface ReviewChoice {
 export interface ReviewItem {
   id: string;
   algorithmSlug: string;
+  /** Question-specific Golden slice; omitted for algorithm-wide review prompts. */
+  problemSlug?: string;
   kind: ReviewItemKind;
   prompt: string;
   /** Monospace state lines shown above the choices. Must never leak the answer. */

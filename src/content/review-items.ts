@@ -21,3 +21,8 @@ export function getReviewItem(id: string): ReviewItem | undefined {
 export function getReviewItemsByAlgorithm(algorithmSlug: string): ReviewItem[] {
   return reviewItems.filter((item) => item.algorithmSlug === algorithmSlug);
 }
+
+/** One question's curated review set, preserving other Golden slices in the family. */
+export function getReviewItemsByProblem(problemSlug: string): ReviewItem[] {
+  return reviewItems.filter((item) => item.problemSlug === problemSlug);
+}

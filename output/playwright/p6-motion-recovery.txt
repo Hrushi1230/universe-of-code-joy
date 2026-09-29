@@ -1,0 +1,31 @@
+async (page) => {
+  await page.setViewportSize({width:1440,height:900});
+  await page.goto("http://127.0.0.1:4187/");
+  await page.waitForLoadState("networkidle");
+  const card=page.getByTestId("home-traversal");
+  await card.scrollIntoViewIfNeeded();
+  await page.emulateMedia({reducedMotion:"reduce"});
+  await page.waitForFunction(()=>document.documentElement.dataset.reducedMotion==="true");
+  await page.getByRole("button",{name:"Replay traversal"}).click();
+  const before=await card.boundingBox();
+  for(let i=0;i<9;i++) await page.getByRole("button",{name:"Next traversal step"}).click();
+  const after=await card.boundingBox();
+  const summary=await card.getByRole("img").getAttribute("aria-label");
+  const disabled=await page.getByRole("button",{name:"Play traversal",exact:true}).isDisabled();
+  const context=await page.context().browser().newContext({viewport:{width:1440,height:900}});
+  const probe=await context.newPage();
+  let recovered=false;
+  try {
+    await probe.route("**/assets/explore-*.js",route=>route.abort());
+    await probe.goto("http://127.0.0.1:4187/");
+    await probe.locator('a[href="/explore"]').first().click();
+    await probe.getByRole("heading",{name:"This page didn't load",exact:true}).waitFor({timeout:10000});
+    await probe.unroute("**/assets/explore-*.js");
+    await probe.getByRole("link",{name:"Go home",exact:true}).click();
+    await probe.waitForURL("http://127.0.0.1:4187/");
+    recovered=true;
+  } finally {
+    await context.close();
+  }
+  return {summary,autoplayDisabled:disabled,cardHeightStable:Math.abs(before.height-after.height)<=1,failedChunkHomeRecovery:recovered};
+}

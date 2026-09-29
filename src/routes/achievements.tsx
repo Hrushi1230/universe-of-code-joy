@@ -3,13 +3,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   ArrowDownUp,
   ArrowRight,
-  BookCopy,
   BookOpen,
   Brain,
   CalendarCheck,
   CalendarDays,
   Check,
-  ChevronDown,
   Crown,
   Dumbbell,
   Flame,
@@ -20,7 +18,6 @@ import {
   Hash,
   Lock,
   Milestone,
-  Monitor,
   Moon,
   Puzzle,
   Rocket,
@@ -36,6 +33,17 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { AppSidebar, AppWorkspaceBar } from "@/components/app-shell";
+import { DemoNotice } from "@/components/demo-notice";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import useHydrated from "@/hooks/useHydrated";
 import { evaluateAchievements, type AchievementState } from "@/lib/achievements";
 import { baselineProgress, useProgressStore } from "@/stores/progressStore";
@@ -121,20 +129,6 @@ const SHOP = [
     desc: "Protect your streak for one day.",
     price: 200,
   },
-  {
-    id: "theme",
-    icon: Monitor,
-    name: "Theme: Mono",
-    desc: "Clean mono theme for the editor.",
-    price: 500,
-  },
-  {
-    id: "hints",
-    icon: BookCopy,
-    name: "Hint Pack",
-    desc: "Get 5 hints for any challenge.",
-    price: 150,
-  },
 ];
 
 const formatDate = (iso: string): string =>
@@ -144,13 +138,15 @@ function Achievements() {
   const hydrated = useHydrated();
   const live = useProgressStore((s) => s);
   const state = hydrated ? live : baselineProgress;
-  const unlockAchievement = useProgressStore((s) => s.unlockAchievement);
-  const awardXp = useProgressStore((s) => s.awardXp);
-  const addFreeze = useProgressStore((s) => s.addFreeze);
+  const unlockAchievementReward = useProgressStore((s) => s.unlockAchievementReward);
+  const redeemReward = useProgressStore((s) => s.redeemReward);
 
   const [filter, setFilter] = useState<Filter>("All");
   const [tier, setTier] = useState<Tier>("All tiers");
-  const [tierOpen, setTierOpen] = useState(false);
+  const [purchase, setPurchase] = useState<{
+    item: (typeof SHOP)[number];
+    transactionId: string;
+  } | null>(null);
 
   const all = useMemo(() => evaluateAchievements(state), [state]);
 
@@ -163,13 +159,13 @@ function Achievements() {
       (a) => a.unlocked && !a.unlockedAt,
     );
     for (const a of fresh) {
-      unlockAchievement(a.achievement.id, 100);
-      awardXp(a.achievement.xp, `achievement:${a.achievement.id}`);
-      toast.success(`Badge unlocked — ${a.achievement.name}`, {
-        description: `${a.achievement.description} +${a.achievement.xp} XP`,
-      });
+      if (unlockAchievementReward(a.achievement.id, 100, a.achievement.xp)) {
+        toast.success(`Badge unlocked — ${a.achievement.name}`, {
+          description: `${a.achievement.description} +${a.achievement.xp} XP`,
+        });
+      }
     }
-  }, [awardXp, hydrated, unlockAchievement]);
+  }, [hydrated, unlockAchievementReward]);
 
   const earned = all.filter((a) => a.unlocked).length;
   const pct = all.length === 0 ? 0 : Math.round((earned / all.length) * 100);
@@ -184,30 +180,36 @@ function Achievements() {
       if (filter === "Locked") return !a.unlocked && a.pct === 0;
       return true;
     })
-    .sort((a, b) => rank(a) - rank(b) || b.pct - a.pct)
-    .slice(0, 12);
+    .sort((a, b) => rank(a) - rank(b) || b.pct - a.pct);
 
-  const redeem = (item: (typeof SHOP)[number]) => {
-    if (state.xp < item.price) {
-      toast.error("Not enough XP", {
-        description: `${item.name} costs ${item.price} XP — you have ${state.xp}.`,
+  const requestRedeem = (item: (typeof SHOP)[number]) => {
+    setPurchase({ item, transactionId: `shop:${item.id}:${Date.now()}` });
+  };
+
+  const confirmRedeem = () => {
+    if (!purchase) return;
+    const redeemed = redeemReward(purchase.transactionId, purchase.item.id, purchase.item.price, 1);
+    if (redeemed) {
+      toast.success(`${purchase.item.name} redeemed`, {
+        description: `${purchase.item.price} XP spent. One freeze was added locally.`,
       });
-      return;
+    } else {
+      toast.error("Reward was not redeemed", {
+        description: "Check your XP balance and freeze limit, then try again.",
+      });
     }
-    awardXp(-item.price, `redeem:${item.id}`);
-    if (item.id === "freeze") addFreeze(1);
-    toast.success(`${item.name} redeemed`, { description: `−${item.price} XP` });
+    setPurchase(null);
   };
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background">
+    <div className="flex min-h-screen w-full bg-background lg:h-screen lg:overflow-hidden">
       <AppSidebar active="Achievements" collapsible />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <AppWorkspaceBar crumbs={[]} search />
 
-        <main className="flex min-h-0 flex-1 flex-col overflow-hidden px-8 py-4">
-          <div className="flex shrink-0 items-center justify-between gap-8">
+        <main className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-4 sm:px-8">
+          <div className="flex shrink-0 flex-col items-start justify-between gap-3 sm:flex-row sm:items-center sm:gap-8">
             <div>
               <h1 className="text-[28px] font-semibold leading-none tracking-tight text-foreground">
                 Achievements
@@ -216,7 +218,7 @@ function Achievements() {
                 {earned} of {all.length} badges earned. Keep going.
               </p>
             </div>
-            <div className="flex w-[420px] items-center gap-3">
+            <div className="flex w-full items-center gap-3 sm:w-[420px]">
               <span className="font-mono text-[13px] text-primary">{pct}%</span>
               <div className="h-2 flex-1 overflow-hidden rounded-full bg-secondary">
                 <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
@@ -224,8 +226,15 @@ function Achievements() {
             </div>
           </div>
 
-          <div className="mt-3.5 flex shrink-0 items-center justify-between">
-            <div className="flex overflow-hidden rounded-xl border border-hairline bg-card">
+          <div className="mt-3">
+            <DemoNotice>
+              Badge criteria, XP, and streak freezes use progress stored on this device. Rewards are
+              not server-verified yet.
+            </DemoNotice>
+          </div>
+
+          <div className="mt-3.5 flex shrink-0 flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
+            <div className="grid grid-cols-2 overflow-hidden rounded-xl border border-hairline bg-card sm:flex">
               {(["All", "Earned", "In progress", "Locked"] as Filter[]).map((t, i) => (
                 <button
                   key={t}
@@ -243,103 +252,95 @@ function Achievements() {
                 </button>
               ))}
             </div>
-            <div className="relative">
-              <button
-                onClick={() => setTierOpen((o) => !o)}
-                aria-expanded={tierOpen}
-                className="inline-flex h-10 items-center gap-2 rounded-xl border border-hairline bg-card px-4 font-mono text-[13px] text-foreground hover:bg-secondary"
+            <label className="flex items-center gap-2 font-mono text-[12px] text-muted-foreground">
+              Tier
+              <select
+                value={tier}
+                onChange={(event) => setTier(event.target.value as Tier)}
+                className="h-10 rounded-xl border border-hairline bg-card px-3 font-mono text-[13px] capitalize text-foreground outline-none focus:border-primary focus:ring-4 focus:ring-primary-tint"
               >
-                {tier === "All tiers" ? "Category" : tier}{" "}
-                <ChevronDown className="h-4 w-4 text-muted-foreground" strokeWidth={1.9} />
-              </button>
-              {tierOpen && (
-                <div className="absolute right-0 z-20 mt-1.5 w-[160px] overflow-hidden rounded-xl border border-hairline bg-card py-1 shadow-[0_12px_30px_-18px_rgba(14,21,19,0.35)]">
-                  {TIERS.map((t) => (
-                    <button
-                      key={t}
-                      onClick={() => {
-                        setTier(t);
-                        setTierOpen(false);
-                      }}
-                      className={`block w-full px-4 py-2 text-left font-mono text-[12.5px] capitalize hover:bg-secondary ${
-                        tier === t ? "text-primary" : "text-foreground"
-                      }`}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+                {TIERS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
 
-          <div className="mt-3.5 grid min-h-0 flex-1 grid-cols-4 grid-rows-3 gap-3.5">
-            {visible.map((a) => {
-              const locked = !a.unlocked && a.pct === 0;
-              const Icon = ICONS[a.achievement.icon] ?? Trophy;
-              return (
-                <div
-                  key={a.achievement.id}
-                  className={`relative flex min-h-0 flex-col rounded-2xl border p-4 ${
-                    a.unlocked
-                      ? "border-primary/25 bg-primary-tint/40"
-                      : locked
-                        ? "border-hairline bg-paper"
-                        : "border-hairline bg-card"
-                  }`}
-                >
-                  {locked && (
-                    <Lock
-                      className="absolute right-3.5 top-3.5 h-3.5 w-3.5 text-muted-foreground"
-                      strokeWidth={1.9}
-                    />
-                  )}
-                  <div className="flex gap-3.5">
-                    <Crest icon={Icon} muted={locked} />
-                    <div className="min-w-0 pt-1">
-                      <div className="text-[14.5px] font-semibold leading-tight text-foreground">
-                        {a.achievement.name}
+          {visible.length === 0 ? (
+            <div className="mt-3.5 rounded-2xl border border-hairline bg-card px-5 py-10 text-center font-mono text-[13px] text-muted-foreground">
+              No badges match these filters.
+            </div>
+          ) : (
+            <div className="mt-3.5 grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+              {visible.map((a) => {
+                const locked = !a.unlocked && a.pct === 0;
+                const Icon = ICONS[a.achievement.icon] ?? Trophy;
+                return (
+                  <div
+                    key={a.achievement.id}
+                    className={`relative flex min-h-0 flex-col rounded-2xl border p-4 ${
+                      a.unlocked
+                        ? "border-primary/25 bg-primary-tint/40"
+                        : locked
+                          ? "border-hairline bg-paper"
+                          : "border-hairline bg-card"
+                    }`}
+                  >
+                    {locked && (
+                      <Lock
+                        className="absolute right-3.5 top-3.5 h-3.5 w-3.5 text-muted-foreground"
+                        strokeWidth={1.9}
+                      />
+                    )}
+                    <div className="flex gap-3.5">
+                      <Crest icon={Icon} muted={locked} />
+                      <div className="min-w-0 pt-1">
+                        <div className="text-[14.5px] font-semibold leading-tight text-foreground">
+                          {a.achievement.name}
+                        </div>
+                        <p className="mt-1 font-mono text-[11.5px] leading-[1.5] text-muted-foreground">
+                          {a.achievement.description}
+                        </p>
                       </div>
-                      <p className="mt-1 font-mono text-[11.5px] leading-[1.5] text-muted-foreground">
-                        {a.achievement.description}
-                      </p>
+                    </div>
+
+                    <div className="mt-auto pt-3">
+                      {a.unlocked && (
+                        <span className="inline-flex items-center gap-2 font-mono text-[12px] text-primary">
+                          <Check className="h-3.5 w-3.5" strokeWidth={2.6} />
+                          {a.unlockedAt ? `Earned ${formatDate(a.unlockedAt)}` : "Earned"}
+                        </span>
+                      )}
+                      {!a.unlocked && !locked && (
+                        <div className="flex items-center gap-2.5">
+                          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-secondary">
+                            <div
+                              className="h-full rounded-full bg-primary"
+                              style={{ width: `${a.pct}%` }}
+                            />
+                          </div>
+                          <span className="shrink-0 font-mono text-[12px] text-foreground">
+                            {a.current} / {a.target}
+                          </span>
+                        </div>
+                      )}
+                      {locked && (
+                        <span className="inline-flex items-center gap-2 font-mono text-[12px] text-muted-foreground">
+                          <Lock className="h-3.5 w-3.5" strokeWidth={1.9} />
+                          {a.achievement.criteria}
+                        </span>
+                      )}
                     </div>
                   </div>
-
-                  <div className="mt-auto pt-3">
-                    {a.unlocked && (
-                      <span className="inline-flex items-center gap-2 font-mono text-[12px] text-primary">
-                        <Check className="h-3.5 w-3.5" strokeWidth={2.6} />
-                        {a.unlockedAt ? `Earned ${formatDate(a.unlockedAt)}` : "Earned"}
-                      </span>
-                    )}
-                    {!a.unlocked && !locked && (
-                      <div className="flex items-center gap-2.5">
-                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-secondary">
-                          <div
-                            className="h-full rounded-full bg-primary"
-                            style={{ width: `${a.pct}%` }}
-                          />
-                        </div>
-                        <span className="shrink-0 font-mono text-[12px] text-foreground">
-                          {a.current} / {a.target}
-                        </span>
-                      </div>
-                    )}
-                    {locked && (
-                      <span className="inline-flex items-center gap-2 font-mono text-[12px] text-muted-foreground">
-                        <Lock className="h-3.5 w-3.5" strokeWidth={1.9} />
-                        {a.achievement.criteria}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
 
           {/* Rewards shop */}
-          <div className="mt-3.5 flex shrink-0 items-center gap-5 rounded-2xl border border-hairline bg-primary-tint/50 px-6 py-4">
+          <div className="mt-3.5 flex shrink-0 flex-col items-stretch gap-4 rounded-2xl border border-hairline bg-primary-tint/50 px-5 py-4 sm:flex-row sm:items-center sm:px-6">
             <div className="w-[150px] shrink-0">
               <div className="text-[17px] font-semibold leading-tight text-foreground">
                 Rewards shop
@@ -367,8 +368,8 @@ function Achievements() {
                       {item.price} XP
                     </span>
                     <button
-                      onClick={() => redeem(item)}
-                      disabled={state.xp < item.price}
+                      onClick={() => requestRedeem(item)}
+                      disabled={!hydrated || state.xp < item.price || state.streak.freezesLeft >= 9}
                       className="h-7 rounded-lg bg-primary px-3 font-mono text-[12px] text-primary-foreground hover:bg-primary-glow disabled:opacity-45"
                     >
                       Redeem
@@ -378,7 +379,7 @@ function Achievements() {
               </div>
             ))}
 
-            <div className="w-[160px] shrink-0 text-right">
+            <div className="shrink-0 text-left sm:ml-auto sm:w-[190px] sm:text-right">
               <div className="font-mono text-[13px] text-foreground">
                 Balance: <span className="text-primary">{state.xp.toLocaleString("en-US")} XP</span>
               </div>
@@ -388,6 +389,22 @@ function Achievements() {
               </span>
             </div>
           </div>
+
+          <AlertDialog open={Boolean(purchase)} onOpenChange={(open) => !open && setPurchase(null)}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Redeem one streak freeze?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This spends {purchase?.item.price ?? 0} XP from this device and adds one streak
+                  freeze. This local action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Keep XP</AlertDialogCancel>
+                <AlertDialogAction onClick={confirmRedeem}>Spend XP</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </main>
       </div>
     </div>

@@ -16,7 +16,7 @@ export function PlaybackBand({ className }: PlaybackBandProps): React.ReactEleme
     <section
       aria-label="Playback"
       className={cn(
-        "flex shrink-0 items-center rounded-2xl border border-hairline bg-card px-5 py-2.5 shadow-sm",
+        "flex shrink-0 items-center overflow-hidden rounded-2xl border border-hairline bg-card px-3 py-2.5 shadow-sm sm:px-5 lg:h-[58px] lg:min-h-[58px]",
         className,
       )}
     >

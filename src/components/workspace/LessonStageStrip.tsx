@@ -32,6 +32,8 @@ export interface LessonStageStripProps {
   practiceSlug: string | null;
   /** Algorithm the Trace and Visualize links point at. */
   algorithmSlug?: string;
+  /** Question whose Code/Solve/Trace/Review mappings are active. */
+  problemSlug?: string;
   /** True when this algorithm has a hand-trace exercise; false keeps it inert. */
   traceAvailable?: boolean;
   /** Implementation challenge for the Code stage; null keeps the chip inert. */
@@ -59,6 +61,7 @@ export function LessonStageStrip({
   active,
   practiceSlug,
   algorithmSlug,
+  problemSlug,
   traceAvailable = false,
   codeSlug = null,
   codeComplete = false,
@@ -70,7 +73,7 @@ export function LessonStageStrip({
   return (
     <nav
       aria-label="Lesson stages"
-      className={cn("flex items-center gap-1 overflow-x-auto", className)}
+      className={cn("flex items-center gap-1 overflow-hidden", className)}
     >
       {STAGES.map((stage) => {
         const isActive = stage.id === active;
@@ -116,6 +119,7 @@ export function LessonStageStrip({
               search={{
                 from: "lesson" as const,
                 ...(algorithmSlug ? { algorithm: algorithmSlug } : {}),
+                ...(problemSlug ? { problem: problemSlug } : {}),
                 stage: "code" as const,
               }}
               className={cn(
@@ -142,6 +146,7 @@ export function LessonStageStrip({
               search={{
                 from: "lesson" as const,
                 ...(algorithmSlug ? { algorithm: algorithmSlug } : {}),
+                ...(problemSlug ? { problem: problemSlug } : {}),
                 stage: "solve" as const,
               }}
               className={cn(
@@ -165,7 +170,10 @@ export function LessonStageStrip({
             <Link
               key={stage.id}
               to="/review"
-              search={{ algorithm: algorithmSlug }}
+              search={{
+                algorithm: algorithmSlug,
+                ...(problemSlug ? { problem: problemSlug } : {}),
+              }}
               className={cn(
                 base,
                 "gap-1",

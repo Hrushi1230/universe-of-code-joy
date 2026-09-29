@@ -1,4 +1,5 @@
 import * as React from "react";
+import { RainWaterView } from "@/components/viz/RainWaterView";
 import { cn } from "@/lib/utils";
 import type { ArrayFrame, CellState } from "@/engine/types";
 import { pointerLabel } from "@/lib/pointerLabels";
@@ -7,6 +8,7 @@ import { cellCenter, clampToRow, scaleXFor, windowExtentPx } from "@/lib/vizTran
 import { cellTreatment } from "@/lib/vizState";
 import { assignPointerLanes } from "@/lib/pointerLanes";
 import { decisionPreview } from "@/lib/decisionPreview";
+import { ARRAY_VISIBLE_CELL_LIMIT, arrayViewportGeometry } from "@/lib/arrayViewport";
 
 /**
  * DOM (not SVG) canvas for searching-style array frames: a `target = n` chip,
@@ -56,16 +58,24 @@ function windowExtent(frame: ArrayFrame): { from: number; to: number } | null {
   return { from: clamp(lo.index), to: clamp(hi.index) };
 }
 
-function describe(frame: ArrayFrame): string {
+function describe(frame: ArrayFrame, revealDecision: boolean): string {
   const parts: string[] = [`Array of ${frame.values.length} values: ${frame.values.join(", ")}.`];
   if (frame.target) parts.push(`${frame.target.label} ${String(frame.target.value)}.`);
   for (const p of frame.pointers)
     parts.push(`Pointer ${pointerLabel(p.name)} at index ${p.index}.`);
   const win = windowExtent(frame);
-  if (win) parts.push(`Current search range covers indexes ${win.from} to ${win.to}.`);
+  if (win) {
+    const label = frame.ranges[0]?.label ?? "Current search range";
+    parts.push(`${label} covers indexes ${win.from} to ${win.to}.`);
+  }
   if (frame.comparison) {
     const { left, op, right, verdict } = frame.comparison;
-    parts.push(`Comparing ${left} ${op} ${right}.${verdict ? ` ${verdict}.` : ""}`);
+    parts.push(
+      `Comparing ${left} ${op} ${right}.${revealDecision && verdict ? ` ${verdict}.` : ""}`,
+    );
+  }
+  if (frame.swapPair) {
+    parts.push(`Swapping indexes ${frame.swapPair[0]} and ${frame.swapPair[1]}.`);
   }
   return parts.join(" ");
 }
@@ -92,22 +102,29 @@ function useMeasuredWidth<T extends HTMLElement>(): [React.RefObject<T | null>, 
 const ValueCell = React.memo(function ValueCell({
   value,
   state,
+  swapping,
 }: {
   value: string | number;
   state: CellState;
+  swapping: boolean;
 }): React.ReactElement {
   const treatment = cellTreatment(state);
   return (
     <div
+      data-testid="array-cell"
+      data-state={state}
       className={cn(
         "relative flex h-[60px] items-center justify-center rounded-xl border font-mono text-[21px] tabular-nums xl:h-[62px]",
         "transition-[background-color,border-color,color,box-shadow,opacity] duration-300 ease-out",
         CELL_SURFACE[state],
         EMPHASIS[state],
         treatment.dim && "opacity-55",
+        swapping && "ring-2 ring-primary ring-offset-2 ring-offset-card",
       )}
     >
-      {String(value)}
+      <span key={String(value)} className={cn(swapping && "viz-swap")}>
+        {String(value)}
+      </span>
       {treatment.mark ? (
         <span className="pointer-events-none absolute right-1 top-1 opacity-80">
           <StateIcon state={state} size={11} />
@@ -130,13 +147,18 @@ export interface ArrayCanvasProps {
   className?: string;
 }
 
-export function ArrayCanvas({
+export function ArrayCanvas(props: ArrayCanvasProps): React.ReactElement {
+  return props.frame.rainWater ? <RainWaterView {...props} /> : <StandardArrayCanvas {...props} />;
+}
+
+function StandardArrayCanvas({
   frame,
   movedPointers,
   revealDecision = true,
   className,
 }: ArrayCanvasProps): React.ReactElement {
   const n = Math.max(1, frame.values.length);
+  const viewport = arrayViewportGeometry(frame.values.length);
   const win = windowExtent(frame);
   const [rowRef, rowWidth] = useMeasuredWidth<HTMLDivElement>();
   const cols: React.CSSProperties = { gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` };
@@ -186,8 +208,8 @@ export function ArrayCanvas({
   const preview = revealDecision ? decisionPreview(frame) : null;
 
   return (
-    <div className={cn("flex w-full flex-col", className)}>
-      <span className="sr-only" role="img" aria-label={describe(frame)} />
+    <div data-testid="array-canvas" className={cn("flex w-full flex-col", className)}>
+      <span className="sr-only" role="img" aria-label={describe(frame, revealDecision)} />
 
       {/* target — a stationary mono chip; only its value cross-fades */}
       {frame.target ? (
@@ -203,106 +225,139 @@ export function ArrayCanvas({
       ) : null}
 
       <div
-        className={cn("w-full self-center px-1", frame.target ? "mt-5" : "mt-0")}
-        style={{ maxWidth: `${n * MAX_CELL}px` }}
+        data-testid="array-scroll-viewport"
+        data-overflow="false"
+        data-over-limit={viewport.overflow ? "true" : "false"}
+        data-visible-cell-limit={ARRAY_VISIBLE_CELL_LIMIT}
+        className={cn(
+          "w-full self-center",
+          frame.target ? "mt-5" : "mt-0",
+          viewport.overflow && "mx-auto overflow-hidden rounded-lg px-1",
+        )}
+        style={
+          viewport.overflow && viewport.viewportWidth
+            ? { maxWidth: `min(100%, ${viewport.viewportWidth}px)` }
+            : undefined
+        }
       >
-        {/* index labels */}
-        <div aria-hidden="true" className="grid w-full gap-2" style={cols}>
-          {frame.values.map((_, i) => (
-            <span
-              key={`idx-${i}`}
-              className="text-center font-mono text-[13px] tabular-nums text-slate"
-            >
-              {i}
-            </span>
-          ))}
-        </div>
+        <div
+          className="px-1"
+          style={
+            viewport.overflow && viewport.trackWidth
+              ? { width: `${viewport.trackWidth}px` }
+              : { maxWidth: `${n * MAX_CELL}px`, marginInline: "auto" }
+          }
+        >
+          {/* index labels */}
+          <div aria-hidden="true" className="grid w-full gap-2" style={cols}>
+            {frame.values.map((_, i) => (
+              <span
+                key={`idx-${i}`}
+                className="text-center font-mono text-[13px] tabular-nums text-slate"
+              >
+                {i}
+              </span>
+            ))}
+          </div>
 
-        {/* value cells */}
-        <div ref={rowRef} className="mt-2 grid w-full gap-2" style={cols}>
-          {frame.values.map((value, i) => (
-            <ValueCell key={`cell-${i}`} value={value} state={stateOf(frame, i)} />
-          ))}
-        </div>
+          {/* value cells */}
+          <div ref={rowRef} className="mt-2 grid w-full gap-2" style={cols}>
+            {frame.values.map((value, i) => (
+              <ValueCell
+                key={`cell-${i}`}
+                value={value}
+                state={stateOf(frame, i)}
+                swapping={frame.swapPair?.includes(i) ?? false}
+              />
+            ))}
+          </div>
 
-        {/* low / mid / high markers — persistent, they travel */}
-        <div className="relative mt-2.5 h-[52px] w-full">
-          {markers.map((m) => (
-            <span
-              key={m.name}
-              className="absolute left-0 top-0 flex flex-col items-center gap-0.5 leading-none transition-[transform,opacity] duration-300 ease-out will-change-transform"
+          {/* low / mid / high markers — persistent, they travel */}
+          <div className="relative mt-2.5 h-[52px] w-full">
+            {markers.map((m) => (
+              <span
+                key={m.name}
+                className="absolute left-0 top-0 flex flex-col items-center gap-0.5 leading-none transition-[transform,opacity] duration-300 ease-out will-change-transform"
+                style={{
+                  opacity: m.active ? 1 : 0,
+                  transform: `translateX(${clampToRow(cellCenter(m.slot, rowWidth, n, CELL_GAP), rowWidth, 22 + Math.abs(m.lane)) + m.lane}px) translateX(-50%)`,
+                }}
+              >
+                <svg
+                  aria-hidden="true"
+                  width="14"
+                  height="16"
+                  viewBox="0 0 14 16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-accent-strong"
+                >
+                  <path d="M7 15V2" />
+                  <path d="M2.5 6.5 7 2l4.5 4.5" />
+                </svg>
+                <span
+                  className={cn(
+                    "mt-1 font-sans text-[13px] transition-colors duration-300 ease-out",
+                    moved.has(m.name)
+                      ? "font-semibold text-accent-strong"
+                      : "font-semibold text-ink",
+                  )}
+                >
+                  {pointerLabel(m.name)}
+                </span>
+                <span className="font-mono text-[12px] tabular-nums text-slate">({m.index})</span>
+              </span>
+            ))}
+          </div>
+
+          {/* search-range bracket — one element that contracts */}
+          <div className="relative mt-1 h-[10px] w-full overflow-hidden">
+            <div
+              aria-hidden="true"
+              className="absolute left-0 top-0 h-[10px] w-full origin-left rounded-b-[3px] border-x border-t border-slate-soft/70 transition-[transform,opacity] duration-300 ease-out will-change-transform"
               style={{
-                opacity: m.active ? 1 : 0,
-                transform: `translateX(${clampToRow(cellCenter(m.slot, rowWidth, n, CELL_GAP), rowWidth, 22 + Math.abs(m.lane)) + m.lane}px) translateX(-50%)`,
+                opacity: win ? 1 : 0,
+                transform: `translateX(${extent.offset}px) scaleX(${scaleXFor(extent.width, rowWidth)})`,
+              }}
+            />
+          </div>
+          <div className="relative mt-2 h-[18px] w-full">
+            <span
+              className="absolute left-0 top-0 whitespace-nowrap font-mono text-[13px] text-accent-strong transition-[transform,opacity] duration-300 ease-out will-change-transform"
+              style={{
+                opacity: win ? 1 : 0,
+                transform: `translateX(${clampToRow(extent.center, rowWidth, 90)}px) translateX(-50%)`,
               }}
             >
-              <svg
-                aria-hidden="true"
-                width="14"
-                height="16"
-                viewBox="0 0 14 16"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-accent-strong"
-              >
-                <path d="M7 15V2" />
-                <path d="M2.5 6.5 7 2l4.5 4.5" />
-              </svg>
-              <span
-                className={cn(
-                  "mt-1 font-sans text-[13px] transition-colors duration-300 ease-out",
-                  moved.has(m.name) ? "font-semibold text-accent-strong" : "font-semibold text-ink",
-                )}
-              >
-                {pointerLabel(m.name)}
+              {frame.ranges[0]?.label ?? "Current search range"}{" "}
+              <span key={win ? `${win.from}-${win.to}` : "none"} className="viz-swap">
+                [{win?.from ?? 0}..{win?.to ?? 0}]
               </span>
-              <span className="font-mono text-[12px] tabular-nums text-slate">({m.index})</span>
             </span>
-          ))}
-        </div>
+          </div>
 
-        {/* search-range bracket — one element that contracts */}
-        <div className="relative mt-1 h-[10px] w-full overflow-hidden">
-          <div
-            aria-hidden="true"
-            className="absolute left-0 top-0 h-[10px] w-full origin-left rounded-b-[3px] border-x border-t border-slate-soft/70 transition-[transform,opacity] duration-300 ease-out will-change-transform"
-            style={{
-              opacity: win ? 1 : 0,
-              transform: `translateX(${extent.offset}px) scaleX(${scaleXFor(extent.width, rowWidth)})`,
-            }}
-          />
-        </div>
-        <div className="relative mt-2 h-[18px] w-full">
-          <span
-            className="absolute left-0 top-0 whitespace-nowrap font-mono text-[13px] text-accent-strong transition-[transform,opacity] duration-300 ease-out will-change-transform"
-            style={{
-              opacity: win ? 1 : 0,
-              transform: `translateX(${clampToRow(extent.center, rowWidth, 90)}px) translateX(-50%)`,
-            }}
-          >
-            Current search range{" "}
-            <span key={win ? `${win.from}-${win.to}` : "none"} className="viz-swap">
-              [{win?.from ?? 0}..{win?.to ?? 0}]
-            </span>
-          </span>
-        </div>
-
-        {/* Decision preview: the side that would survive this comparison. The
-            row keeps its height so the canvas never reflows, but the sentence
-            itself is absent unless a preview is allowed — at an open prediction
-            checkpoint it would otherwise still be readable to a screen reader.
-            The wording is explicit that the range above has not changed yet. */}
-        <div className="mt-1.5 flex h-[16px] w-full items-start justify-center">
-          {preview ? (
-            <span className="viz-swap whitespace-nowrap font-mono text-[12px] text-slate">
-              Preview: [{preview.from}..{preview.to}] would survive — range not changed yet
-            </span>
-          ) : null}
+          {/* Decision preview: the side that would survive this comparison. The
+              row keeps its height so the canvas never reflows, but the sentence
+              itself is absent unless a preview is allowed — at an open prediction
+              checkpoint it would otherwise still be readable to a screen reader.
+              The wording is explicit that the range above has not changed yet. */}
+          <div className="mt-1.5 flex h-[16px] w-full items-start justify-center">
+            {preview ? (
+              <span className="viz-swap whitespace-nowrap font-mono text-[12px] text-slate">
+                Preview: [{preview.from}..{preview.to}] would survive — range not changed yet
+              </span>
+            ) : null}
+          </div>
         </div>
       </div>
+      {viewport.overflow ? (
+        <p className="mt-1.5 text-center font-mono text-[11px] text-slate">
+          Input limit: {ARRAY_VISIBLE_CELL_LIMIT} cells
+        </p>
+      ) : null}
     </div>
   );
 }

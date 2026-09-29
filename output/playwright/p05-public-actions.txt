@@ -1,0 +1,76 @@
+async (page) => {
+  const checks = [];
+  const check = (condition, name) => {
+    if (!condition) throw new Error(name);
+    checks.push(name);
+  };
+  await page.setViewportSize({ width: 390, height: 600 });
+  await page.goto("http://127.0.0.1:8081/pricing");
+  await page.waitForLoadState("networkidle");
+  await page.getByRole("button", { name: "Monthly", exact: true }).click();
+  check(
+    (await page
+      .getByRole("button", { name: "Monthly", exact: true })
+      .getAttribute("aria-pressed")) === "true",
+    "Pricing interval selects monthly",
+  );
+  const faq = page.locator("summary").filter({ hasText: "Can I pay for Pro today?" });
+  await faq.focus();
+  await page.keyboard.press("Enter");
+  check(await faq.evaluate((el) => el.parentElement.open), "Pricing FAQ opens with keyboard");
+  await page.keyboard.press("Enter");
+  check(!(await faq.evaluate((el) => el.parentElement.open)), "Pricing FAQ closes with keyboard");
+  await page.goto("http://127.0.0.1:8081/contact");
+  await page.waitForLoadState("networkidle");
+  await page.getByRole("button", { name: "Check message" }).click();
+  check(
+    await page.locator("#contact-form").evaluate((el) => !el.checkValidity()),
+    "Contact rejects empty required inputs",
+  );
+  await page.locator("#contact-first-name").fill("Test");
+  await page.locator("#contact-last-name").fill("Learner");
+  await page.locator("#contact-email").fill("learner@example.com");
+  await page.locator("#contact-topic").selectOption({ label: "Product support" });
+  await page.locator("#contact-message").fill("Local acceptance check.");
+  await page.getByRole("button", { name: "Check message" }).click();
+  check(
+    (await page.getByRole("status").filter({ hasText: "Nothing was sent or stored." }).innerText()).includes("Nothing was sent or stored."),
+    "Valid contact form reports unavailable delivery",
+  );
+  await page.goto("http://127.0.0.1:8081/auth");
+  await page.waitForLoadState("networkidle");
+  await page.locator("#email").fill("learner@example.com");
+  await page.locator("#password").fill("abcdefgh");
+  await page.getByRole("button", { name: "Continue to local setup" }).click();
+  check(
+    (await page.getByRole("alert").innerText()).includes("one number"),
+    "Signup enforces its displayed password requirement",
+  );
+  await page.getByRole("button", { name: "Show password" }).click();
+  check(
+    (await page.locator("#password").getAttribute("type")) === "text",
+    "Password visibility control has an accessible action",
+  );
+  for (const route of [
+    "/",
+    "/pricing",
+    "/contact",
+    "/login",
+    "/auth",
+    "/settings",
+    "/notifications",
+  ]) {
+    // Browser page zoom reduces the CSS viewport. CSS style.zoom does not
+    // change media-query breakpoints and is not an equivalent acceptance check.
+    await page.setViewportSize({ width: 720, height: 450 });
+    await page.goto("http://127.0.0.1:8081" + route);
+    await page.waitForLoadState("networkidle");
+    check(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1,
+      ),
+      route + " fits the 720x450 CSS viewport equivalent to 200% of 1440x900",
+    );
+  }
+  return checks;
+}

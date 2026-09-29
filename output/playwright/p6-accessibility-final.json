@@ -1,0 +1,296 @@
+[
+  {
+    "route": "/",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "aria-prohibited-attr",
+        "count": 5
+      },
+      {
+        "id": "color-contrast",
+        "count": 11
+      }
+    ]
+  },
+  {
+    "route": "/visualizer",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 9
+      }
+    ]
+  },
+  {
+    "route": "/pricing",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "route": "/campus",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "aria-prohibited-attr",
+        "count": 5
+      },
+      {
+        "id": "color-contrast",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "route": "/blog",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 56
+      }
+    ]
+  },
+  {
+    "route": "/contact",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "route": "/privacy",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": []
+  },
+  {
+    "route": "/terms",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": []
+  },
+  {
+    "route": "/auth",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": []
+  },
+  {
+    "route": "/login",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": []
+  },
+  {
+    "route": "/forgot-password",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "route": "/reset-password",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "route": "/verify-email",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "route": "/onboarding/goals",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "route": "/onboarding/assessment",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 11
+      }
+    ]
+  },
+  {
+    "route": "/onboarding/path",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "route": "/explore",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": []
+  },
+  {
+    "route": "/dashboard",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 2
+      }
+    ]
+  },
+  {
+    "route": "/paths",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 11
+      }
+    ]
+  },
+  {
+    "route": "/mastery-map",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 30
+      }
+    ]
+  },
+  {
+    "route": "/quests",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "route": "/achievements",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": []
+  },
+  {
+    "route": "/leagues",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 3
+      }
+    ]
+  },
+  {
+    "route": "/notifications",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": []
+  },
+  {
+    "route": "/settings",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": []
+  },
+  {
+    "route": "/settings/billing",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": []
+  },
+  {
+    "route": "/practice",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "route": "/practice/results",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": []
+  },
+  {
+    "route": "/review",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": []
+  },
+  {
+    "route": "/practice/two-sum",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 2
+      }
+    ]
+  },
+  {
+    "route": "/algorithms/binary-search",
+    "version": "4.12.0",
+    "violations": [],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "count": 1
+      }
+    ]
+  }
+]

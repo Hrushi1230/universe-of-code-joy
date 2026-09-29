@@ -6,12 +6,12 @@
  * "S10.4 — Every fabricated public statistic is either substantiated or removed before launch."
  *
  * DIRECTIVE:
- * Every public-facing metric, promotional statistic, testimonial, and social proof
- * claim has been systematically reviewed and substantiated with empirical codebase
- * data or replaced with verified platform properties.
+ * Entries distinguish catalog properties, product intentions and labeled samples.
+ * Their evidence fields document the source; a status label is not evidence of
+ * measured learner outcomes, customer endorsement or production service delivery.
  *
  * AUDIT STATUS:
- * Fully audited and substantiated under S10.4. Zero unverified claims remain in production.
+ * Frontend claim review only. Production claims require the later release review.
  */
 
 export type MarketingClaimType =
@@ -106,8 +106,8 @@ export interface ClaimsAuditLog {
 /* -------------------------------------------------------------------------- */
 
 export const CLAIMS_AUDIT_LOG: ClaimsAuditLog = {
-  reviewedBy: "Algora Content Integrity & Legal Audit Team",
-  reviewedAt: "2026-08-03T22:25:00.000Z",
+  reviewedBy: "Repository evidence audit",
+  reviewedAt: "2026-09-12T00:00:00.000Z",
   criterion: "S10.4 (G10 Content Integrity)",
   summary:
     "All fabricated public statistics and marketing claims have been systematically reviewed, substantiated with empirical codebase data or replaced with verified platform properties. 0 unverified claims remaining.",
@@ -125,84 +125,82 @@ export const MARKETING_CLAIMS: Record<string, MarketingClaim> = {
     id: "hero-learners",
     type: "metric",
     status: "SUBSTANTIATED",
-    value: "100%",
-    label: "in-browser",
-    rawText: "100% in-browser",
+    value: "Local",
+    label: "browser runner",
+    rawText: "In-browser runner",
     surfaces: ["/", "/auth"],
     flagReason: "Replaced synthetic learner metric with verified platform architecture capability.",
-    targetResolution:
-      "Substantiated as 100% client-side in-browser execution with zero installation requirement.",
+    targetResolution: "Describe the implemented JavaScript and TypeScript browser runner.",
     evidence:
       "Pure client-side Web Worker runner architecture (G3 / S3.1) executing student code directly in browser.",
     substantiationMethod: "Architectural verification against client-side execution sandbox.",
-    reviewedAt: "2026-08-03T22:25:00.000Z",
-    reviewedBy: "Algora Content Integrity & Legal Audit Team",
+    reviewedAt: "2026-09-12T00:00:00.000Z",
+    reviewedBy: "Repository evidence audit",
   },
   "hero-lessons": {
     id: "hero-lessons",
     type: "catalog_size",
     status: "SUBSTANTIATED",
-    value: "30+",
-    label: "lessons",
-    rawText: "30+ lessons",
+    value: "56",
+    label: "practice questions",
+    rawText: "56 practice questions",
     surfaces: ["/", "/auth", "/login"],
-    flagReason: "Replaced prototype volume estimate with verified initial curriculum slice.",
-    targetResolution: "Substantiated based on actual lesson records in src/data/lessons.ts.",
+    flagReason: "Uses the catalog count instead of calling every record a completed lesson.",
+    targetResolution: "Keep the count aligned with src/data/problems.ts.",
     evidence:
-      "Curriculum slice in src/data/lessons.ts and src/data/algorithms.ts containing 30+ structured interactive lessons.",
-    substantiationMethod: "Direct count verification against curriculum registry.",
-    reviewedAt: "2026-08-03T22:25:00.000Z",
-    reviewedBy: "Algora Content Integrity & Legal Audit Team",
+      "56 records are present in src/data/problems.ts and checked by the question matrix test.",
+    substantiationMethod: "Direct catalog count.",
+    reviewedAt: "2026-09-12T00:00:00.000Z",
+    reviewedBy: "Repository evidence audit",
   },
   "hero-rating": {
     id: "hero-rating",
     type: "metric",
     status: "SUBSTANTIATED",
-    value: "60fps",
-    label: "animation",
-    rawText: "60fps animation",
+    value: "0.5–2×",
+    label: "playback speed",
+    rawText: "0.5–2× playback",
     surfaces: ["/", "/auth"],
-    flagReason: "Replaced unverified star rating with verified 60fps frame rendering performance.",
-    targetResolution: "Substantiated with SVG visualizer repaint benchmark (G8 / S8.3).",
-    evidence:
-      "Frame animation timing under 16ms per frame verified across SVG visualizer renderers.",
-    substantiationMethod: "Performance budget benchmark verification.",
-    reviewedAt: "2026-08-03T22:25:00.000Z",
-    reviewedBy: "Algora Content Integrity & Legal Audit Team",
+    flagReason: "Removed an unverified cross-device 60fps performance claim.",
+    targetResolution:
+      "Describe the implemented homepage speed control without a performance promise.",
+    evidence: "The homepage traversal slider exposes 0.5, 1, 1.5 and 2 times playback speeds.",
+    substantiationMethod: "Source and interaction verification.",
+    reviewedAt: "2026-09-12T00:00:00.000Z",
+    reviewedBy: "Repository evidence audit",
   },
   "campus-courses": {
     id: "campus-courses",
     type: "metric",
     status: "SUBSTANTIATED",
-    value: "CS1 & CS2",
-    label: "syllabus ready",
-    rawText: "CS1 & CS2 syllabus ready",
+    value: "Core DSA",
+    label: "topic coverage",
+    rawText: "Core DSA topic coverage",
     surfaces: ["/campus"],
     flagReason: "Replaced unverified adoption count with verified curricular scope alignment.",
-    targetResolution:
-      "Substantiated as coverage for foundational CS1 (Data Structures) and CS2 (Algorithms) syllabi.",
+    targetResolution: "Describe catalog topics without claiming approval against a named syllabus.",
     evidence:
       "Curriculum paths covering Arrays, Lists, Trees, Heaps, Graphs, Sorting, Searching, and Dynamic Programming.",
     substantiationMethod: "Curriculum mapping against ACM/IEEE CS curriculum standards.",
-    reviewedAt: "2026-08-03T22:25:00.000Z",
-    reviewedBy: "Algora Content Integrity & Legal Audit Team",
+    reviewedAt: "2026-09-12T00:00:00.000Z",
+    reviewedBy: "Repository evidence audit",
   },
   "campus-students": {
     id: "campus-students",
     type: "metric",
     status: "SUBSTANTIATED",
-    value: "Unlimited",
-    label: "cohort seats",
-    rawText: "Unlimited cohort seats",
+    value: "Sample",
+    label: "cohort preview",
+    rawText: "Sample cohort preview",
     surfaces: ["/campus"],
     flagReason:
       "Replaced synthetic campus student volume with verified multi-seat cohort capacity.",
-    targetResolution: "Substantiated as unmetered campus cohort onboarding capacity.",
+    targetResolution: "Label the bundled cohort illustration as sample data.",
     evidence:
-      "Client-authoritative storage and local classroom roster capabilities support arbitrary cohort sizes.",
-    substantiationMethod: "System capability and licensing architecture verification.",
-    reviewedAt: "2026-08-03T22:25:00.000Z",
-    reviewedBy: "Algora Content Integrity & Legal Audit Team",
+      "The campus route renders a fixed sample cohort fixture; no roster backend is implemented.",
+    substantiationMethod: "Source inspection.",
+    reviewedAt: "2026-09-12T00:00:00.000Z",
+    reviewedBy: "Repository evidence audit",
   },
   "campus-outcome-completion": {
     id: "campus-outcome-completion",
@@ -217,39 +215,39 @@ export const MARKETING_CLAIMS: Record<string, MarketingClaim> = {
     evidence:
       "Engine frame builder in src/engine/ guarantees synchronous lockstep across canvas, code highlight, and explanation.",
     substantiationMethod: "Automated engine invariant test verification.",
-    reviewedAt: "2026-08-03T22:25:00.000Z",
-    reviewedBy: "Algora Content Integrity & Legal Audit Team",
+    reviewedAt: "2026-09-12T00:00:00.000Z",
+    reviewedBy: "Repository evidence audit",
   },
   "campus-outcome-reps": {
     id: "campus-outcome-reps",
     type: "outcome",
     status: "SUBSTANTIATED",
-    value: "0ms",
-    label: "local sandbox runner latency",
+    value: "Local",
+    label: "Web Worker runner",
     surfaces: ["/campus"],
     flagReason:
       "Replaced fabricated repetition multiplier with verified local runner execution speed.",
-    targetResolution: "Substantiated with in-browser Web Worker execution latency.",
+    targetResolution: "Describe execution location without inventing a zero-latency measurement.",
     evidence:
       "Code execution completes locally in dedicated worker without round-trip network latency.",
-    substantiationMethod: "Runner benchmark telemetry verification.",
-    reviewedAt: "2026-08-03T22:25:00.000Z",
-    reviewedBy: "Algora Content Integrity & Legal Audit Team",
+    substantiationMethod: "Runner architecture inspection.",
+    reviewedAt: "2026-09-12T00:00:00.000Z",
+    reviewedBy: "Repository evidence audit",
   },
   "campus-outcome-recommend": {
     id: "campus-outcome-recommend",
     type: "outcome",
     status: "SUBSTANTIATED",
-    value: "100%",
-    label: "browser-based with zero install",
+    value: "Browser",
+    label: "no native install",
     surfaces: ["/campus"],
     flagReason:
       "Replaced fabricated student recommendation ratio with verified zero-install property.",
     targetResolution: "Substantiated as pure web application accessible instantly on any device.",
     evidence: "Universal web deployment without local compiler or native environment requirements.",
     substantiationMethod: "Web deployment architecture verification.",
-    reviewedAt: "2026-08-03T22:25:00.000Z",
-    reviewedBy: "Algora Content Integrity & Legal Audit Team",
+    reviewedAt: "2026-09-12T00:00:00.000Z",
+    reviewedBy: "Repository evidence audit",
   },
   "campus-testimonial-voss": {
     id: "campus-testimonial-voss",
@@ -257,17 +255,17 @@ export const MARKETING_CLAIMS: Record<string, MarketingClaim> = {
     status: "SUBSTANTIATED",
     quote:
       "Students understand algorithms deeply when visual state, execution trace, and plain-English explanation advance in lockstep.",
-    author: "Algora Curriculum Architecture",
-    role: "Pedagogy & Visual Systems",
-    initials: "CA",
+    author: "Algora learning principle",
+    role: "Product specification",
+    initials: "LP",
     surfaces: ["/campus"],
     flagReason: "Replaced fictional professor persona with authentic pedagogical design rationale.",
     targetResolution:
       "Substantiated as official Algora Curriculum & Pedagogy architecture principle.",
     evidence: "Core pedagogical thesis documented in research.md §1 and Algora teaching framework.",
     substantiationMethod: "Pedagogical specification ratification.",
-    reviewedAt: "2026-08-03T22:25:00.000Z",
-    reviewedBy: "Algora Content Integrity & Legal Audit Team",
+    reviewedAt: "2026-09-12T00:00:00.000Z",
+    reviewedBy: "Repository evidence audit",
   },
   "campus-cohort-cs2110": {
     id: "campus-cohort-cs2110",
@@ -275,8 +273,8 @@ export const MARKETING_CLAIMS: Record<string, MarketingClaim> = {
     status: "SUBSTANTIATED",
     courseCode: "CS 2110",
     term: "Sample Dashboard",
-    studentCount: 128,
-    avgMastery: 72,
+    studentCount: 5,
+    avgMastery: 69,
     roster: [
       { initials: "AK", name: "Aarav Kapoor", xp: "12,840 XP", mastery: 85 },
       { initials: "SM", name: "Sara Malik", xp: "11,230 XP", mastery: 72 },
@@ -292,41 +290,41 @@ export const MARKETING_CLAIMS: Record<string, MarketingClaim> = {
     evidence:
       "Sample cohort fixture bundled for interactive demo preview without false institution claims.",
     substantiationMethod: "Demonstration fixture validation.",
-    reviewedAt: "2026-08-03T22:25:00.000Z",
-    reviewedBy: "Algora Content Integrity & Legal Audit Team",
+    reviewedAt: "2026-09-12T00:00:00.000Z",
+    reviewedBy: "Repository evidence audit",
   },
   "blog-newsletter-subscribers": {
     id: "blog-newsletter-subscribers",
     type: "metric",
     status: "SUBSTANTIATED",
-    value: "Weekly",
-    label: "algorithm breakdowns",
-    rawText: "Get algorithm breakdowns & visual guides. Unsubscribe anytime.",
+    value: "Planned",
+    label: "newsletter",
+    rawText: "Newsletter sign-up is coming soon.",
     surfaces: ["/blog"],
     flagReason: "Removed fabricated subscriber count.",
-    targetResolution: "Substantiated as standard transparent newsletter description.",
-    evidence: "Truthful publication cadence and content description without inflated metrics.",
-    substantiationMethod: "Editorial copy review.",
-    reviewedAt: "2026-08-03T22:25:00.000Z",
-    reviewedBy: "Algora Content Integrity & Legal Audit Team",
+    targetResolution: "Do not promise delivery or unsubscribe behavior before integration.",
+    evidence: "The blog route currently has no newsletter delivery integration.",
+    substantiationMethod: "Route handler inspection.",
+    reviewedAt: "2026-09-12T00:00:00.000Z",
+    reviewedBy: "Repository evidence audit",
   },
   "catalog-algorithms-count": {
     id: "catalog-algorithms-count",
     type: "catalog_size",
     status: "SUBSTANTIATED",
-    value: "Full",
+    value: "34",
     label: "algorithm catalog",
-    rawText: "Complete algorithm catalog & visualizers",
+    rawText: "34 runnable visualizer modules",
     surfaces: ["/pricing", "/login", "/auth"],
     flagReason:
       "Replaced promotional 60+ count with verified comprehensive catalog access description.",
     targetResolution:
-      "Substantiated as full unrestricted access to all current and upcoming algorithms in the catalog.",
+      "State the current runnable module count without claiming future access or entitlement.",
     evidence:
-      "Pro tier provides unrestricted access to entire algorithm catalog in src/data/algorithms.ts.",
-    substantiationMethod: "Feature entitlement verification.",
-    reviewedAt: "2026-08-03T22:25:00.000Z",
-    reviewedBy: "Algora Content Integrity & Legal Audit Team",
+      "src/engine/registry.ts currently exposes 34 algorithm-keyed and problem-keyed modules.",
+    substantiationMethod: "Registry count.",
+    reviewedAt: "2026-09-12T00:00:00.000Z",
+    reviewedBy: "Repository evidence audit",
   },
   "explore-catalog": {
     id: "explore-catalog",
@@ -334,40 +332,39 @@ export const MARKETING_CLAIMS: Record<string, MarketingClaim> = {
     status: "SUBSTANTIATED",
     value: "25+",
     label: "algorithms and 50+ practice questions",
-    rawText: "25+ algorithms and 50+ practice questions, with 19 step-through visualizers",
+    rawText: "26 algorithms, 56 practice questions, and 34 runnable visualizer modules",
     surfaces: ["/explore"],
     flagReason:
       "Prior copy read '26+ interactive visualizers', implying every catalog entry animates when only the registered engine modules do.",
     targetResolution:
       "Substantiated by counting algorithms and questions separately and attributing visualizers only to registered engine modules.",
     evidence:
-      "26 algorithm records in src/data/algorithms.ts and 56 question records in src/data/problems.ts, against 19 modules in src/engine/registry.ts — 13 keyed by algorithm slug plus 6 keyed by question slug, the searching questions whose animation is their own rather than plain binary search. The catalog counts are stated as floors so growth cannot overstate them; the visualizer count is exact, and since modules are only ever added it can only ever understate.",
+      "26 algorithm records in src/data/algorithms.ts, 56 question records in src/data/problems.ts, and 34 modules from listAllModules() in src/engine/registry.ts.",
     substantiationMethod:
       "Direct count verification against the content catalog and the engine module registry.",
-    reviewedAt: "2026-08-09T00:00:00.000Z",
-    reviewedBy: "Algora Content Integrity & Legal Audit Team",
+    reviewedAt: "2026-09-12T00:00:00.000Z",
+    reviewedBy: "Repository evidence audit",
   },
   "university-social-proof": {
     id: "university-social-proof",
     type: "social_proof",
     status: "SUBSTANTIATED",
-    label: "Designed for standard CS curricula at",
+    label: "Built around core algorithm foundations",
     institutions: [
-      { id: "mit", name: "MIT", fullName: "Massachusetts Institute of Technology" },
-      { id: "stanford", name: "Stanford", fullName: "Stanford University" },
-      { id: "berkeley", name: "Berkeley", fullName: "University of California, Berkeley" },
-      { id: "cmu", name: "CMU", fullName: "Carnegie Mellon University" },
-      { id: "waterloo", name: "Waterloo", fullName: "University of Waterloo" },
+      { id: "arrays", name: "Arrays", fullName: "Arrays and strings" },
+      { id: "trees", name: "Trees", fullName: "Trees and binary search trees" },
+      { id: "graphs", name: "Graphs", fullName: "Graphs and graph traversal" },
+      { id: "sorting", name: "Sorting", fullName: "Sorting algorithms" },
+      { id: "dynamic-programming", name: "DP", fullName: "Dynamic programming" },
     ],
     surfaces: ["/", "/campus"],
     flagReason:
       "Replaced unverified endorsement claim with verified curriculum benchmark alignment.",
-    targetResolution:
-      "Substantiated as alignment with collegiate data structures & algorithm syllabi.",
-    evidence: "Curriculum topic alignment with standard course structures of major CS programs.",
-    substantiationMethod: "Syllabus benchmark mapping.",
-    reviewedAt: "2026-08-03T22:25:00.000Z",
-    reviewedBy: "Algora Content Integrity & Legal Audit Team",
+    targetResolution: "Show implemented subject areas without implying institutional affiliation.",
+    evidence: "These families are present in the algorithm and problem catalogs.",
+    substantiationMethod: "Catalog family inspection.",
+    reviewedAt: "2026-09-12T00:00:00.000Z",
+    reviewedBy: "Repository evidence audit",
   },
 };
 

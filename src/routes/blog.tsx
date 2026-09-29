@@ -1,7 +1,10 @@
+import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Search, ArrowRight, Mail } from "lucide-react";
 import { SiteNav, SiteFooter } from "@/components/site-chrome";
 import { blogNewsletterClaim } from "@/content/marketing-claims";
+import { DemoNotice } from "@/components/demo-notice";
+import useHydrated from "@/hooks/useHydrated";
 
 export const Route = createFileRoute("/blog")({
   component: BlogPage,
@@ -11,12 +14,12 @@ export const Route = createFileRoute("/blog")({
       {
         name: "description",
         content:
-          "Deep dives, study techniques, and interview prep from the Algora team. Visual guides to algorithms, data structures, and getting hired.",
+          "Preview planned Algora articles about algorithms, study techniques, and interview preparation.",
       },
       { property: "og:title", content: "The Algora Blog" },
       {
         property: "og:description",
-        content: "Deep dives, study techniques, and interview prep from the Algora team.",
+        content: "Preview planned Algora articles about algorithms and interview preparation.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -522,13 +525,39 @@ const POSTS = [
 ];
 
 function BlogPage() {
+  const hydrated = useHydrated();
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("All");
+  const filteredPosts = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    return POSTS.filter((post) => {
+      const matchesCategory = category === "All" || post.tag === category.toUpperCase();
+      const matchesQuery =
+        !normalizedQuery ||
+        `${post.title} ${post.excerpt} ${post.tag}`.toLowerCase().includes(normalizedQuery);
+      return matchesCategory && matchesQuery;
+    });
+  }, [category, query]);
+
   return (
     <div className="min-h-screen bg-background">
       <SiteNav />
       <main>
-        <Header />
-        <Featured />
-        <Grid />
+        <Header
+          query={query}
+          setQuery={setQuery}
+          category={category}
+          setCategory={setCategory}
+          ready={hydrated}
+        />
+        {category === "All" && !query.trim() && <Featured />}
+        <Grid
+          posts={filteredPosts}
+          onReset={() => {
+            setQuery("");
+            setCategory("All");
+          }}
+        />
         <Newsletter />
       </main>
       <SiteFooter />
@@ -536,13 +565,25 @@ function BlogPage() {
   );
 }
 
-function Header() {
+function Header({
+  query,
+  setQuery,
+  category,
+  setCategory,
+  ready,
+}: {
+  query: string;
+  setQuery: (value: string) => void;
+  category: string;
+  setCategory: (value: string) => void;
+  ready: boolean;
+}) {
   return (
-    <section className="mx-auto max-w-[1280px] px-8 pt-16 pb-10 text-center">
+    <section className="mx-auto max-w-[1280px] px-4 pb-10 pt-12 text-center sm:px-8 sm:pt-16">
       <span className="inline-flex items-center gap-2 rounded-full bg-primary-tint px-3 py-1.5 font-mono text-[11px] tracking-[0.14em] text-primary">
         <span className="text-[9px]">◆</span> THE ALGORA BLOG
       </span>
-      <h1 className="mx-auto mt-8 max-w-[820px] font-display text-[54px] font-semibold leading-[1.08] tracking-[-0.02em] text-foreground">
+      <h1 className="mx-auto mt-8 max-w-[820px] font-display text-[42px] font-semibold leading-[1.08] tracking-[-0.02em] text-foreground sm:text-[54px]">
         Ideas on algorithms,
         <br />
         learning, and getting hired
@@ -557,16 +598,23 @@ function Header() {
           className="w-full bg-transparent font-sans text-[14px] text-foreground outline-none placeholder:text-muted-foreground"
           placeholder="Search articles, topics, or guides..."
           aria-label="Search articles"
+          disabled={!ready}
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
         />
         <Search size={18} className="shrink-0 text-primary" strokeWidth={2} />
       </div>
 
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-        {CATEGORIES.map((c, i) => (
+        {CATEGORIES.map((c) => (
           <button
             key={c}
-            className={`rounded-xl px-5 py-2.5 font-mono text-[13px] transition-colors ${
-              i === 0
+            type="button"
+            aria-pressed={category === c}
+            disabled={!ready}
+            onClick={() => setCategory(c)}
+            className={`rounded-xl px-5 py-2.5 font-mono text-[13px] transition-colors disabled:cursor-wait disabled:opacity-60 ${
+              category === c
                 ? "bg-primary text-primary-foreground"
                 : "border border-hairline bg-card text-foreground hover:border-primary hover:text-primary"
             }`}
@@ -581,13 +629,13 @@ function Header() {
 
 function Featured() {
   return (
-    <section className="mx-auto max-w-[1280px] px-8 pt-6">
+    <section className="mx-auto max-w-[1280px] px-4 pt-6 sm:px-8">
       <article className="rounded-2xl border border-hairline bg-card p-6 shadow-[0_1px_2px_rgba(14,21,19,0.04)]">
-        <div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-10">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-10">
           <div className="rounded-xl bg-secondary p-4">
             <FeaturedArt />
           </div>
-          <div className="flex flex-col justify-center py-2 pr-6">
+          <div className="flex flex-col justify-center py-2 lg:pr-6">
             <div className="inline-flex w-fit rounded-md bg-primary-tint px-2.5 py-1 font-mono text-[11px] tracking-[0.12em] text-primary">
               INTERVIEW PREP
             </div>
@@ -598,22 +646,19 @@ function Featured() {
               A clear framework to think out loud, handle edge cases, and communicate complexity
               with confidence. Includes real examples and a handy cheat sheet.
             </p>
-            <div className="mt-7 flex items-center gap-3">
+            <div className="mt-7 flex flex-wrap items-center gap-3">
               <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary-tint font-mono text-[12px] font-medium text-primary">
                 PR
               </span>
-              <span className="font-mono text-[12px] text-muted-foreground">By Priya Raman</span>
+              <span className="font-mono text-[12px] text-muted-foreground">Editorial preview</span>
               <span className="size-1.5 rounded-full bg-primary" />
-              <span className="font-mono text-[12px] text-muted-foreground">Mar 12, 2026</span>
+              <span className="font-mono text-[12px] text-muted-foreground">Draft</span>
               <span className="size-1.5 rounded-full bg-primary" />
               <span className="font-mono text-[12px] text-muted-foreground">8 min read</span>
             </div>
-            <a
-              href="#"
-              className="mt-6 inline-flex items-center gap-2 font-sans text-[15px] font-medium text-primary hover:underline"
-            >
-              Read article <ArrowRight size={16} strokeWidth={2} />
-            </a>
+            <span className="mt-6 inline-flex items-center gap-2 font-sans text-[15px] font-medium text-primary">
+              Article coming soon <ArrowRight size={16} strokeWidth={2} />
+            </span>
           </div>
         </div>
       </article>
@@ -621,37 +666,58 @@ function Featured() {
   );
 }
 
-function Grid() {
+function Grid({ posts, onReset }: { posts: typeof POSTS; onReset: () => void }) {
   return (
-    <section className="mx-auto max-w-[1280px] px-8 pt-20">
+    <section className="mx-auto max-w-[1280px] px-4 pt-16 sm:px-8 sm:pt-20">
       <h2 className="text-center font-display text-[26px] font-semibold tracking-[-0.01em] text-foreground">
         Latest articles
       </h2>
-      <div className="mt-10 grid grid-cols-3 gap-6">
-        {POSTS.map((p) => (
-          <article
-            key={p.title}
-            className="flex flex-col rounded-2xl border border-hairline bg-card p-5 transition-shadow hover:shadow-[0_6px_20px_rgba(14,21,19,0.06)]"
+      {posts.length ? (
+        <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {posts.map((p) => (
+            <article
+              key={p.title}
+              className="flex flex-col rounded-2xl border border-hairline bg-card p-5 transition-shadow hover:shadow-[0_6px_20px_rgba(14,21,19,0.06)]"
+            >
+              <div className="rounded-xl bg-secondary/60 p-3">
+                <div className="aspect-[232/132] w-full">{p.art}</div>
+              </div>
+              <div className="mt-5 font-mono text-[11px] tracking-[0.12em] text-primary">
+                {p.tag}
+              </div>
+              <h3 className="mt-2 font-display text-[19px] font-semibold leading-[1.3] tracking-[-0.01em] text-foreground">
+                {p.title}
+              </h3>
+              <p className="mt-2.5 font-sans text-[14px] leading-relaxed text-muted-foreground">
+                {p.excerpt}
+              </p>
+              <div className="mt-auto flex items-center gap-2 pt-6 font-mono text-[12px] text-muted-foreground">
+                Editorial preview <span className="size-1.5 rounded-full bg-primary" /> {p.meta}
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className="mt-10 rounded-2xl border border-hairline bg-card px-6 py-12 text-center">
+          <p className="font-sans text-[16px] text-foreground">
+            No article previews match this search.
+          </p>
+          <button
+            type="button"
+            onClick={onReset}
+            className="mt-4 font-mono text-[13px] text-primary hover:underline"
           >
-            <div className="rounded-xl bg-secondary/60 p-3">
-              <div className="aspect-[232/132] w-full">{p.art}</div>
-            </div>
-            <div className="mt-5 font-mono text-[11px] tracking-[0.12em] text-primary">{p.tag}</div>
-            <h3 className="mt-2 font-display text-[19px] font-semibold leading-[1.3] tracking-[-0.01em] text-foreground">
-              {p.title}
-            </h3>
-            <p className="mt-2.5 font-sans text-[14px] leading-relaxed text-muted-foreground">
-              {p.excerpt}
-            </p>
-            <div className="mt-auto flex items-center gap-2 pt-6 font-mono text-[12px] text-muted-foreground">
-              Feb 2026 <span className="size-1.5 rounded-full bg-primary" /> {p.meta}
-            </div>
-          </article>
-        ))}
-      </div>
+            Clear filters
+          </button>
+        </div>
+      )}
       <div className="mt-10 flex justify-center">
-        <button className="inline-flex items-center gap-2 rounded-xl border border-hairline bg-card px-6 py-3 font-sans text-[15px] font-medium text-primary hover:border-primary">
-          View all articles <ArrowRight size={16} strokeWidth={2} />
+        <button
+          type="button"
+          onClick={onReset}
+          className="inline-flex items-center gap-2 rounded-xl border border-hairline bg-card px-6 py-3 font-sans text-[15px] font-medium text-primary hover:border-primary"
+        >
+          Show all previews <ArrowRight size={16} strokeWidth={2} />
         </button>
       </div>
     </section>
@@ -660,10 +726,10 @@ function Grid() {
 
 function Newsletter() {
   return (
-    <section className="mx-auto max-w-[1280px] px-8 pt-20 pb-4">
-      <div className="rounded-2xl border border-hairline bg-primary-tint/60 px-10 py-12">
-        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-10">
-          <span className="grid size-[86px] place-items-center rounded-full border border-primary/30 bg-card/70">
+    <section className="mx-auto max-w-[1280px] px-4 pb-4 pt-16 sm:px-8 sm:pt-20">
+      <div className="rounded-2xl border border-hairline bg-primary-tint/60 px-5 py-10 sm:px-10 sm:py-12">
+        <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:gap-10">
+          <span className="mx-auto grid size-[86px] place-items-center rounded-full border border-primary/30 bg-card/70 lg:mx-0">
             <Mail size={30} className="text-primary" strokeWidth={1.5} />
           </span>
           <div className="text-center">
@@ -675,19 +741,28 @@ function Newsletter() {
             </p>
             <div className="mx-auto mt-6 flex max-w-[440px] items-stretch">
               <input
+                disabled
                 className="min-w-0 flex-1 rounded-l-xl border border-hairline bg-card px-4 py-3 font-sans text-[14px] text-foreground outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/15 transition-all"
                 placeholder="Enter your email"
                 aria-label="Email address"
               />
-              <button className="shrink-0 rounded-r-xl bg-primary px-6 font-sans text-[14px] font-medium text-primary-foreground hover:bg-primary-glow">
-                Subscribe
+              <button
+                disabled
+                className="shrink-0 rounded-r-xl bg-primary px-4 font-sans text-[14px] font-medium text-primary-foreground opacity-55 sm:px-6"
+              >
+                Coming soon
               </button>
             </div>
             <p className="mt-5 font-mono text-[12px] text-muted-foreground">
               {blogNewsletterClaim.rawText}
             </p>
+            <div className="mx-auto mt-4 max-w-[520px]">
+              <DemoNotice>No email is collected or stored.</DemoNotice>
+            </div>
           </div>
-          <NoteArt />
+          <div className="mx-auto lg:mx-0">
+            <NoteArt />
+          </div>
         </div>
       </div>
     </section>

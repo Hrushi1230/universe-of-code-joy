@@ -1,23 +1,21 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Check,
   ArrowRight,
   Shield,
-  Clock,
   Headphones,
   Building2,
   Share2,
   BookOpen,
   FileText,
-  Activity,
-  Users,
   Plus,
-  Minus,
   ChevronDown,
   Play,
   Flag,
 } from "lucide-react";
 import { SiteNav, SiteFooter, AlgoraGlyph } from "@/components/site-chrome";
+import { DemoNotice } from "@/components/demo-notice";
 
 export const Route = createFileRoute("/contact")({
   component: ContactPage,
@@ -27,13 +25,12 @@ export const Route = createFileRoute("/contact")({
       {
         name: "description",
         content:
-          "Questions about learning, campus plans, partnerships, or your account? Reach the right team at Algora and expect a thoughtful response.",
+          "Preview the Algora inquiry form for learning, campus plans and partnerships. Message delivery is coming soon.",
       },
       { property: "og:title", content: "Contact — Algora" },
       {
         property: "og:description",
-        content:
-          "Reach the right team at Algora. Under 24h response, real human support, student-first.",
+        content: "Preview Algora's inquiry form. Message delivery is coming soon.",
       },
       { property: "og:type", content: "website" },
     ],
@@ -57,13 +54,13 @@ function ContactPage() {
 }
 
 function Hero() {
-  const trust = ["Under 24h response", "Real human support", "Student-first"];
+  const trust = ["Product questions", "Campus inquiries", "Partnerships"];
   return (
-    <section className="mx-auto max-w-[1280px] px-8 pt-16 pb-10 text-center">
+    <section className="mx-auto max-w-[1280px] px-4 pb-10 pt-12 text-center sm:px-8 sm:pt-16">
       <div className="inline-flex items-center gap-2 rounded-full bg-primary-tint px-3 py-1 font-mono text-[11px] tracking-wider text-primary">
         <span className="text-[10px]">◆</span> CONTACT
       </div>
-      <h1 className="mt-6 font-sans text-[64px] leading-[1.05] tracking-[-0.02em] text-foreground">
+      <h1 className="mt-6 font-sans text-[42px] leading-[1.05] tracking-[-0.02em] text-foreground sm:text-[64px]">
         Let's solve it together
         <span className="inline-block ml-1 h-3 w-3 translate-y-[-2px] bg-primary" />
       </h1>
@@ -71,7 +68,7 @@ function Hero() {
         Questions about learning, campus plans, partnerships, or your account? Reach the right team
         and expect a thoughtful response.
       </p>
-      <div className="mt-7 flex items-center justify-center gap-8 font-sans text-[14px] text-foreground/80">
+      <div className="mt-7 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 font-sans text-[14px] text-foreground/80">
         {trust.map((t) => (
           <div key={t} className="flex items-center gap-2">
             <span className="grid size-5 place-items-center rounded-full bg-primary/10">
@@ -85,12 +82,23 @@ function Hero() {
   );
 }
 
-function Label({ children, required }: { children: React.ReactNode; required?: boolean }) {
+function Label({
+  children,
+  htmlFor,
+  required,
+}: {
+  children: React.ReactNode;
+  htmlFor: string;
+  required?: boolean;
+}) {
   return (
-    <div className="mb-2 font-mono text-[11px] tracking-wider text-muted-foreground">
+    <label
+      htmlFor={htmlFor}
+      className="mb-2 block font-mono text-[11px] tracking-wider text-muted-foreground"
+    >
       {children}
       {required && <span className="text-primary ml-1">*</span>}
-    </div>
+    </label>
   );
 }
 
@@ -98,43 +106,90 @@ const inputCls =
   "w-full rounded-lg border border-hairline bg-card px-3.5 py-3 font-sans text-[14px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition";
 
 function PrimaryArea() {
+  const [message, setMessage] = useState("");
+  const [result, setResult] = useState<string | null>(null);
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setResult(
+      "Your message is ready, but delivery is not connected yet. Nothing was sent or stored.",
+    );
+  };
+
   return (
-    <section className="mx-auto max-w-[1280px] px-8 pb-16">
-      <div className="grid grid-cols-[1.9fr_1fr] gap-6">
+    <section className="mx-auto max-w-[1280px] px-4 pb-16 sm:px-8">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.9fr_1fr]">
         {/* Form */}
-        <div className="rounded-2xl border border-hairline bg-card p-8">
+        <form
+          id="contact-form"
+          className="rounded-2xl border border-hairline bg-card p-5 sm:p-8"
+          onSubmit={handleSubmit}
+        >
           <h2 className="font-sans text-[28px] tracking-[-0.01em] text-foreground">
             Send us a message
           </h2>
           <p className="mt-2 font-sans text-[14px] text-muted-foreground">
-            Tell us what you need, and we'll route your message to the right person.
+            Prepare a question about learning, campus plans or partnerships.
           </p>
 
-          <div className="mt-7 grid grid-cols-2 gap-5">
+          <div className="mt-5">
+            <DemoNotice>
+              Message delivery is coming soon. This form currently validates only.
+            </DemoNotice>
+          </div>
+
+          <div className="mt-7 grid grid-cols-1 gap-5 sm:grid-cols-2">
             <div>
-              <Label required>FIRST NAME</Label>
-              <input className={inputCls} placeholder="Jane" />
+              <Label htmlFor="contact-first-name" required>
+                FIRST NAME
+              </Label>
+              <input
+                id="contact-first-name"
+                name="firstName"
+                required
+                autoComplete="given-name"
+                className={inputCls}
+              />
             </div>
             <div>
-              <Label required>LAST NAME</Label>
-              <input className={inputCls} placeholder="Doe" />
+              <Label htmlFor="contact-last-name" required>
+                LAST NAME
+              </Label>
+              <input
+                id="contact-last-name"
+                name="lastName"
+                required
+                autoComplete="family-name"
+                className={inputCls}
+              />
             </div>
           </div>
 
           <div className="mt-5">
-            <Label required>EMAIL ADDRESS</Label>
+            <Label htmlFor="contact-email" required>
+              EMAIL ADDRESS
+            </Label>
             <input
+              id="contact-email"
               className={`${inputCls} border-primary ring-2 ring-primary/25`}
-              placeholder="jane.doe@student.edu"
+              name="email"
+              type="email"
+              required
+              autoComplete="email"
             />
           </div>
 
           <div className="mt-5">
-            <Label required>WHAT CAN WE HELP WITH?</Label>
+            <Label htmlFor="contact-topic" required>
+              WHAT CAN WE HELP WITH?
+            </Label>
             <div className="relative">
               <select
-                className={`${inputCls} appearance-none pr-10 text-muted-foreground/80`}
+                id="contact-topic"
+                className={`${inputCls} appearance-none pr-10 text-muted-foreground`}
                 defaultValue=""
+                name="topic"
+                required
               >
                 <option value="" disabled>
                   Select an option
@@ -151,15 +206,26 @@ function PrimaryArea() {
           </div>
 
           <div className="mt-5">
-            <Label required>MESSAGE</Label>
+            <Label htmlFor="contact-message" required>
+              MESSAGE
+            </Label>
             <div className="relative">
               <textarea
+                id="contact-message"
                 rows={6}
                 className={`${inputCls} resize-none`}
                 placeholder="Tell us more about your question or request..."
+                name="message"
+                required
+                maxLength={1000}
+                value={message}
+                onChange={(event) => {
+                  setMessage(event.target.value);
+                  setResult(null);
+                }}
               />
               <div className="absolute bottom-2 right-3 font-mono text-[11px] text-muted-foreground">
-                0 / 1000
+                {message.length} / 1000
               </div>
             </div>
           </div>
@@ -167,22 +233,27 @@ function PrimaryArea() {
           <div className="mt-5 flex items-start gap-2.5 font-sans text-[13px] text-muted-foreground">
             <Shield className="mt-0.5 size-4 shrink-0 text-primary" />
             <div>
-              Your privacy matters. We never share your information. <br />
-              See our <a className="text-primary underline underline-offset-2">
+              Review how local preview data is handled. <br />
+              See our{" "}
+              <Link to="/privacy" className="text-primary underline underline-offset-2">
                 Privacy Policy
-              </a>{" "}
+              </Link>{" "}
               for details.
             </div>
           </div>
 
-          <button className="mt-5 w-full rounded-xl bg-primary py-3.5 font-sans text-[15px] font-medium text-primary-foreground hover:bg-primary-glow transition-colors">
-            Send message
+          <button
+            type="submit"
+            className="mt-5 w-full rounded-xl bg-primary py-3.5 font-sans text-[15px] font-medium text-primary-foreground transition-colors hover:bg-primary-glow"
+          >
+            Check message
           </button>
-          <div className="mt-3 flex items-center justify-center gap-2 font-mono text-[11px] text-muted-foreground">
-            <Clock className="size-3.5" />
-            Typical response: within one business day.
-          </div>
-        </div>
+          {result && (
+            <div role="status" className="mt-3 text-center font-mono text-[12px] text-primary">
+              {result}
+            </div>
+          )}
+        </form>
 
         {/* Route cards */}
         <div className="flex flex-col gap-5">
@@ -190,19 +261,19 @@ function PrimaryArea() {
             Icon={Headphones}
             title="Product support"
             body="Get help with lessons, progress, billing, or your account."
-            email="support@algora.dev"
+            href="#contact-form"
           />
           <RouteCard
             Icon={Building2}
             title="Campus & teams"
             body="Bring visual algorithm learning to your university or cohort."
-            email="campus@algora.dev"
+            href="#contact-form"
           />
           <RouteCard
             Icon={Share2}
             title="Partnerships"
             body="Collaborate on curriculum, communities, or student programs."
-            email="partners@algora.dev"
+            href="#contact-form"
           />
         </div>
       </div>
@@ -214,20 +285,23 @@ function RouteCard({
   Icon,
   title,
   body,
-  email,
+  href,
 }: {
   Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
   title: string;
   body: string;
-  email: string;
+  href: string;
 }) {
   return (
-    <a className="group rounded-2xl border border-hairline bg-card p-6 hover:border-primary/40 transition-colors">
+    <a
+      href={href}
+      className="group rounded-2xl border border-hairline bg-card p-6 transition-colors hover:border-primary/40"
+    >
       <Icon className="size-7 text-primary" strokeWidth={1.75} />
       <div className="mt-4 font-sans text-[20px] tracking-[-0.01em] text-foreground">{title}</div>
       <p className="mt-2 font-sans text-[14px] leading-[1.55] text-muted-foreground">{body}</p>
       <div className="mt-4 inline-flex items-center gap-1.5 font-sans text-[14px] text-primary">
-        {email}
+        Use the contact form
         <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
       </div>
     </a>
@@ -236,44 +310,57 @@ function RouteCard({
 
 function SelfServe() {
   const items = [
-    { Icon: BookOpen, title: "Help center", body: "Guides for accounts, lessons, and progress." },
+    {
+      Icon: BookOpen,
+      title: "Browse algorithms",
+      body: "Explore available lessons and questions.",
+      to: "/explore",
+    },
     {
       Icon: FileText,
       title: "Billing FAQ",
-      body: "Plans, invoices, discounts, and cancellations.",
+      body: "Review the current pricing preview and common questions.",
+      to: "/pricing",
     },
-    { Icon: Activity, title: "Platform status", body: "", status: true },
-    { Icon: Users, title: "Student community", body: "Learn alongside other algorithm explorers." },
+    {
+      Icon: Building2,
+      title: "Campus overview",
+      body: "See the planned educator experience.",
+      to: "/campus",
+    },
+    {
+      Icon: Share2,
+      title: "Learning paths",
+      body: "Choose a structured route through the catalog.",
+      to: "/paths",
+    },
   ];
   return (
-    <section className="mx-auto max-w-[1280px] px-8 pb-16 text-center">
+    <section className="mx-auto max-w-[1280px] px-4 pb-16 text-center sm:px-8">
       <h2 className="font-sans text-[36px] tracking-[-0.02em] text-foreground">
         Find an answer faster
       </h2>
       <p className="mx-auto mt-3 max-w-[560px] font-sans text-[15px] text-muted-foreground">
         Explore the most common questions before sending a message.
       </p>
-      <div className="mt-9 grid grid-cols-4 gap-5 text-left">
+      <div className="mt-9 grid grid-cols-1 gap-5 text-left sm:grid-cols-2 xl:grid-cols-4">
         {items.map((it) => (
-          <div key={it.title} className="rounded-2xl border border-hairline bg-card p-6">
+          <Link
+            to={it.to}
+            key={it.title}
+            className="rounded-2xl border border-hairline bg-card p-6 transition-colors hover:border-primary/40"
+          >
             <it.Icon className="size-6 text-primary" strokeWidth={1.75} />
             <div className="mt-4 font-sans text-[17px] tracking-[-0.01em] text-foreground">
               {it.title}
             </div>
-            {it.status ? (
-              <div className="mt-2 flex items-center gap-2 font-sans text-[13px] text-muted-foreground">
-                <span className="size-2 rounded-full bg-primary" />
-                All systems operational.
-              </div>
-            ) : (
-              <p className="mt-2 font-sans text-[13px] leading-[1.55] text-muted-foreground">
-                {it.body}
-              </p>
-            )}
+            <p className="mt-2 font-sans text-[13px] leading-[1.55] text-muted-foreground">
+              {it.body}
+            </p>
             <div className="mt-4 inline-flex items-center gap-1.5 font-sans text-[13px] text-primary">
               Explore <ArrowRight className="size-3.5" />
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </section>
@@ -282,20 +369,31 @@ function SelfServe() {
 
 function FaqSection() {
   const rows = [
-    { q: "Can I use Algora for free?" },
-    { q: "Do you offer student discounts?" },
-    { q: "Can universities request a demo?" },
+    {
+      q: "Can I use the current Algora preview?",
+      a: "Yes. The current experience runs locally in your browser. Account and payment services are not connected yet.",
+    },
+    {
+      q: "Is the student discount available?",
+      a: "Not yet. Pricing and student verification are product previews until billing is integrated.",
+    },
+    {
+      q: "Can universities request a demo?",
+      a: "The campus page explains the planned experience. Contact delivery must be connected before this form can send a request.",
+    },
     {
       q: "How quickly does support respond?",
-      open: true,
-      a: "Most messages receive a reply within one business day. Account and billing issues are prioritized.",
+      a: "A response-time commitment has not been established because the support channel is not connected yet.",
     },
-    { q: "Where can I report a technical issue?" },
+    {
+      q: "Where can I report a technical issue?",
+      a: "Use the contact form to prepare the message. It will clearly say when delivery is available.",
+    },
   ];
   return (
-    <section className="mx-auto max-w-[1280px] px-8 pb-16">
-      <div className="rounded-2xl border border-hairline bg-card p-10">
-        <div className="grid grid-cols-[1fr_1.8fr] gap-10">
+    <section className="mx-auto max-w-[1280px] px-4 pb-16 sm:px-8">
+      <div className="rounded-2xl border border-hairline bg-card p-5 sm:p-10">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_1.8fr] lg:gap-10">
           <div>
             <div className="font-mono text-[11px] tracking-wider text-primary">
               COMMON QUESTIONS
@@ -312,22 +410,19 @@ function FaqSection() {
             </p>
           </div>
           <div>
-            {rows.map((r, i) => (
-              <div key={r.q} className={i === 0 ? "" : "border-t border-hairline"}>
-                <button className="flex w-full items-center justify-between py-4 text-left font-sans text-[15px] text-foreground">
-                  {r.q}
-                  {r.open ? (
-                    <Minus className="size-4 text-primary" />
-                  ) : (
-                    <Plus className="size-4 text-primary" />
-                  )}
-                </button>
-                {r.open && r.a && (
-                  <div className="rounded-lg bg-primary-tint/50 px-4 py-3 mb-4 font-sans text-[14px] leading-[1.6] text-muted-foreground">
-                    {r.a}
-                  </div>
-                )}
-              </div>
+            {rows.map((row, index) => (
+              <details
+                key={row.q}
+                className={index === 0 ? "group" : "group border-t border-hairline"}
+              >
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 font-sans text-[15px] text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30">
+                  {row.q}
+                  <Plus className="size-4 shrink-0 text-primary transition-transform group-open:rotate-45" />
+                </summary>
+                <div className="mb-4 rounded-lg bg-primary-tint/50 px-4 py-3 font-sans text-[14px] leading-[1.6] text-muted-foreground">
+                  {row.a}
+                </div>
+              </details>
             ))}
           </div>
         </div>
@@ -338,11 +433,11 @@ function FaqSection() {
 
 function CtaBand() {
   return (
-    <section className="mx-auto max-w-[1280px] px-8 pb-16">
-      <div className="rounded-2xl bg-primary-tint px-10 py-8">
-        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-8">
+    <section className="mx-auto max-w-[1280px] px-4 pb-16 sm:px-8">
+      <div className="rounded-2xl bg-primary-tint px-5 py-8 sm:px-10">
+        <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[auto_1fr_auto]">
           {/* Browser icon */}
-          <div className="w-[150px] rounded-lg border border-primary/30 bg-card p-3">
+          <div className="mx-auto hidden w-[150px] rounded-lg border border-primary/30 bg-card p-3 lg:block">
             <div className="flex gap-1">
               <span className="size-1.5 rounded-full bg-primary/40" />
               <span className="size-1.5 rounded-full bg-primary/40" />
@@ -369,13 +464,19 @@ function CtaBand() {
             <p className="mt-2 font-sans text-[14px] text-muted-foreground">
               Start visualizing your first algorithm in minutes.
             </p>
-            <div className="mt-5 flex items-center justify-center gap-3">
-              <button className="rounded-full bg-primary px-5 py-2.5 font-sans text-sm font-medium text-primary-foreground hover:bg-primary-glow transition-colors">
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+              <Link
+                to="/auth"
+                className="rounded-full bg-primary px-5 py-2.5 font-sans text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-glow"
+              >
                 Start learning free
-              </button>
-              <button className="rounded-full border border-primary/40 bg-card px-5 py-2.5 font-sans text-sm font-medium text-primary hover:bg-primary-tint transition-colors">
+              </Link>
+              <Link
+                to="/visualizer"
+                className="rounded-full border border-primary/40 bg-card px-5 py-2.5 font-sans text-sm font-medium text-primary transition-colors hover:bg-primary-tint"
+              >
                 Explore the visualizer
-              </button>
+              </Link>
             </div>
             <div className="mt-3 font-mono text-[11px] text-muted-foreground">
               No credit card required.
@@ -383,7 +484,7 @@ function CtaBand() {
           </div>
 
           {/* Flag illustration */}
-          <div className="relative size-[120px]">
+          <div className="relative mx-auto hidden size-[120px] lg:block">
             <svg
               viewBox="0 0 120 120"
               className="size-full text-primary"

@@ -1,0 +1,17 @@
+async (page) => {
+  const results = [];
+  await page.setViewportSize({width:390,height:844});
+  for (const route of ["/","/visualizer","/pricing","/campus","/blog","/contact","/privacy","/terms","/auth","/login","/forgot-password","/reset-password","/verify-email","/onboarding/goals","/onboarding/assessment","/onboarding/path","/explore","/dashboard","/paths","/mastery-map","/quests","/achievements","/leagues","/notifications","/settings","/settings/billing","/practice","/practice/results","/review","/practice/two-sum","/algorithms/binary-search"]) {
+    await page.goto("http://127.0.0.1:4187"+route);
+    await page.waitForLoadState("networkidle");
+    await page.addScriptTag({path:"C:/Users/hrkes/AppData/Local/npm-cache/_npx/0f94ee7615faf582/node_modules/axe-core/axe.min.js"});
+    const scan = await page.evaluate(async () => {
+      const r = await window.axe.run(document, {runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa","best-practice"]}});
+      return {version:r.testEngine.version,
+        violations:r.violations.map(v=>({id:v.id,impact:v.impact,count:v.nodes.length,nodes:v.nodes.slice(0,5).map(n=>({target:n.target,summary:n.failureSummary}))})),
+        incomplete:r.incomplete.map(v=>({id:v.id,count:v.nodes.length}))};
+    });
+    results.push({route,...scan});
+  }
+  return results;
+}

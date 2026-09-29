@@ -55,8 +55,17 @@ export function achievementCounter(
   const done = lessonsDone(state);
   const solved = solvedProblems(state);
   const claimed = Object.entries(state.quests).filter(([, q]) => Boolean(q.claimedAt));
-  const claimedOf = (kind: "daily" | "weekly") =>
-    claimed.filter(([id]) => getQuests().find((q) => q.id === id)?.kind === kind).length;
+  const questTransactions = Object.values(state.rewardTransactions ?? {}).filter(
+    (transaction) => transaction.kind === "quest",
+  );
+  const claimedOf = (kind: "daily" | "weekly") => {
+    if (questTransactions.length > 0) {
+      return questTransactions.filter(
+        (transaction) => getQuests().find((q) => q.id === transaction.referenceId)?.kind === kind,
+      ).length;
+    }
+    return claimed.filter(([id]) => getQuests().find((q) => q.id === id)?.kind === kind).length;
+  };
 
   switch (achievement.id) {
     case "first-steps":
@@ -77,9 +86,7 @@ export function achievementCounter(
       return [Object.values(state.problems).filter((p) => p.solvedAt && p.attempts <= 1).length, 1];
     case "speed-demon":
       return [
-        Object.values(state.problems).filter(
-          (p) => p.solvedAt && (p.bestRuntimeMs ?? Infinity) <= 300_000,
-        ).length,
+        Object.values(state.problems).filter((p) => p.solvedAt && p.bestRuntimeMs !== null).length,
         1,
       ];
     case "streak-3":

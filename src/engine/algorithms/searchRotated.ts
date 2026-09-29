@@ -413,8 +413,8 @@ export const searchRotatedModule: AlgorithmModule = {
       label: "Rotated sorted list",
       kind: "numbers",
       default: "4, 5, 6, 7, 0, 1, 2",
-      help: "Up to 25 unique numbers: a sorted list cut once and swapped end to end.",
-      max: 25,
+      help: "Up to 12 unique numbers: a sorted list cut once and swapped end to end.",
+      max: 12,
     },
     { name: "target", label: "Target", kind: "number", default: 0, min: -9999, max: 9999 },
   ],
@@ -441,15 +441,13 @@ export const searchRotatedModule: AlgorithmModule = {
     /* Starts on the other branch: a[lo] is above a[mid], so the cut is on the left
        and it is the right half that gets shaded. */
     { label: "Right half is the tidy one", values: { values: "6, 7, 0, 1, 2, 4, 5", target: "4" } },
-    /* 21 cells of three-digit values crosses ArrayView's box-to-bar threshold, so
-       the two ramps and the cliff are visible as shape. Degrades to boxes, still
-       correct, if that threshold ever moves. */
+    /* Twelve cells use the full fixed teaching width while keeping both ramps and
+       the rotation cliff visible. */
     {
       label: "See the cliff",
       values: {
-        values:
-          "235, 245, 255, 265, 275, 285, 295, 305, 105, 115, 125, 135, 145, 155, 165, 175, 185, 195, 205, 215, 225",
-        target: "155",
+        values: "235, 245, 255, 265, 275, 305, 105, 125, 145, 165, 185, 205",
+        target: "165",
       },
     },
   ],

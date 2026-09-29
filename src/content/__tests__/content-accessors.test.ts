@@ -174,7 +174,7 @@ describe("Content Accessors & Seam 1 Client Architecture (S10.2)", () => {
 
     it("retrieves demo learner profile correctly", async () => {
       const learner = await client.getDemoLearner();
-      expect(learner.handle).toBe("ada_codes");
+      expect(learner.handle).toBe("local_learner");
       expect(learner.streak).toBeGreaterThan(0);
       expect(learner.activity.length).toBeGreaterThan(0);
     });
@@ -421,7 +421,7 @@ describe("Content Accessors & Seam 1 Client Architecture (S10.2)", () => {
       expect(getAchievement("first-steps")?.id).toBe("first-steps");
       expect(getAchievementsByTier("bronze").length).toBeGreaterThan(0);
 
-      expect(getDemoLearner().handle).toBe("ada_codes");
+      expect(getDemoLearner().handle).toBe("local_learner");
       const claims = getMarketingClaims();
       expect(claims.length).toBeGreaterThan(0);
       expect(getMarketingClaim(claims[0].id)?.id).toBe(claims[0].id);

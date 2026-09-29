@@ -23,9 +23,11 @@ describe("trace exercise content", () => {
     expect(exercise.inputs["values"]).not.toBe(preset["values"]);
   });
 
-  it("has one exercise per algorithm slug", () => {
-    const slugs = traceExercises.map((e) => e.algorithmSlug);
-    expect(new Set(slugs).size).toBe(slugs.length);
+  it("has one exercise per algorithm/question slice", () => {
+    const keys = traceExercises.map(
+      (exercise) => `${exercise.algorithmSlug}:${exercise.problemSlug ?? "*"}`,
+    );
+    expect(new Set(keys).size).toBe(keys.length);
   });
 });
 
@@ -151,6 +153,9 @@ describe("trace store", () => {
     expect(store.getState().entries["q1"]!.status).toBe("correct");
     expect(store.getState().entries["q1"]!.outcome).toBe("correct-after-retry");
     expect(store.getState().entries["q1"]!.attempts).toBe(2);
+    expect(resolvedCount(["q1"], store.getState().entries)).toBe(0);
+    store.getState().continueFrom("q1");
+    expect(resolvedCount(["q1"], store.getState().entries)).toBe(1);
   });
 
   it("records a first-try win and ignores checks after resolution", () => {
@@ -188,9 +193,17 @@ describe("trace store", () => {
     const ids = ["a", "b", "c"];
     store.getState().select("a", "1");
     store.getState().check("a", "1");
+    store.getState().continueFrom("a");
     store.getState().select("c", "1");
     store.getState().check("c", "1");
+    store.getState().continueFrom("c");
     expect(resolvedCount(ids, store.getState().entries)).toBe(1);
+  });
+
+  it("does not continue an unresolved checkpoint", () => {
+    const store = createTraceStore();
+    store.getState().continueFrom("q");
+    expect(store.getState().entries["q"]).toBeUndefined();
   });
 
   it("keys runs by slug and inputs, order independent", () => {

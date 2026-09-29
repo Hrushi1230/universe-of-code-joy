@@ -65,6 +65,20 @@ describe("Binary Search review content (Phase 10)", () => {
     expect(hasReviewSet("dijkstra")).toBe(false);
     expect(reviewSetFor("dijkstra")).toEqual([]);
   });
+
+  it("keeps Sort Colors and Two Sum review sets independent", () => {
+    expect(reviewSetFor("two-pointers", "sort-colors")).toHaveLength(6);
+    expect(reviewSetFor("two-pointers", "two-sum")).toHaveLength(6);
+    expect(reviewSetFor("two-pointers", "container-with-most-water")).toHaveLength(6);
+    expect(reviewSetFor("two-pointers", "trapping-rain-water")).toHaveLength(6);
+    expect(reviewSetFor("two-pointers", "valid-palindrome")).toHaveLength(6);
+    expect(reviewSetFor("two-pointers", "move-zeroes")).toHaveLength(6);
+    expect(reviewSetFor("two-pointers", "remove-duplicates-from-sorted-array")).toHaveLength(6);
+    expect(reviewSetFor("two-pointers", "three-sum")).toHaveLength(6);
+    expect(reviewSetFor("level-order", "binary-tree-level-order")).toHaveLength(6);
+    expect(reviewSetFor("binary-search", "two-sum")).toEqual([]);
+    expect(hasReviewSet("two-pointers", "two-sum")).toBe(true);
+  });
 });
 
 describe("Review answer outcomes", () => {

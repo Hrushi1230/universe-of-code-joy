@@ -16,8 +16,8 @@ import { getAlgorithm, getAlgorithms } from "@/content/algorithms";
 import { getLesson } from "@/content/lessons";
 import { getPath, getPaths } from "@/content/paths";
 import { getQuest } from "@/content/quests";
-import { demoLearner as mockUser } from "@/content/demo-learner";
 import { useHydrated } from "@/hooks/useHydrated";
+import { readOnboardingState, weeklyGoalMinutes } from "@/lib/onboarding";
 import { nextBestAction, sortRecommended } from "@/lib/recommend";
 import { xpToNextLevel } from "@/lib/xp";
 import {
@@ -26,6 +26,7 @@ import {
   useProgressStore,
   type ProgressData,
 } from "@/stores/progressStore";
+import { usePrefsStore } from "@/stores/prefsStore";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
@@ -54,7 +55,6 @@ function TealPeriod() {
 }
 
 const WEEK = ["M", "T", "W", "T", "F", "S", "S"];
-const WEEKLY_GOAL_MINUTES = 240;
 
 /** Monday-first keys for the current local week. */
 function currentWeekKeys(now: Date): string[] {
@@ -211,9 +211,13 @@ function buildPathNodes(progress: ProgressData): PathNode[] {
 function DashboardPage() {
   const hydrated = useHydrated();
   const live = useProgressStore((s) => s);
-  const setQuestProgress = useProgressStore((s) => s.setQuestProgress);
-  const claimQuest = useProgressStore((s) => s.claimQuest);
-  const awardXp = useProgressStore((s) => s.awardXp);
+  const claimQuestReward = useProgressStore((s) => s.claimQuestReward);
+  const profileName = usePrefsStore((s) => s.profile.fullName);
+  const [weeklyTargetMinutes, setWeeklyTargetMinutes] = React.useState(240);
+
+  React.useEffect(() => {
+    setWeeklyTargetMinutes(weeklyGoalMinutes(readOnboardingState().commitment));
+  }, []);
 
   const p: ProgressData = hydrated ? live : baselineProgress;
 
@@ -235,8 +239,8 @@ function DashboardPage() {
     () => weekKeys.reduce((sum, k) => sum + (p.activity[k]?.minutes ?? 0), 0),
     [weekKeys, p.activity],
   );
-  const goalPct = Math.min(100, Math.round((weekMinutes / WEEKLY_GOAL_MINUTES) * 100));
-  const minutesLeft = Math.max(0, WEEKLY_GOAL_MINUTES - weekMinutes);
+  const goalPct = Math.min(100, Math.round((weekMinutes / weeklyTargetMinutes) * 100));
+  const minutesLeft = Math.max(0, weeklyTargetMinutes - weekMinutes);
   const today = todayKey ? p.activity[todayKey] : undefined;
   const xpToday = today?.xp ?? 0;
   const solvedToday = today?.solved ?? 0;
@@ -319,12 +323,11 @@ function DashboardPage() {
   const questClaimed = Boolean(questState?.claimedAt && questState.periodKey === todayKey);
 
   const claim = React.useCallback(() => {
-    setQuestProgress(quest.id, quest.target);
-    claimQuest(quest.id);
-    awardXp(quest.xp, `quest:${quest.id}`);
-  }, [awardXp, claimQuest, setQuestProgress, quest.id, quest.target, quest.xp]);
+    if (!todayKey || !questDone) return;
+    claimQuestReward(quest.id, todayKey, questProgress, quest.xp);
+  }, [claimQuestReward, quest.id, quest.xp, questDone, questProgress, todayKey]);
 
-  const firstName = mockUser.name.split(" ")[0];
+  const firstName = hydrated && profileName.trim() ? profileName.trim().split(/\s+/)[0] : "Local";
   const toNext = xpToNextLevel(p.xp);
 
   return (
@@ -334,7 +337,7 @@ function DashboardPage() {
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <AppTopBar title="Dashboard" />
 
-        <main className="flex-1 overflow-y-auto px-8 pt-4 pb-2">
+        <main className="flex-1 overflow-y-auto px-4 pb-4 pt-4 sm:px-8 sm:pb-2">
           <h1 className="text-[30px] font-semibold leading-none tracking-[-0.025em] text-foreground">
             Welcome back, {firstName}
             <TealPeriod />
@@ -347,7 +350,7 @@ function DashboardPage() {
           <div className="mt-4 rounded-2xl border border-hairline bg-card px-6 py-3">
             <div className="text-[16px] font-semibold text-foreground">Continue learning</div>
             {continueCard ? (
-              <div className="mt-3 flex items-center gap-5">
+              <div className="mt-3 flex flex-wrap items-center gap-4 sm:gap-5">
                 <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-hairline bg-card">
                   <Grid2x2 className="h-6 w-6 text-primary" strokeWidth={1.6} />
                 </span>
@@ -371,13 +374,13 @@ function DashboardPage() {
                 <Link
                   to="/algorithms/$slug"
                   params={{ slug: continueCard.slug }}
-                  className="inline-flex h-12 shrink-0 items-center gap-2 rounded-xl bg-primary px-6 font-mono text-[14px] font-medium text-primary-foreground transition-colors hover:bg-primary-glow"
+                  className="inline-flex h-12 shrink-0 items-center gap-2 rounded-xl bg-primary px-6 font-mono text-[14px] font-medium text-primary-foreground transition-colors hover:bg-primary-glow sm:ml-auto"
                 >
                   Resume lesson <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
             ) : (
-              <div className="mt-3 flex items-center gap-5">
+              <div className="mt-3 flex flex-wrap items-center gap-4 sm:gap-5">
                 <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-hairline bg-card">
                   <Grid2x2 className="h-6 w-6 text-primary" strokeWidth={1.6} />
                 </span>
@@ -391,7 +394,7 @@ function DashboardPage() {
                 </div>
                 <Link
                   to="/explore"
-                  className="inline-flex h-12 shrink-0 items-center gap-2 rounded-xl bg-primary px-6 font-mono text-[14px] font-medium text-primary-foreground transition-colors hover:bg-primary-glow"
+                  className="inline-flex h-12 shrink-0 items-center gap-2 rounded-xl bg-primary px-6 font-mono text-[14px] font-medium text-primary-foreground transition-colors hover:bg-primary-glow sm:ml-auto"
                 >
                   Browse algorithms <ArrowRight className="h-4 w-4" />
                 </Link>
@@ -400,11 +403,11 @@ function DashboardPage() {
           </div>
 
           {/* Stats row */}
-          <div className="mt-3.5 grid grid-cols-3 gap-3.5">
+          <div className="mt-3.5 grid grid-cols-1 gap-3.5 lg:grid-cols-3">
             <StreakCard streak={p.streak.current} active={weekActive} />
             <div className="rounded-2xl border border-hairline bg-card px-5 py-4">
               <div className="font-mono text-[13px] text-foreground">
-                This week · {(weekMinutes / 60).toFixed(1)} / {WEEKLY_GOAL_MINUTES / 60}h
+                This week · {(weekMinutes / 60).toFixed(1)} / {weeklyTargetMinutes / 60}h
               </div>
               <div className="mt-2 flex items-center gap-4">
                 <Ring pct={goalPct} />
@@ -450,7 +453,7 @@ function DashboardPage() {
           </div>
 
           {/* Lower body */}
-          <div className="mt-3.5 grid grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] gap-3.5">
+          <div className="mt-3.5 grid grid-cols-1 gap-3.5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
             <div className="rounded-2xl border border-hairline bg-card px-6 py-3">
               <div className="flex items-center justify-between">
                 <span className="text-[16px] font-semibold text-foreground">Today&apos;s plan</span>
@@ -498,7 +501,7 @@ function DashboardPage() {
                   View full path <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
-              <div className="mt-4 flex items-start">
+              <div className="mt-4 flex items-start overflow-x-auto pb-2">
                 {pathNodes.map((node, i) => {
                   const badge = (
                     <span
@@ -515,7 +518,7 @@ function DashboardPage() {
                     </span>
                   );
                   return (
-                    <div key={node.n} className="flex min-w-0 flex-1 flex-col items-center">
+                    <div key={node.n} className="flex min-w-[108px] flex-1 flex-col items-center">
                       <div className="flex w-full items-center">
                         <span
                           className={[
@@ -584,7 +587,7 @@ function DashboardPage() {
           </div>
 
           {/* Daily quest */}
-          <div className="mt-3 flex items-center gap-5 rounded-2xl bg-primary-tint/60 px-6 py-3.5">
+          <div className="mt-3 flex flex-wrap items-center gap-4 rounded-2xl bg-primary-tint/60 px-5 py-3.5 sm:gap-5 sm:px-6">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary-tint">
               <Target className="h-6 w-6 text-primary" strokeWidth={1.6} />
             </span>
@@ -595,11 +598,11 @@ function DashboardPage() {
                 <span className="text-primary">+{quest.xp} XP</span>
               </div>
             </div>
-            <div className="ml-auto flex items-center gap-3">
+            <div className="flex min-w-[220px] flex-1 items-center gap-3 sm:ml-auto sm:flex-none">
               <span className="font-mono text-[13px] text-foreground">
                 {questProgress} / {quest.target}
               </span>
-              <div className="h-2 w-[200px] overflow-hidden rounded-full bg-secondary">
+              <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-secondary sm:w-[200px] sm:flex-none">
                 <div
                   className="h-full rounded-full bg-primary transition-[width] duration-500"
                   style={{ width: `${(questProgress / quest.target) * 100}%` }}

@@ -297,7 +297,7 @@ resolve the correct line for the selected language
 
 update active line
 
-scroll code only if necessary
+keep code visible in a fixed panel or bounded code page without scrolling
 
 visually emphasize it
 
@@ -1640,10 +1640,10 @@ graph nodes too dense to inspect
 
 When space becomes insufficient:
 
-stack
-scroll locally
-simplify secondary information
-collapse optional panels
+switch between focused World / Code / Reason views while preserving the current step
+keep the bottom playback controller visible without page or internal scrolling
+bound accepted inputs and paginate secondary information without shrinking text below readable size
+collapse optional panels without moving the workspace boundaries
 
 
 85. MOBILE PLAYBACK

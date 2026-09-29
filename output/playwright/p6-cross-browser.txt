@@ -1,0 +1,48 @@
+async (page) => {
+  const browser = page.context().browser().browserType().name();
+  const base = "http://127.0.0.1:4187";
+  const failures = [], checks = [];
+  const check = (pass,name) => { checks.push(name); if (!pass) failures.push(name); };
+  for (const route of ["/auth","/login"]) {
+    for (const [width,height] of [[320,480],[320,568],[390,844],[430,932]]) {
+      await page.setViewportSize({width,height});
+      await page.goto(base+route);
+      await page.waitForLoadState("networkidle");
+      for (const state of ["initial","error"]) {
+        if (state === "error") await page.locator('button[type="submit"]').click();
+        const fit = await page.evaluate(() => {
+          const root = document.documentElement;
+          return root.scrollWidth <= innerWidth && root.scrollHeight <= innerHeight &&
+            [...document.querySelectorAll('main input, main button[type="submit"], main [role="checkbox"]')].every(el=>{
+              const r=el.getBoundingClientRect(); return r.top>=0 && r.bottom<=innerHeight;
+            });
+        });
+        check(fit,route+" "+width+"x"+height+" "+state+" fits");
+      }
+      if (width===320 && height===480) await page.screenshot({path:"output/playwright/p6-"+browser+"-"+route.slice(1)+".png"});
+    }
+  }
+  await page.setViewportSize({width:390,height:844});
+  for (const [route,button,nav] of [
+    ["/","Open navigation","Mobile main"],
+    ["/dashboard","Open app navigation","Mobile app navigation"]
+  ]) {
+    await page.goto(base+route);
+    await page.waitForLoadState("networkidle");
+    const trigger=page.getByRole("button",{name:button,exact:true});
+    await trigger.focus();
+    await page.keyboard.press("Enter");
+    await page.getByRole("navigation",{name:nav,exact:true}).waitFor();
+    await page.keyboard.press("Escape");
+    await page.getByRole("navigation",{name:nav,exact:true}).waitFor({state:"hidden"});
+    check(await trigger.evaluate(el=>document.activeElement===el),route+" menu restores keyboard focus");
+  }
+  await page.goto(base+"/");
+  await page.waitForLoadState("networkidle");
+  check(await page.evaluate(()=>document.documentElement.scrollHeight>innerHeight),"Homepage retains reading scroll");
+  await page.emulateMedia({reducedMotion:"reduce"});
+  await page.waitForFunction(()=>document.documentElement.dataset.reducedMotion==="true");
+  check(await page.evaluate(()=>document.documentElement.dataset.reducedMotion==="true"),"Live reduced motion enabled");
+  await page.emulateMedia({reducedMotion:"no-preference"});
+  return {browser,checks:checks.length,failures};
+}

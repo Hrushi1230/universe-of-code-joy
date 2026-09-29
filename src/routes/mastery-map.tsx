@@ -1,5 +1,5 @@
 import * as React from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, Check, Lock, Minus, Plus } from "lucide-react";
 import { AppSidebar, AppWorkspaceBar } from "@/components/app-shell";
 import { getAlgorithm, getAlgorithms } from "@/content/algorithms";
@@ -16,7 +16,7 @@ export const Route = createFileRoute("/mastery-map")({
       {
         name: "description",
         content:
-          "See every algorithm skill tiered from Foundations to Graphs & Advanced, with live mastered, in-progress and locked counts from your own progress.",
+          "See every algorithm skill tiered from Foundations to Graphs & Advanced, with live mastery and prerequisite guidance from progress on this device.",
       },
       { property: "og:title", content: "Mastery map — your algorithm skill tree — Algora" },
       {
@@ -34,7 +34,7 @@ const TEAL = "var(--primary)";
 const EDGE = "var(--hairline)";
 const MUTED = "var(--slate)";
 
-type NodeState = "mastered" | "progress" | "locked";
+type NodeState = "mastered" | "progress" | "prerequisite";
 
 type SkillNode = {
   slug: string;
@@ -63,7 +63,7 @@ const R = 21;
 function nodeState(pct: number, prereqsMet: boolean): NodeState {
   if (pct >= 80) return "mastered";
   if (pct > 0) return "progress";
-  return prereqsMet ? "progress" : "locked";
+  return prereqsMet ? "progress" : "prerequisite";
 }
 
 function buildGraph(progress: ProgressData) {
@@ -96,7 +96,7 @@ function buildGraph(progress: ProgressData) {
     for (const p of a.prerequisites) {
       const from = byId.get(p);
       if (!from) continue;
-      links.push({ from, to, dashed: to.state === "locked" });
+      links.push({ from, to, dashed: to.state === "prerequisite" });
     }
   }
 
@@ -126,7 +126,7 @@ function SkillTree({
   return (
     <svg
       viewBox={`0 0 830 ${height}`}
-      className="h-full w-full"
+      className="h-full min-w-[760px] w-full"
       role="group"
       aria-label="Algorithm skill tree"
     >
@@ -243,7 +243,7 @@ function SkillTree({
                 </>
               )}
 
-              {s.state === "locked" && (
+              {s.state === "prerequisite" && (
                 <>
                   <circle
                     cx={s.x}
@@ -253,16 +253,16 @@ function SkillTree({
                     stroke={EDGE}
                     strokeWidth={1.5}
                   />
-                  <g
-                    transform={`translate(${s.x - 6} ${s.y - 7})`}
-                    fill="none"
-                    stroke={MUTED}
-                    strokeWidth={1.5}
-                    strokeLinecap="round"
+                  <text
+                    x={s.x}
+                    y={s.y + 4}
+                    textAnchor="middle"
+                    fill={MUTED}
+                    fontFamily="JetBrains Mono, monospace"
+                    fontSize={11}
                   >
-                    <rect x={0.5} y={6} width={11} height={7.5} rx={1.8} />
-                    <path d="M3 6 V4.2 a3 3 0 0 1 6 0 V6" />
-                  </g>
+                    0%
+                  </text>
                 </>
               )}
 
@@ -270,7 +270,7 @@ function SkillTree({
                 x={s.x}
                 y={s.y + R + 17}
                 textAnchor="middle"
-                fill={s.state === "locked" ? MUTED : "var(--ink)"}
+                fill={s.state === "prerequisite" ? MUTED : "var(--ink)"}
                 fontFamily="Instrument Sans, sans-serif"
                 fontSize={12}
               >
@@ -296,7 +296,7 @@ function MasteryMap() {
   const counts = React.useMemo(() => {
     const mastered = nodes.filter((n) => n.state === "mastered").length;
     const inProgress = nodes.filter((n) => n.state === "progress").length;
-    return { mastered, inProgress, locked: nodes.length - mastered - inProgress };
+    return { mastered, inProgress, prerequisite: nodes.length - mastered - inProgress };
   }, [nodes]);
 
   const recommended = React.useMemo(() => {
@@ -317,7 +317,7 @@ function MasteryMap() {
           search
         />
 
-        <main className="flex min-h-0 flex-1 flex-col overflow-hidden px-7 py-4">
+        <main className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-4 sm:px-7">
           <h1 className="shrink-0 text-[28px] font-semibold leading-none tracking-tight text-foreground">
             Mastery map
           </h1>
@@ -328,13 +328,16 @@ function MasteryMap() {
             </span>
           </p>
 
-          <div className="mt-3 grid shrink-0 grid-cols-[repeat(3,184px)] gap-4">
+          <div className="mt-3 grid shrink-0 grid-cols-3 gap-2 sm:max-w-[584px] sm:gap-4">
             {[
               { label: "Mastered", value: counts.mastered, teal: true },
               { label: "In progress", value: counts.inProgress, dot: true },
-              { label: "Locked", value: counts.locked, lock: true },
+              { label: "Prereqs first", value: counts.prerequisite, lock: true },
             ].map((s) => (
-              <div key={s.label} className="rounded-2xl border border-hairline bg-card px-5 py-3">
+              <div
+                key={s.label}
+                className="rounded-2xl border border-hairline bg-card px-3 py-3 sm:px-5"
+              >
                 <div className="font-mono text-[12.5px] text-muted-foreground">{s.label}</div>
                 <div className="mt-1 flex items-center gap-2">
                   <span
@@ -354,15 +357,15 @@ function MasteryMap() {
             ))}
           </div>
 
-          <div className="mt-3 grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_340px] gap-4 pb-2">
+          <div className="mt-3 grid min-h-0 flex-1 grid-cols-1 gap-4 pb-2 lg:grid-cols-[minmax(0,1fr)_340px]">
             {/* Canvas */}
-            <section className="relative flex min-h-0 flex-col rounded-2xl border border-hairline bg-card p-4">
+            <section className="relative flex min-h-[500px] flex-col rounded-2xl border border-hairline bg-card p-3 sm:p-4 lg:min-h-0">
               <div className="min-h-0 flex-1 overflow-auto">
                 <SkillTree nodes={nodes} links={links} height={height} scale={scale} onPick={go} />
               </div>
 
-              <div className="mt-2 flex shrink-0 items-center">
-                <div className="inline-flex items-center gap-5 rounded-xl border border-hairline bg-card px-4 py-2">
+              <div className="mt-2 flex shrink-0 flex-wrap items-center gap-2">
+                <div className="inline-flex flex-wrap items-center gap-3 rounded-xl border border-hairline bg-card px-3 py-2 sm:gap-5 sm:px-4">
                   <span className="inline-flex items-center gap-2 font-mono text-[12px] text-foreground">
                     <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary">
                       <Check className="h-2.5 w-2.5 text-primary-foreground" strokeWidth={3.4} />
@@ -375,7 +378,7 @@ function MasteryMap() {
                   </span>
                   <span className="inline-flex items-center gap-2 font-mono text-[12px] text-foreground">
                     <Lock className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.8} />
-                    Locked
+                    Prerequisites first
                   </span>
                 </div>
 
@@ -464,6 +467,28 @@ function MasteryMap() {
                   </div>
                 );
               })}
+
+              <div className="mt-5 border-t border-hairline pt-4">
+                <h3 className="font-sans text-[13.5px] font-medium text-foreground">
+                  All skills · keyboard list ({nodes.length})
+                </h3>
+                <ul id="mastery-skill-list" className="mt-3 max-h-52 space-y-1 overflow-y-auto">
+                  {nodes.map((node) => (
+                    <li key={node.slug}>
+                      <Link
+                        to="/algorithms/$slug"
+                        params={{ slug: node.slug }}
+                        className="flex min-h-10 items-center justify-between gap-3 rounded-lg px-2 font-mono text-[12px] text-foreground hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <span>{node.label}</span>
+                        <span className="text-muted-foreground">
+                          {node.state === "prerequisite" ? "prerequisites first" : `${node.pct}%`}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
               <button
                 onClick={() => navigate({ to: "/explore", search: { sort: "recommended" } })}

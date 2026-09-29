@@ -2,6 +2,7 @@ import * as React from "react";
 import { MonitorPlay } from "lucide-react";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ArrayCanvas } from "@/components/viz/ArrayCanvas";
+import { AuxPanels } from "@/components/viz/AuxPanels";
 import { CurrentOperation } from "@/components/viz/CurrentOperation";
 import { FrameView } from "@/components/viz/FrameView";
 import { VariableBoard } from "@/components/viz/VariableBoard";
@@ -59,7 +60,12 @@ export function AlgorithmWorldPanel({
      insight once, derived from history rather than from a mutable UI flag. */
   const operation = deriveOperation(step, prevStep, run ? { steps: run.steps, index } : undefined);
   const reasoning = deriveReasoning(step, prevStep, index + 1);
-  const showTeachingRow = variables.length > 0 || operation !== null;
+  /* Tree modules use their own compact aux evidence (queue, stack, bounds,
+     swaps). Rendering the generic Variables board as well duplicates that
+     evidence and can push the fixed world card past its visible height. */
+  const rainWater = frame?.kind === "array" && !!frame.rainWater;
+  const showTeachingRow =
+    !rainWater && frame?.kind !== "tree" && (variables.length > 0 || operation !== null);
 
   /* Only the boundary that actually moved on this step gets emphasis. */
   const moved =
@@ -71,7 +77,7 @@ export function AlgorithmWorldPanel({
     <section
       aria-label="Algorithm world"
       className={cn(
-        "relative flex min-w-0 flex-col overflow-hidden rounded-2xl border border-hairline bg-card px-6 pb-5 pt-5 shadow-sm",
+        "relative flex min-w-0 flex-col overflow-hidden rounded-2xl border border-hairline bg-card px-3 pb-5 pt-5 shadow-sm sm:px-6",
         className,
       )}
     >
@@ -89,14 +95,14 @@ export function AlgorithmWorldPanel({
         Algorithm World
       </h2>
 
-      {/* One scroll column: the frame, then the panels that read it. The group is
+      {/* One fixed column: the frame, then the panels that read it. The group is
           centred in the card so leftover height is shared above and below rather
           than pooling into one dead region under the content. */}
       {/* Top-aligned with one measured offset: the data structure sits high in
           the card instead of floating in the middle of leftover height, while
           keeping breathing room above the target chip. */}
-      <div className="relative mt-4 flex min-h-0 flex-1 flex-col justify-start gap-6 overflow-y-auto overflow-x-hidden pt-2">
-        <div className="flex shrink-0 justify-center">
+      <div className="relative mt-4 flex min-h-0 flex-1 flex-col justify-start gap-6 overflow-hidden pt-2">
+        <div className={cn("flex justify-center", rainWater ? "min-h-0 flex-1" : "shrink-0")}>
           {frame ? (
             frame.kind === "array" ? (
               <ArrayCanvas frame={frame} movedPointers={moved} revealDecision={revealAllowed} />
@@ -107,6 +113,8 @@ export function AlgorithmWorldPanel({
             <p className="t-small text-slate">Preparing the visualization…</p>
           )}
         </div>
+
+        <AuxPanels aux={step?.aux} className="shrink-0" />
 
         {showTeachingRow ? (
           <div className="flex shrink-0 flex-col items-stretch gap-4 lg:flex-row">

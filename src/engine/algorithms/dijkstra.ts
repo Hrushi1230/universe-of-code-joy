@@ -121,6 +121,7 @@ function buildFrame(
   nodeStates: Map<string, CellState>,
   edgeStates: Map<string, EdgeState>,
   dist: Map<string, number>,
+  parent: Map<string, string>,
 ): GraphFrame {
   return {
     kind: "graph",
@@ -136,7 +137,7 @@ function buildFrame(
         y: pos.y,
         state: nodeStates.get(id) ?? "idle",
         dist: Number.isFinite(d) ? d : null,
-        badge: fmt(d),
+        parent: parent.get(id) ?? null,
       };
     }),
     edges: graph.edges.map((e) => ({
@@ -196,12 +197,13 @@ function run(parsed: Record<string, unknown>): AlgorithmRun {
 
   const nodeStates = new Map<string, CellState>();
   const edgeStates = new Map<string, EdgeState>();
+  const parent = new Map<string, string>();
   const queue: string[] = [...graph.nodes];
   const b = new StepBuilder(PSEUDOCODE, CODE_BY_LANG, CODE_MAP);
   nodeStates.set(start, "frontier");
 
   b.emit({
-    frame: buildFrame(graph, positions, nodeStates, edgeStates, dist),
+    frame: buildFrame(graph, positions, nodeStates, edgeStates, dist, parent),
     aux: auxFor(graph, dist, queue, null),
     codeLine: 4,
     narration: `We say ${start} costs nothing to reach and every other node is unreachably far for now.`,
@@ -221,7 +223,7 @@ function run(parsed: Record<string, unknown>): AlgorithmRun {
     const u = queue[bestIndex]!;
     if (!Number.isFinite(dist.get(u) ?? Infinity)) {
       b.emit({
-        frame: buildFrame(graph, positions, nodeStates, edgeStates, dist),
+        frame: buildFrame(graph, positions, nodeStates, edgeStates, dist, parent),
         aux: auxFor(graph, dist, queue, null),
         codeLine: 6,
         narration: `Everything still in the queue is unreachable from ${start}, so there is nothing left to settle.`,
@@ -236,7 +238,7 @@ function run(parsed: Record<string, unknown>): AlgorithmRun {
     nodeStates.set(u, "active");
 
     b.emit({
-      frame: buildFrame(graph, positions, nodeStates, edgeStates, dist),
+      frame: buildFrame(graph, positions, nodeStates, edgeStates, dist, parent),
       aux: auxFor(graph, dist, queue, u),
       codeLine: 7,
       narration: `${u} is the closest node we have not settled yet, at a cost of ${fmt(dist.get(u) ?? Infinity)}.`,
@@ -253,11 +255,12 @@ function run(parsed: Record<string, unknown>): AlgorithmRun {
 
       if (alt < (dist.get(v) ?? Infinity)) {
         dist.set(v, alt);
+        parent.set(v, u);
         b.bump("improvements");
         edgeStates.set(key, "tree");
         if (nodeStates.get(v) !== "visited") nodeStates.set(v, "frontier");
         b.emit({
-          frame: buildFrame(graph, positions, nodeStates, edgeStates, dist),
+          frame: buildFrame(graph, positions, nodeStates, edgeStates, dist, parent),
           aux: auxFor(graph, dist, queue, u),
           codeLine: 12,
           narration: `Going through ${u} reaches ${v} for only ${alt}, which beats the best route we knew.`,
@@ -266,7 +269,7 @@ function run(parsed: Record<string, unknown>): AlgorithmRun {
       } else {
         edgeStates.set(key, "rejected");
         b.emit({
-          frame: buildFrame(graph, positions, nodeStates, edgeStates, dist),
+          frame: buildFrame(graph, positions, nodeStates, edgeStates, dist, parent),
           aux: auxFor(graph, dist, queue, u),
           codeLine: 11,
           narration: `Going through ${u} would cost ${alt} to reach ${v}, which is no better than what we have.`,
@@ -277,7 +280,7 @@ function run(parsed: Record<string, unknown>): AlgorithmRun {
 
     nodeStates.set(u, "visited");
     b.emit({
-      frame: buildFrame(graph, positions, nodeStates, edgeStates, dist),
+      frame: buildFrame(graph, positions, nodeStates, edgeStates, dist, parent),
       aux: auxFor(graph, dist, queue, null),
       codeLine: 8,
       narration: `${u} is finished, because no later route can ever reach it more cheaply.`,
@@ -286,7 +289,7 @@ function run(parsed: Record<string, unknown>): AlgorithmRun {
   }
 
   b.emit({
-    frame: buildFrame(graph, positions, nodeStates, edgeStates, dist),
+    frame: buildFrame(graph, positions, nodeStates, edgeStates, dist, parent),
     aux: auxFor(graph, dist, queue, null),
     codeLine: 14,
     narration: "Every reachable node now holds the cheapest cost of getting there from the start.",

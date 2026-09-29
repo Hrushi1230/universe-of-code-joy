@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { getModule, listAllModules, listModules, resolveModule } from "@/engine/registry";
 import { algorithms } from "@/data/algorithms";
-import type { AlgorithmRun, ArrayFrame, GraphFrame, TreeFrame } from "@/engine/types";
+import type {
+  AlgorithmRun,
+  ArrayFrame,
+  CallStackPanel,
+  GraphFrame,
+  HeapFrame,
+  TableFrame,
+} from "@/engine/types";
 
 // `resolveModule`, not `getModule`: the sweeps below cover `listAllModules()`,
 // which includes problem-keyed modules that `getModule` is deliberately blind to.
@@ -55,6 +62,30 @@ describe("registry", () => {
       }
     }
   });
+
+  it("enforces frozen no-scroll teaching limits before a run is created", () => {
+    for (const mod of listAllModules()) {
+      for (const field of mod.inputs) {
+        if (field.kind === "numbers") expect(field.max).toBeLessThanOrEqual(12);
+      }
+    }
+
+    expect(
+      resolveModule("binary-search")!.validate({
+        values: "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13",
+        target: "7",
+      }).ok,
+    ).toBe(false);
+    expect(resolveModule("climbing-stairs")!.validate({ n: "12" }).ok).toBe(false);
+    expect(resolveModule("unique-paths")!.validate({ rows: "9", cols: "10" }).ok).toBe(false);
+    expect(resolveModule("unique-paths")!.validate({ rows: "8", cols: "11" }).ok).toBe(false);
+    expect(
+      resolveModule("bfs")!.validate({
+        graph: "A-B, B-C, C-D, D-E, E-F, F-G, G-H, H-I, I-J, J-K",
+        start: "A",
+      }).ok,
+    ).toBe(false);
+  });
 });
 
 describe("insertion-sort", () => {
@@ -83,19 +114,79 @@ describe("merge-sort", () => {
 });
 
 describe("quicksort", () => {
-  it("sorts a known list", () => {
+  it("sorts a known list while emitting the real recursive call stack", () => {
     const run = runWith("quicksort", { values: "7, 2, 1, 6, 8, 5, 3, 4" });
     expect(lastArray(run)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+
+    const panels = run.steps.flatMap((step) =>
+      (step.aux ?? []).filter((panel): panel is CallStackPanel => panel.kind === "callstack"),
+    );
+    const states = new Set(panels.flatMap((panel) => panel.frames.map((frame) => frame.state)));
+    expect(states).toEqual(new Set(["enter", "active", "success", "return"]));
+    expect(Math.max(...panels.map((panel) => panel.frames.length))).toBeGreaterThan(1);
+    expect(
+      panels.some((panel) => panel.frames.some((frame) => frame.choice?.includes("pivot"))),
+    ).toBe(true);
+    expect(
+      panels.some((panel) =>
+        panel.frames.some((frame) => frame.args.some((arg) => arg.name === "lo")),
+      ),
+    ).toBe(true);
+    expect(run.steps.some((step) => step.aux?.some((panel) => panel.kind === "stack"))).toBe(false);
   });
 });
 
 describe("heap-sort", () => {
-  it("sorts a known list and shows the backing array", () => {
+  it("sorts a known list in one synchronized heap frame", () => {
     const run = runWith("heap-sort", { values: "4, 10, 3, 5, 1, 8" });
-    const frame = run.steps[run.steps.length - 1]!.frame as TreeFrame;
-    expect(frame.nodes.map((n) => n.label)).toEqual([1, 3, 4, 5, 8, 10]);
-    const aux = run.steps[0]!.aux?.[0];
-    expect(aux?.kind).toBe("keyvalue");
+    const frame = run.steps[run.steps.length - 1]!.frame as HeapFrame;
+    expect(frame.kind).toBe("heap");
+    expect(frame.slots.map((slot) => slot.value)).toEqual([1, 3, 4, 5, 8, 10]);
+    expect(frame.heapSize).toBe(0);
+    expect(run.steps.some((step) => (step.frame as HeapFrame).swapPair)).toBe(true);
+    expect(run.steps.every((step) => step.aux === undefined)).toBe(true);
+  });
+});
+
+describe("dynamic programming", () => {
+  it("solves Climbing Stairs through explicit read, compute, and write states", () => {
+    const run = runWith("climbing-stairs", { n: "5" });
+    const frame = run.steps[run.steps.length - 1]!.frame as TableFrame;
+    expect(run.result).toBe("8 ways");
+    expect(frame.layout).toBe("1d");
+    expect(frame.cells.at(-1)).toMatchObject({ value: 8, state: "found", role: "result" });
+    expect(
+      new Set(
+        run.steps
+          .map((step) => step.frame as TableFrame)
+          .map((step) => step.computation?.phase)
+          .filter(Boolean),
+      ),
+    ).toEqual(new Set(["read", "compute", "write"]));
+    expect(
+      run.steps.some((step) =>
+        (step.frame as TableFrame).cells.some((cell) => cell.role === "dependency"),
+      ),
+    ).toBe(true);
+  });
+
+  it("solves Unique Paths with top and left dependencies in a stable 2-D table", () => {
+    const run = runWith("unique-paths", { rows: "3", cols: "7" });
+    const frame = run.steps[run.steps.length - 1]!.frame as TableFrame;
+    expect(run.result).toBe("28 paths");
+    expect(frame.layout).toBe("2d");
+    expect(frame.rowLabels).toHaveLength(3);
+    expect(frame.colLabels).toHaveLength(7);
+    expect(frame.cells.at(-1)).toMatchObject({ value: 28, state: "found", role: "result" });
+    expect(
+      run.steps.some((step) => {
+        const computation = (step.frame as TableFrame).computation;
+        return (
+          computation?.dependencies.some((dependency) => dependency.label === "top") &&
+          computation.dependencies.some((dependency) => dependency.label === "left")
+        );
+      }),
+    ).toBe(true);
   });
 });
 

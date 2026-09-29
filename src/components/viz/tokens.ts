@@ -123,6 +123,68 @@ const LEGEND_BY_SLUG: Record<string, Partial<Record<CellState, string>>> = {
     excluded: "Checked, not a match",
     found: "Target found",
   },
+  "two-sum": {
+    idle: "Still a candidate",
+    compare: "Current pair",
+    excluded: "Endpoint ruled out",
+    found: "Target pair",
+  },
+  "container-with-most-water": {
+    idle: "Possible wall",
+    compare: "Current walls",
+    excluded: "Wall ruled out",
+    found: "Best container walls",
+  },
+  "trapping-rain-water": {
+    idle: "Unresolved bar",
+    active: "Resolved boundary bar",
+    compare: "Boundary maxima",
+    found: "Water added here",
+    sorted: "Water resolved",
+  },
+  "valid-palindrome": {
+    idle: "Unchecked character",
+    active: "Skipped or mismatched",
+    compare: "Current endpoints",
+    found: "Normalized match",
+    excluded: "Proved or ignored",
+  },
+  "move-zeroes": {
+    idle: "Unfinished slot",
+    active: "Read or skipped value",
+    compare: "Current read/write slot",
+    found: "Copied non-zero",
+    excluded: "Scanned output slot",
+    sorted: "Final output prefix",
+  },
+  "remove-duplicates-from-sorted-array": {
+    idle: "Unscanned value",
+    active: "Skipped duplicate",
+    compare: "Current and last unique",
+    found: "Copied unique value",
+    excluded: "Outside unique prefix",
+    sorted: "Final unique prefix",
+  },
+  "three-sum": {
+    idle: "Pair candidate",
+    active: "Fixed anchor",
+    compare: "Current endpoints",
+    found: "Recorded triplet",
+    excluded: "Ruled out or processed",
+    sorted: "Sweep complete",
+  },
+  "binary-tree-level-order": {
+    idle: "Not discovered",
+    active: "Current dequeued node",
+    frontier: "Waiting in queue",
+    visited: "Recorded in a level",
+  },
+  "validate-binary-search-tree": {
+    idle: "Not yet checked",
+    active: "Current bounds check",
+    visited: "Bounds valid",
+    excluded: "BST violation",
+  },
   /* Keyed by QUESTION slug, not algorithm slug: this is a problem-keyed module,
      and WorkspacePanels passes `run.slug`. Nearly binary search's wording, but
      the cells are candidate *slots* rather than candidate values, and `found`
@@ -207,6 +269,12 @@ const LEGEND_BY_SLUG: Record<string, Partial<Record<CellState, string>>> = {
     excluded: "Leaving",
     found: "Best window",
   },
+  "sort-colors": {
+    idle: "Not classified yet",
+    compare: "Classifying now",
+    visited: "Middle partition: 1",
+    sorted: "Final partition: 0 or 2",
+  },
   quicksort: {
     active: "Pivot",
     compare: "Compared to pivot",
@@ -230,8 +298,12 @@ export function statesInFrame(frame: Frame): Set<CellState> {
       for (const state of Object.values(frame.states)) states.add(state);
       break;
     case "tree":
+    case "heap":
+    case "linked-list":
     case "graph":
-      for (const node of frame.nodes) states.add(node.state);
+      for (const item of frame.kind === "heap" ? frame.slots : frame.nodes) {
+        states.add(item.state);
+      }
       break;
     case "grid":
     case "table":

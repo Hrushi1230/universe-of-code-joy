@@ -12,26 +12,27 @@ import {
   Zap,
 } from "lucide-react";
 import { AppSidebar, AppWorkspaceBar } from "@/components/app-shell";
+import { DemoNotice } from "@/components/demo-notice";
 import { getLesson } from "@/content/lessons";
-import { demoLearner as mockUser } from "@/content/demo-learner";
 import useHydrated from "@/hooks/useHydrated";
 import { buildLeague, isoWeek, weekDayKeys, weekEnd } from "@/lib/league";
+import { usePrefsStore } from "@/stores/prefsStore";
 import { baselineProgress, useProgressStore } from "@/stores/progressStore";
 
 export const Route = createFileRoute("/leagues")({
   component: Leagues,
   head: () => ({
     meta: [
-      { title: "Teal League leaderboard — weekly rankings — Algora" },
+      { title: "League preview — local weekly XP — Algora" },
       {
         name: "description",
         content:
-          "See the Teal League weekly leaderboard: top 10 advance to Diamond. Track your rank, weekly XP and how far you are from climbing.",
+          "Compare local weekly XP with a deterministic sample cohort. Live competition is not connected.",
       },
-      { property: "og:title", content: "Teal League leaderboard — weekly rankings — Algora" },
+      { property: "og:title", content: "League preview — Algora" },
       {
         property: "og:description",
-        content: "Your weekly XP places you live on the Teal League table.",
+        content: "A local weekly XP preview with an explicitly simulated peer cohort.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -117,6 +118,7 @@ function Leagues() {
   const hydrated = useHydrated();
   const live = useProgressStore((s) => s);
   const state = hydrated ? live : baselineProgress;
+  const profile = usePrefsStore((s) => s.profile);
 
   // Week identity is captured once so the seed can never change mid-render.
   const [now] = useState(() => new Date());
@@ -144,14 +146,14 @@ function Leagues() {
     [state.lessons, weekKeys],
   );
 
-  const league = useMemo(
-    () =>
-      buildLeague(week.year * 100 + week.week, weekly.xp, {
-        name: mockUser.name,
-        handle: `@${mockUser.handle}`,
-      }),
-    [week.week, week.year, weekly.xp],
-  );
+  const league = useMemo(() => {
+    const name = hydrated && profile.fullName.trim() ? profile.fullName.trim() : "Local Learner";
+    const rawHandle = hydrated && profile.username.trim() ? profile.username.trim() : "@learner";
+    return buildLeague(week.year * 100 + week.week, weekly.xp, {
+      name,
+      handle: rawHandle.startsWith("@") ? rawHandle : `@${rawHandle}`,
+    });
+  }, [hydrated, profile.fullName, profile.username, week.week, week.year, weekly.xp]);
 
   // Countdown to the weekly reset; static text until mounted so SSR matches.
   const [daysLeft, setDaysLeft] = useState<number | null>(null);
@@ -172,20 +174,20 @@ function Leagues() {
   const avgPerDay = Math.round(weekly.xp / Math.max(1, weekly.activeDays || 1));
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background">
+    <div className="flex min-h-screen w-full bg-background lg:h-screen lg:overflow-hidden">
       <AppSidebar active="Compete" collapsible />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <AppWorkspaceBar crumbs={[]} search />
 
-        <main className="flex min-h-0 flex-1 flex-col overflow-hidden px-8 py-4">
-          <div className="flex shrink-0 items-start justify-between">
+        <main className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-4 sm:px-8">
+          <div className="flex shrink-0 flex-col items-start justify-between gap-3 sm:flex-row">
             <div>
               <h1 className="text-[28px] font-semibold leading-none tracking-tight text-foreground">
                 Teal League
               </h1>
               <p className="mt-2 font-mono text-[13px] text-muted-foreground">
-                Top {league.promoteRank} advance to the Diamond League.
+                Top {league.promoteRank} appear in the sample promotion zone.
                 {daysLeft === null ? "" : ` ${daysLeft} day${daysLeft === 1 ? "" : "s"} left.`}
               </p>
             </div>
@@ -195,10 +197,17 @@ function Leagues() {
             </span>
           </div>
 
+          <div className="mt-3">
+            <DemoNotice>
+              Your row uses weekly XP saved on this device. Every other player, rank change, tier,
+              and promotion boundary is a deterministic fixture—not live competition.
+            </DemoNotice>
+          </div>
+
           {/* League bar */}
-          <div className="mt-3 flex shrink-0 items-center gap-1 rounded-2xl border border-hairline bg-card px-5 py-2.5">
-            {TIERS.map((t, i) => (
-              <div key={t.name} className="flex items-center">
+          <div className="mt-3 grid shrink-0 grid-cols-2 gap-2 rounded-2xl border border-hairline bg-card px-4 py-3 sm:grid-cols-5 sm:px-5">
+            {TIERS.map((t) => (
+              <div key={t.name} className="flex items-center justify-center">
                 <div
                   className={`flex items-center gap-2.5 rounded-xl px-3 py-1.5 ${
                     t.current ? "border border-primary/40 bg-primary-tint/70" : ""
@@ -211,37 +220,28 @@ function Leagues() {
                     }`}
                   >
                     {t.name}
-                    {t.current && (
-                      <span className="block text-[11px] text-primary/80">(Current)</span>
-                    )}
+                    {t.current && <span className="block text-[11px] text-primary">(Current)</span>}
                   </span>
                 </div>
-                {i < TIERS.length - 1 && (
-                  <span className="mx-3 flex items-center gap-1.5">
-                    <span className="h-px w-8 bg-hairline" />
-                    <span className="h-1.5 w-1.5 rounded-full bg-hairline" />
-                    <span className="h-px w-8 bg-hairline" />
-                  </span>
-                )}
               </div>
             ))}
           </div>
 
-          <div className="mt-3 grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_310px] gap-4 pb-2">
+          <div className="mt-3 grid min-h-0 flex-1 grid-cols-1 gap-4 pb-2 xl:grid-cols-[minmax(0,1fr)_310px]">
             {/* Leaderboard */}
             <section className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-hairline bg-card">
-              <div className="grid shrink-0 grid-cols-[64px_minmax(0,1fr)_120px_92px] items-center border-b border-hairline px-5 py-2.5 font-mono text-[12.5px] text-muted-foreground">
+              <div className="grid shrink-0 grid-cols-[48px_minmax(0,1fr)_86px] items-center border-b border-hairline px-3 py-2.5 font-mono text-[12px] text-muted-foreground sm:grid-cols-[64px_minmax(0,1fr)_120px_92px] sm:px-5 sm:text-[12.5px]">
                 <span>Rank</span>
                 <span>Player</span>
                 <span className="text-right">Weekly XP</span>
-                <span className="text-right">Change</span>
+                <span className="hidden text-right sm:block">Change</span>
               </div>
 
               <div className="min-h-0 flex-1 overflow-auto">
                 {league.rows.map((r) => (
                   <div key={`${r.rank}-${r.handle}`}>
                     <div
-                      className={`relative grid grid-cols-[64px_minmax(0,1fr)_120px_92px] items-center border-b border-hairline px-5 py-[6px] ${
+                      className={`relative grid min-h-14 grid-cols-[48px_minmax(0,1fr)_86px] items-center border-b border-hairline px-3 py-[6px] sm:grid-cols-[64px_minmax(0,1fr)_120px_92px] sm:px-5 ${
                         r.me ? "bg-primary-tint/60" : ""
                       }`}
                     >
@@ -268,14 +268,14 @@ function Leagues() {
                           {r.initials}
                         </span>
                         <span
-                          className={`w-[110px] shrink-0 truncate text-[14px] ${
+                          className={`min-w-0 truncate text-[14px] sm:w-[110px] sm:shrink-0 ${
                             r.me ? "font-semibold text-foreground" : "text-foreground"
                           }`}
                         >
                           {r.name}
                         </span>
                         <span
-                          className={`truncate font-mono text-[12.5px] ${
+                          className={`hidden truncate font-mono text-[12.5px] sm:block ${
                             r.me ? "text-primary" : "text-muted-foreground"
                           }`}
                         >
@@ -291,7 +291,7 @@ function Leagues() {
                         {r.xp.toLocaleString("en-US")} XP
                       </span>
 
-                      <span className="flex justify-end">
+                      <span className="hidden justify-end sm:flex">
                         <Move move={r.move} />
                       </span>
                     </div>
@@ -348,7 +348,7 @@ function Leagues() {
                 <div>
                   <div className="font-mono text-[12px] text-muted-foreground">League size</div>
                   <div className="font-mono text-[13.5px] text-foreground">
-                    {league.size} students
+                    {league.size} sample players
                   </div>
                 </div>
               </div>
@@ -387,7 +387,8 @@ function Leagues() {
           </div>
 
           <p className="shrink-0 pb-1 font-mono text-[12px] text-muted-foreground">
-            Weekly XP resets every Monday. Your row updates the moment you earn XP.
+            Your weekly XP uses local Monday boundaries. The sample cohort is regenerated
+            deterministically each week; no other person's data is shown.
           </p>
         </main>
       </div>

@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, ChevronDown, Lock, Monitor, ShieldCheck, Upload } from "lucide-react";
+import { Lock, Monitor, ShieldCheck, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { AppSidebar, AppWorkspaceBar } from "@/components/app-shell";
 import { SettingsNav } from "@/components/settings-nav";
 import useHydrated from "@/hooks/useHydrated";
+import { normalizeLocalProfile, validateLocalProfile, type ProfileField } from "@/lib/profile";
 import type { ProfileData } from "@/stores/prefsStore";
 import { usePrefsStore } from "@/stores/prefsStore";
+import { DemoNotice } from "@/components/demo-notice";
 
 export const Route = createFileRoute("/settings/")({
   component: SettingsProfile,
@@ -15,13 +17,12 @@ export const Route = createFileRoute("/settings/")({
       { title: "Account settings — profile & security — Algora" },
       {
         name: "description",
-        content:
-          "Update your Algora profile, username, email and bio, and manage password, two-factor authentication and active sessions.",
+        content: "Update the local Algora preview profile stored on this device.",
       },
       { property: "og:title", content: "Account settings — profile & security — Algora" },
       {
         property: "og:description",
-        content: "Manage your Algora profile details, security and active devices in one place.",
+        content: "Manage the local Algora preview profile stored on this device.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -29,17 +30,29 @@ export const Route = createFileRoute("/settings/")({
   }),
 });
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  id,
+  label,
+  error,
+  children,
+}: {
+  id: ProfileField;
+  label: string;
+  error?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <label className="block">
+    <label className="block" htmlFor={id}>
       <span className="font-mono text-[12px] text-muted-foreground">{label}</span>
       <div className="mt-1.5">{children}</div>
+      {error && (
+        <span id={`${id}-error`} className="mt-1.5 block font-mono text-[12px] text-error">
+          {error}
+        </span>
+      )}
     </label>
   );
 }
-
-const inputBase =
-  "flex h-11 w-full items-center rounded-xl border border-hairline bg-card px-3.5 font-mono text-[13.5px] text-foreground";
 
 const editableInput =
   "flex h-11 w-full items-center rounded-xl border border-hairline bg-card px-3.5 font-mono text-[13.5px] text-foreground outline-none focus:border-primary focus:ring-4 focus:ring-primary-tint";
@@ -47,11 +60,11 @@ const editableInput =
 function SettingsProfile() {
   const hydrated = useHydrated();
   const profile = usePrefsStore((s) => s.profile);
-  const twoFactor = usePrefsStore((s) => s.profile.twoFactorEnabled);
   const updateProfile = usePrefsStore((s) => s.updateProfile);
 
   /* ---- draft state (local copy for dirty tracking) ---- */
   const [draft, setDraft] = useState<ProfileData>(() => ({ ...profile }));
+  const [showErrors, setShowErrors] = useState(false);
 
   /* Sync draft when store changes (e.g. after hydration) */
   useEffect(() => {
@@ -69,19 +82,28 @@ function SettingsProfile() {
     );
   }, [hydrated, draft, profile]);
 
+  const errors = useMemo(() => validateLocalProfile(draft), [draft]);
+  const hasErrors = Object.keys(errors).length > 0;
+
   const handleSave = useCallback(() => {
-    updateProfile(draft);
-    toast.success("Profile saved");
+    setShowErrors(true);
+    if (Object.keys(validateLocalProfile(draft)).length > 0) {
+      toast.error("Check the highlighted profile fields");
+      return;
+    }
+    const normalized = normalizeLocalProfile(draft);
+    updateProfile(normalized);
+    setDraft(normalized);
+    setShowErrors(false);
+    toast.success("Local profile saved", {
+      description: "Changes are stored only on this device.",
+    });
   }, [draft, updateProfile]);
 
   const handleCancel = useCallback(() => {
     setDraft({ ...profile });
+    setShowErrors(false);
   }, [profile]);
-
-  const handleToggle2FA = useCallback(() => {
-    updateProfile({ twoFactorEnabled: !twoFactor });
-    toast.success(twoFactor ? "Two-factor disabled" : "Two-factor enabled");
-  }, [twoFactor, updateProfile]);
 
   /* Display values — SSR-safe baseline, then real after hydration */
   const d = hydrated ? draft : { fullName: "—", username: "—", email: "—", country: "—", bio: "—" };
@@ -95,20 +117,27 @@ function SettingsProfile() {
     : "—";
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background">
+    <div className="flex min-h-screen w-full bg-background lg:h-screen lg:overflow-hidden">
       <AppSidebar active="Settings" collapsible />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <AppWorkspaceBar crumbs={["Settings"]} search />
 
-        <main className="flex min-h-0 flex-1 gap-5 overflow-hidden px-8 py-5">
+        <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-5 sm:px-8 lg:flex-row lg:gap-5">
           <SettingsNav active="Profile" />
 
           <section className="flex min-h-0 min-w-0 flex-1 flex-col rounded-2xl border border-hairline bg-card">
-            <div className="min-h-0 flex-1 overflow-hidden px-7 pt-5">
+            <div className="min-h-0 flex-1 px-4 pt-5 sm:px-7">
               <h1 className="text-[24px] font-semibold leading-none tracking-tight text-foreground">
                 Profile
               </h1>
+
+              <div className="mt-3">
+                <DemoNotice>
+                  Profile changes stay on this device. Passwords, two-factor protection, sessions,
+                  and uploads are not connected.
+                </DemoNotice>
+              </div>
 
               {/* Avatar row */}
               <div className="mt-3.5 flex items-center gap-5 border-b border-hairline pb-3.5">
@@ -116,55 +145,100 @@ function SettingsProfile() {
                   {initials}
                 </span>
                 <div>
-                  <button className="inline-flex h-10 items-center gap-2 rounded-xl border border-hairline bg-card px-4 font-sans text-[14px] text-foreground hover:bg-secondary">
+                  <button
+                    type="button"
+                    disabled
+                    className="inline-flex h-10 cursor-not-allowed items-center gap-2 rounded-xl border border-hairline bg-secondary/50 px-4 font-sans text-[14px] text-muted-foreground"
+                  >
                     <Upload className="h-4 w-4 text-muted-foreground" strokeWidth={1.8} />
-                    Change photo
+                    Photo upload coming soon
                   </button>
                   <p className="mt-2 font-mono text-[12px] text-muted-foreground">
-                    PNG or JPG, up to 2MB
+                    No photo is selected or stored.
                   </p>
                 </div>
               </div>
 
               {/* Fields */}
-              <div className="mt-4 grid grid-cols-2 gap-x-7 gap-y-3.5">
-                <Field label="Full name">
+              <div className="mt-4 grid grid-cols-1 gap-x-7 gap-y-3.5 sm:grid-cols-2">
+                <Field
+                  id="fullName"
+                  label="Full name"
+                  error={showErrors ? errors.fullName : undefined}
+                >
                   <input
+                    id="fullName"
                     className={editableInput}
                     value={d.fullName}
                     onChange={(e) => setDraft((p) => ({ ...p, fullName: e.target.value }))}
+                    disabled={!hydrated}
+                    aria-invalid={showErrors && Boolean(errors.fullName)}
+                    aria-describedby={showErrors && errors.fullName ? "fullName-error" : undefined}
                   />
                 </Field>
-                <Field label="Username">
+                <Field
+                  id="username"
+                  label="Username"
+                  error={showErrors ? errors.username : undefined}
+                >
                   <input
+                    id="username"
                     className={editableInput}
                     value={d.username}
                     onChange={(e) => setDraft((p) => ({ ...p, username: e.target.value }))}
+                    disabled={!hydrated}
+                    aria-invalid={showErrors && Boolean(errors.username)}
+                    aria-describedby={showErrors && errors.username ? "username-error" : undefined}
                   />
                 </Field>
-                <Field label="Email">
-                  <div
-                    className={`${inputBase} justify-between border-primary ring-4 ring-primary-tint`}
+                <Field
+                  id="email"
+                  label="Email (optional)"
+                  error={showErrors ? errors.email : undefined}
+                >
+                  <input
+                    id="email"
+                    type="email"
+                    inputMode="email"
+                    className={editableInput}
+                    value={d.email}
+                    onChange={(e) => setDraft((p) => ({ ...p, email: e.target.value }))}
+                    disabled={!hydrated}
+                    aria-invalid={showErrors && Boolean(errors.email)}
+                    aria-describedby={showErrors && errors.email ? "email-error" : undefined}
+                  />
+                </Field>
+                <Field
+                  id="country"
+                  label="Country (optional)"
+                  error={showErrors ? errors.country : undefined}
+                >
+                  <input
+                    id="country"
+                    className={editableInput}
+                    value={d.country}
+                    onChange={(e) => setDraft((p) => ({ ...p, country: e.target.value }))}
+                    disabled={!hydrated}
+                    aria-invalid={showErrors && Boolean(errors.country)}
+                    aria-describedby={showErrors && errors.country ? "country-error" : undefined}
+                  />
+                </Field>
+                <div className="sm:col-span-2">
+                  <Field
+                    id="bio"
+                    label={`Bio (optional) · ${d.bio.length}/240`}
+                    error={showErrors ? errors.bio : undefined}
                   >
-                    {d.email}
-                    <span className="inline-flex items-center gap-1.5 rounded-md bg-primary-tint px-2 py-1 font-mono text-[11.5px] text-primary">
-                      <Check className="h-3 w-3" strokeWidth={2.8} /> Verified
-                    </span>
-                  </div>
-                </Field>
-                <Field label="Country">
-                  <div className={`${inputBase} justify-between`}>
-                    {d.country}
-                    <ChevronDown className="h-4 w-4 text-muted-foreground" strokeWidth={1.9} />
-                  </div>
-                </Field>
-                <div className="col-span-2">
-                  <Field label="Bio">
                     <textarea
+                      id="bio"
                       className="min-h-[44px] w-full resize-none rounded-xl border border-hairline bg-card px-3.5 py-2.5 font-mono text-[13.5px] leading-[1.6] text-foreground outline-none focus:border-primary focus:ring-4 focus:ring-primary-tint"
                       value={d.bio}
                       onChange={(e) => setDraft((p) => ({ ...p, bio: e.target.value }))}
                       rows={2}
+                      maxLength={260}
+                      disabled={!hydrated}
+                      aria-invalid={showErrors && Boolean(errors.bio)}
+                      aria-describedby={showErrors && errors.bio ? "bio-error" : undefined}
                     />
                   </Field>
                 </div>
@@ -172,18 +246,15 @@ function SettingsProfile() {
 
               {/* Security preview */}
               <h2 className="mt-3.5 text-[19px] font-semibold leading-none tracking-tight text-foreground">
-                Security
+                Security preview
               </h2>
               <div className="mt-2.5 overflow-hidden rounded-xl border border-hairline">
                 <div className="flex min-h-[40px] shrink-0 items-center gap-3 border-b border-hairline px-4">
                   <Lock className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.8} />
                   <span className="text-[14px] text-foreground">Password</span>
-                  <span className="ml-8 font-mono text-[13px] tracking-[0.18em] text-muted-foreground">
-                    ·········
+                  <span className="ml-auto font-mono text-[12.5px] text-muted-foreground">
+                    No password stored
                   </span>
-                  <button className="ml-auto font-sans text-[14px] text-primary hover:underline">
-                    Change
-                  </button>
                 </div>
                 <div className="flex min-h-[40px] shrink-0 items-center gap-3 border-b border-hairline px-4">
                   <ShieldCheck
@@ -191,28 +262,22 @@ function SettingsProfile() {
                     strokeWidth={1.8}
                   />
                   <span className="text-[14px] text-foreground">Two-factor authentication</span>
-                  <button
-                    onClick={handleToggle2FA}
-                    className={`ml-auto flex h-6 w-11 items-center rounded-full px-0.5 transition-colors ${
-                      hydrated && twoFactor ? "bg-primary" : "bg-hairline"
-                    }`}
-                    aria-label={`Two-factor authentication ${hydrated && twoFactor ? "enabled" : "disabled"}`}
-                  >
-                    <span
-                      className={`h-5 w-5 rounded-full bg-card transition-transform ${
-                        hydrated && twoFactor ? "ml-auto" : ""
-                      }`}
-                    />
-                  </button>
+                  <span className="ml-auto font-mono text-[12.5px] text-muted-foreground">
+                    Not connected
+                  </span>
                 </div>
                 <div className="flex min-h-[40px] shrink-0 items-center gap-3 px-4">
                   <Monitor className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.8} />
                   <span className="text-[14px] text-foreground">Active sessions</span>
                   <span className="ml-8 font-mono text-[13px] text-muted-foreground">
-                    2 devices
+                    Not connected
                   </span>
-                  <button className="ml-auto font-sans text-[14px] text-primary hover:underline">
-                    Manage
+                  <button
+                    type="button"
+                    disabled
+                    className="ml-auto cursor-not-allowed font-sans text-[14px] text-muted-foreground"
+                  >
+                    Coming soon
                   </button>
                 </div>
               </div>
@@ -220,7 +285,7 @@ function SettingsProfile() {
 
             {/* Sticky footer — only visible when dirty */}
             <div
-              className={`mt-4 flex h-[68px] shrink-0 items-center justify-between border-t border-hairline px-7 transition-opacity ${
+              className={`mt-4 flex min-h-[68px] shrink-0 flex-col items-stretch justify-between gap-3 border-t border-hairline px-4 py-3 transition-opacity sm:flex-row sm:items-center sm:px-7 ${
                 isDirty ? "opacity-100" : "pointer-events-none opacity-0"
               }`}
             >
@@ -234,6 +299,7 @@ function SettingsProfile() {
                 </button>
                 <button
                   onClick={handleSave}
+                  disabled={hasErrors && showErrors}
                   className="h-11 rounded-xl bg-primary px-6 font-sans text-[14px] font-medium text-primary-foreground hover:bg-primary-glow"
                 >
                   Save changes

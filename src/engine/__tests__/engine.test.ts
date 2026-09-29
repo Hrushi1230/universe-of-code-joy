@@ -13,7 +13,7 @@ function runOk(mod: AlgorithmModule, raw: Record<string, string>): AlgorithmRun 
 const cases: Array<{ mod: AlgorithmModule; raw: Record<string, string> }> = [
   {
     mod: binarySearchModule,
-    raw: { values: Array.from({ length: 15 }, (_, i) => i + 1).join(", "), target: "13" },
+    raw: { values: Array.from({ length: 12 }, (_, i) => i + 1).join(", "), target: "11" },
   },
   { mod: bubbleSortModule, raw: { values: "5, 1, 4, 2, 8" } },
   { mod: bfsModule, raw: { graph: "A-B,A-C,B-D,C-D", start: "A" } },
@@ -22,8 +22,8 @@ const cases: Array<{ mod: AlgorithmModule; raw: Record<string, string> }> = [
 describe("binarySearch", () => {
   const run = runOk(cases[0]!.mod, cases[0]!.raw);
 
-  it("finds the target 13", () => {
-    expect(run.result).toMatch(/Found 13/);
+  it("finds the target 11", () => {
+    expect(run.result).toMatch(/Found 11/);
   });
 
   it("keeps every codeLine within 1..pseudocode.length", () => {

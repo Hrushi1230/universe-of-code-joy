@@ -92,6 +92,8 @@ describe("Alt Text & Non-Text Content Accessibility Audit (WCAG 2.1 SC 1.1.1)", 
   it("verifies specific algorithmic visualization renderers have role='img' and aria-label", () => {
     const vizFiles = [
       path.join(srcDir, "components", "viz", "TreeView.tsx"),
+      path.join(srcDir, "components", "viz", "HeapView.tsx"),
+      path.join(srcDir, "components", "viz", "LinkedListView.tsx"),
       path.join(srcDir, "components", "viz", "GraphView.tsx"),
       path.join(srcDir, "components", "viz", "ArrayView.tsx"),
     ];
@@ -105,7 +107,7 @@ describe("Alt Text & Non-Text Content Accessibility Audit (WCAG 2.1 SC 1.1.1)", 
 
   it("verifies interactive landing and practice visualizations have accessible roles and labels", () => {
     const indexContent = fs.readFileSync(path.join(srcDir, "routes", "index.tsx"), "utf-8");
-    expect(indexContent).toMatch(/aria-label="Interactive algorithm tree visualization"/);
+    expect(indexContent).toMatch(/aria-label={`Interactive breadth-first traversal/);
     expect(indexContent).toMatch(/aria-label="Skill tree milestone map"/);
 
     const reviewContent = fs.readFileSync(path.join(srcDir, "routes", "review.tsx"), "utf-8");

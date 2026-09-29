@@ -1,6 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteFooter, SiteNav } from "@/components/site-chrome";
 import { UniversityStrip } from "@/components/university-lockups";
+import { DemoNotice } from "@/components/demo-notice";
 import {
   campusHeroStats,
   campusCohortDemoClaim,
@@ -15,12 +16,12 @@ export const Route = createFileRoute("/campus")({
       {
         name: "description",
         content:
-          "Bring Algora's synchronized visualizer, guided paths, and cohort dashboards to your CS department, bootcamp, or student club.",
+          "Preview how Algora's synchronized visualizer and guided paths could support a CS department, bootcamp, or student club.",
       },
       { property: "og:title", content: "Algora for Campus — Built for CS Departments" },
       {
         property: "og:description",
-        content: `Cohort dashboards, curriculum-aligned paths, and zero setup for students. ${campusHeroStats[0].rawText}.`,
+        content: `Preview planned cohort tools and current browser learning. ${campusHeroStats[0].rawText}.`,
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -81,10 +82,10 @@ function Arrow() {
 /* ---------------------------------- hero --------------------------------- */
 function Hero() {
   return (
-    <section className="mx-auto grid max-w-[1280px] grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] items-start gap-16 px-8 pt-16 pb-10">
+    <section className="mx-auto grid max-w-[1280px] grid-cols-1 items-start gap-10 px-4 pb-10 pt-12 sm:px-8 sm:pt-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-16">
       <div className="pt-4">
         <Badge>ALGORA FOR CAMPUS</Badge>
-        <h1 className="mt-7 font-display text-[56px] font-semibold leading-[1.06] tracking-[-0.025em] text-foreground">
+        <h1 className="mt-7 font-display text-[42px] font-semibold leading-[1.06] tracking-[-0.025em] text-foreground sm:text-[56px]">
           Bring the visualizer to your whole department
           <span className="ml-0.5 inline-block h-3 w-3 bg-primary align-baseline" />
         </h1>
@@ -92,15 +93,29 @@ function Hero() {
           Give every CS student synchronized visualization, guided paths, and progress you can
           actually see.
         </p>
-        <div className="mt-8 flex items-center gap-3">
-          <button className="rounded-lg bg-primary px-6 py-3.5 text-[15px] font-medium text-primary-foreground transition-colors hover:bg-primary-glow">
+        <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+          <Link
+            to="/contact"
+            hash="contact-form"
+            className="rounded-lg bg-primary px-6 py-3.5 text-center text-[15px] font-medium text-primary-foreground transition-colors hover:bg-primary-glow"
+          >
             Request campus access
-          </button>
-          <button className="rounded-lg border border-hairline bg-card px-6 py-3.5 text-[15px] font-medium text-foreground transition-colors hover:bg-secondary">
-            Book a walkthrough
-          </button>
+          </Link>
+          <Link
+            to="/contact"
+            hash="contact-form"
+            className="rounded-lg border border-hairline bg-card px-6 py-3.5 text-center text-[15px] font-medium text-foreground transition-colors hover:bg-secondary"
+          >
+            Ask about a walkthrough
+          </Link>
         </div>
-        <div className="mt-9 flex items-center gap-3 font-mono text-[12px] text-muted-foreground">
+        <div className="mt-6">
+          <DemoNotice>
+            Campus accounts, rosters, analytics, SSO, pricing, and walkthrough booking are planned,
+            not connected services.
+          </DemoNotice>
+        </div>
+        <div className="mt-6 flex flex-wrap items-center gap-3 font-mono text-[12px] text-muted-foreground">
           <span>{campusHeroStats[0].rawText}</span>
           <span className="size-1 rounded-full bg-primary" />
           <span>{campusHeroStats[1].rawText}</span>
@@ -139,7 +154,7 @@ function CohortCard() {
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-[1fr_auto_120px] items-center gap-4 border-b border-hairline px-7 pb-3 font-sans text-[13px] text-muted-foreground">
+      <div className="mt-6 hidden grid-cols-[1fr_auto_120px] items-center gap-4 border-b border-hairline px-7 pb-3 font-sans text-[13px] text-muted-foreground sm:grid">
         <span>Student</span>
         <span>XP</span>
         <span className="text-right">Mastery</span>
@@ -149,7 +164,7 @@ function CohortCard() {
         {campusCohortDemoClaim.roster.map((s) => (
           <div
             key={s.initials}
-            className="grid grid-cols-[1fr_auto_120px] items-center gap-4 border-b border-hairline py-3.5 last:border-b-0"
+            className="grid grid-cols-1 gap-2 border-b border-hairline py-3.5 last:border-b-0 sm:grid-cols-[1fr_auto_120px] sm:items-center sm:gap-4"
           >
             <div className="flex items-center gap-3">
               <span className="flex size-8 items-center justify-center rounded-full bg-primary-tint font-mono text-[11px] text-primary">
@@ -158,7 +173,7 @@ function CohortCard() {
               <span className="font-sans text-[14px] text-foreground">{s.name}</span>
             </div>
             <span className="font-mono text-[12px] text-muted-foreground">{s.xp}</span>
-            <div className="flex items-center justify-end gap-2.5">
+            <div className="flex items-center gap-2.5 sm:justify-end">
               <div className="h-1.5 w-14 overflow-hidden rounded-full bg-secondary">
                 <div
                   className="h-full rounded-full bg-primary"
@@ -174,7 +189,7 @@ function CohortCard() {
       </div>
 
       <div className="border-t border-hairline px-7 py-4 font-mono text-[12px] text-muted-foreground">
-        {campusCohortDemoClaim.studentCount} students enrolled
+        Illustrative fixture · {campusCohortDemoClaim.studentCount} sample learners
       </div>
     </div>
   );
@@ -240,25 +255,25 @@ function ValueCards() {
     {
       icon: <ChartIcon />,
       title: "Cohort dashboards",
-      body: "See class-wide mastery, spot who's stuck, and celebrate streaks.",
+      body: "A planned view for class-wide mastery and learners who may need help.",
     },
     {
       icon: <MapIcon />,
       title: "Curriculum-aligned paths",
-      body: "Map lessons to your syllabus for CS1, CS2, and interview prep.",
+      body: "A planned way to map current lessons to a course or cohort sequence.",
     },
     {
       icon: <PeopleIcon />,
       title: "Zero setup for students",
-      body: "Roster invite links, SSO-ready, works in the browser.",
+      body: "Current lessons work in the browser; roster links and SSO are not connected.",
     },
   ];
   return (
-    <section className="mx-auto max-w-[1280px] px-8 py-16">
+    <section className="mx-auto max-w-[1280px] px-4 py-14 sm:px-8 sm:py-16">
       <h2 className="mb-12 text-center font-display text-[38px] font-semibold tracking-[-0.02em] text-foreground">
         Why departments choose Algora
       </h2>
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {cards.map((c) => (
           <div key={c.title} className="rounded-2xl border border-hairline bg-card p-7">
             <div className="text-primary">{c.icon}</div>
@@ -268,12 +283,9 @@ function ValueCards() {
             <p className="mt-3 max-w-[260px] font-sans text-[14.5px] leading-[1.65] text-muted-foreground">
               {c.body}
             </p>
-            <a
-              href="#"
-              className="mt-6 inline-flex items-center gap-2 font-sans text-[14px] font-medium text-primary"
-            >
-              Learn more <Arrow />
-            </a>
+            <span className="mt-6 inline-flex items-center gap-2 font-mono text-[12px] text-primary">
+              Planned capability <Arrow />
+            </span>
           </div>
         ))}
       </div>
@@ -287,27 +299,27 @@ function HowItWorks() {
     {
       n: 1,
       label: "Invite your cohort",
-      body: "Add students in seconds with roster links or SSO.",
+      body: "Plan the cohort and invite model; roster links and SSO require integration.",
     },
     {
       n: 2,
       label: "Assign paths & lessons",
-      body: "Choose or build learning paths aligned to your syllabus.",
+      body: "Review existing learning paths and define the course sequence.",
     },
     {
       n: 3,
       label: "Track mastery live",
-      body: "Monitor progress, mastery, and engagement in real time.",
+      body: "Durable progress reporting requires the later backend integration phase.",
     },
   ];
   return (
-    <section className="mx-auto max-w-[1280px] px-8 py-16">
+    <section className="mx-auto max-w-[1280px] px-4 py-14 sm:px-8 sm:py-16">
       <h2 className="mb-14 text-center font-display text-[34px] font-semibold tracking-[-0.02em] text-foreground">
         How it works
       </h2>
       <div className="relative mx-auto max-w-[980px]">
-        <div className="absolute inset-x-[16%] top-5 h-px bg-primary/45" />
-        <div className="relative grid grid-cols-3">
+        <div className="absolute inset-x-[16%] top-5 hidden h-px bg-primary/45 md:block" />
+        <div className="relative grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-0">
           {steps.map((s) => (
             <div key={s.n} className="flex flex-col items-center px-8 text-center">
               <span className="flex size-10 items-center justify-center rounded-full bg-primary font-mono text-[14px] text-primary-foreground">
@@ -331,12 +343,12 @@ function HowItWorks() {
 function Outcomes() {
   const stats = campusOutcomesStats.map((s) => ({ v: s.value, c: s.label }));
   return (
-    <section className="mx-auto max-w-[1280px] px-8 py-8">
-      <div className="grid grid-cols-3 rounded-2xl border border-primary-tint-strong bg-primary-tint py-10">
+    <section className="mx-auto max-w-[1280px] px-4 py-8 sm:px-8">
+      <div className="grid grid-cols-1 rounded-2xl border border-primary-tint-strong bg-primary-tint py-4 sm:grid-cols-3 sm:py-10">
         {stats.map((s, i) => (
           <div
             key={s.v}
-            className={`flex flex-col items-center ${i > 0 ? "border-l border-primary-tint-strong" : ""}`}
+            className={`flex flex-col items-center py-6 sm:py-0 ${i > 0 ? "border-t border-primary-tint-strong sm:border-l sm:border-t-0" : ""}`}
           >
             <div className="font-mono text-[38px] leading-none text-primary">{s.v}</div>
             <div className="mt-4 font-sans text-[14px] text-muted-foreground">{s.c}</div>
@@ -350,13 +362,12 @@ function Outcomes() {
 /* ------------------------------ testimonial ------------------------------ */
 function Testimonial() {
   return (
-    <section className="mx-auto max-w-[1280px] px-8 py-12">
-      <div className="mx-auto flex max-w-[1000px] gap-8 rounded-2xl border border-hairline bg-card px-12 py-12">
+    <section className="mx-auto max-w-[1280px] px-4 py-12 sm:px-8">
+      <div className="mx-auto flex max-w-[1000px] gap-4 rounded-2xl border border-hairline bg-card px-6 py-8 sm:gap-8 sm:px-12 sm:py-12">
         <span className="-mt-2 font-display text-[64px] leading-none text-primary/70">“</span>
         <div>
-          <blockquote className="font-display text-[26px] font-medium leading-[1.4] tracking-[-0.01em] text-foreground">
-            “Students finally <em className="italic pr-1">see</em>what the algorithm is doing.
-            Office hours got quieter — in a good way.”
+          <blockquote className="font-display text-[22px] font-medium leading-[1.4] tracking-[-0.01em] text-foreground sm:text-[26px]">
+            “{campusTestimonialClaim.quote}”
           </blockquote>
           <div className="mt-8 flex items-center gap-4">
             <span className="flex size-11 items-center justify-center rounded-full bg-primary-tint font-mono text-[13px] text-primary">
@@ -376,11 +387,11 @@ function Testimonial() {
 /* --------------------------------- plans --------------------------------- */
 function Plans() {
   return (
-    <section className="mx-auto max-w-[1280px] px-8 py-16">
+    <section className="mx-auto max-w-[1280px] px-4 py-14 sm:px-8 sm:py-16">
       <h2 className="mb-12 text-center font-display text-[34px] font-semibold tracking-[-0.02em] text-foreground">
         Plans for campus
       </h2>
-      <div className="mx-auto grid max-w-[1000px] grid-cols-2 gap-8">
+      <div className="mx-auto grid max-w-[1000px] grid-cols-1 gap-8 md:grid-cols-2">
         <div className="flex flex-col rounded-2xl border border-hairline bg-card p-8">
           <div className="flex items-center gap-3">
             <h3 className="font-display text-[22px] font-semibold text-foreground">
@@ -395,10 +406,10 @@ function Plans() {
           </p>
           <ul className="mt-6 space-y-3 border-t border-hairline pt-6">
             {[
-              "Self-serve sign up",
-              "Roster invite links",
-              "Community leaderboard",
-              "Access to core content",
+              "Planned club profiles",
+              "Planned invitation links",
+              "Planned group leaderboard",
+              "Current public learning catalog",
             ].map((f) => (
               <li
                 key={f}
@@ -408,9 +419,13 @@ function Plans() {
               </li>
             ))}
           </ul>
-          <button className="mt-8 w-full rounded-lg border border-hairline bg-card py-3 text-[15px] font-medium text-foreground transition-colors hover:bg-secondary">
-            Start a club
-          </button>
+          <Link
+            to="/contact"
+            hash="contact-form"
+            className="mt-8 w-full rounded-lg border border-hairline bg-card py-3 text-center text-[15px] font-medium text-foreground transition-colors hover:bg-secondary"
+          >
+            Ask about clubs
+          </Link>
         </div>
 
         <div className="flex flex-col rounded-2xl border border-hairline bg-card p-8">
@@ -425,10 +440,10 @@ function Plans() {
           </p>
           <ul className="mt-6 space-y-3 border-t border-hairline pt-6">
             {[
-              "Cohort dashboards",
-              "SSO & roster sync",
-              "Priority support",
-              "Dedicated onboarding",
+              "Planned cohort dashboards",
+              "Planned SSO and roster sync",
+              "Planned support model",
+              "Planned onboarding",
             ].map((f) => (
               <li
                 key={f}
@@ -438,9 +453,13 @@ function Plans() {
               </li>
             ))}
           </ul>
-          <button className="mt-8 w-full rounded-lg bg-primary py-3 text-[15px] font-medium text-primary-foreground transition-colors hover:bg-primary-glow">
+          <Link
+            to="/contact"
+            hash="contact-form"
+            className="mt-8 w-full rounded-lg bg-primary py-3 text-center text-[15px] font-medium text-primary-foreground transition-colors hover:bg-primary-glow"
+          >
             Talk to our team
-          </button>
+          </Link>
         </div>
       </div>
     </section>
@@ -450,13 +469,13 @@ function Plans() {
 /* -------------------------------- CTA band ------------------------------- */
 function CtaBand() {
   return (
-    <section className="mx-auto max-w-[1280px] px-8 py-10">
-      <div className="flex items-center justify-between gap-8 rounded-2xl border border-primary-tint-strong bg-primary-tint px-14 py-12">
+    <section className="mx-auto max-w-[1280px] px-4 py-10 sm:px-8">
+      <div className="flex items-center justify-between gap-8 rounded-2xl border border-primary-tint-strong bg-primary-tint px-6 py-10 sm:px-14 sm:py-12">
         <svg
           width="90"
           height="90"
           viewBox="0 0 90 90"
-          className="shrink-0 text-primary"
+          className="hidden shrink-0 text-primary lg:block"
           aria-hidden="true"
         >
           <circle cx="45" cy="45" r="34" fill="none" stroke="currentColor" strokeWidth="1.1" />
@@ -473,16 +492,24 @@ function CtaBand() {
             Equip your students to see the algorithm think
             <span className="ml-0.5 inline-block h-2 w-2 bg-primary align-baseline" />
           </h3>
-          <div className="mt-6 flex items-center gap-3">
-            <button className="rounded-lg bg-primary px-6 py-3 text-[15px] font-medium text-primary-foreground transition-colors hover:bg-primary-glow">
+          <div className="mt-6 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+            <Link
+              to="/contact"
+              hash="contact-form"
+              className="rounded-lg bg-primary px-6 py-3 text-center text-[15px] font-medium text-primary-foreground transition-colors hover:bg-primary-glow"
+            >
               Request campus access
-            </button>
-            <button className="rounded-lg border border-primary-tint-strong bg-card px-6 py-3 text-[15px] font-medium text-foreground transition-colors hover:bg-secondary">
-              Download one-pager (PDF)
-            </button>
+            </Link>
+            <Link
+              to="/contact"
+              hash="contact-form"
+              className="rounded-lg border border-primary-tint-strong bg-card px-6 py-3 text-center text-[15px] font-medium text-foreground transition-colors hover:bg-secondary"
+            >
+              Ask for the one-pager
+            </Link>
           </div>
           <p className="mt-4 font-mono text-[12px] text-muted-foreground">
-            Educator pricing available. Reduced-motion friendly.
+            Educator pricing is not published yet. Reduced-motion friendly.
           </p>
         </div>
 
@@ -490,7 +517,7 @@ function CtaBand() {
           width="72"
           height="90"
           viewBox="0 0 72 90"
-          className="shrink-0 text-primary"
+          className="hidden shrink-0 text-primary lg:block"
           aria-hidden="true"
         >
           <rect
@@ -521,7 +548,7 @@ function CampusPage() {
       <SiteNav active="For educators" />
       <main id="main-content">
         <Hero />
-        <UniversityStrip label="Trusted by students and clubs at" />
+        <UniversityStrip label="Built around core algorithm foundations" />
         <ValueCards />
         <HowItWorks />
         <Outcomes />

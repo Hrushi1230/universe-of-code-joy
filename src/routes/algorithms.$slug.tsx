@@ -45,6 +45,8 @@ import {
   isImplementationSolved,
   isTransferSolved,
   resolveImplementationSlug,
+  resolveQuestionImplementationSlug,
+  resolveQuestionTransferSlug,
   resolveTransferSlug,
 } from "@/lib/lesson-stages";
 import { mergePlayerSearch, type AlgorithmSearch } from "@/lib/player-search";
@@ -154,7 +156,10 @@ function AlgorithmWorkspace(): React.ReactElement {
   /* One trace store per workspace mount, mirroring how the player and prediction
      stores are scoped: a learner's guesses never reach the guided player. */
   const [traceStore] = React.useState(createTraceStore);
-  const traceExercise = React.useMemo(() => getTraceExercise(slug), [slug]);
+  const traceExercise = React.useMemo(
+    () => getTraceExercise(slug, search.problem),
+    [slug, search.problem],
+  );
 
   const algo = getAlgorithm(slug);
 
@@ -189,6 +194,7 @@ function AlgorithmWorkspace(): React.ReactElement {
    * medium algorithm's badge.
    */
   const problemForTitle = problemMod ? getProblem(problemMod.slug) : undefined;
+  const learningProblemSlug = problemForTitle?.slug;
   const heading = problemForTitle?.title ?? algo?.name ?? slug;
   const headingDifficulty = problemForTitle?.difficulty ?? algo?.difficulty;
 
@@ -196,7 +202,13 @@ function AlgorithmWorkspace(): React.ReactElement {
    * The Code stage's implementation challenge, mapped in the algorithm catalog.
    * Null hides the chip and the Trace CTA rather than routing to a 404.
    */
-  const codeSlug = React.useMemo(() => resolveImplementationSlug(slug), [slug]);
+  const codeSlug = React.useMemo(
+    () =>
+      learningProblemSlug
+        ? resolveQuestionImplementationSlug(learningProblemSlug)
+        : resolveImplementationSlug(slug),
+    [learningProblemSlug, slug],
+  );
 
   /**
    * Null for algorithms with no linked question — the button renders disabled.
@@ -204,8 +216,11 @@ function AlgorithmWorkspace(): React.ReactElement {
    * technique elsewhere) never reopens Code (write the technique).
    */
   const practiceSlug = React.useMemo(
-    () => resolveTransferSlug(slug, search.problem, undefined, codeSlug),
-    [slug, search.problem, codeSlug],
+    () =>
+      learningProblemSlug
+        ? resolveQuestionTransferSlug(learningProblemSlug)
+        : resolveTransferSlug(slug, undefined, undefined, codeSlug),
+    [slug, learningProblemSlug, codeSlug],
   );
 
   const load = usePlayerStore((s) => s.load);
@@ -249,8 +264,12 @@ function AlgorithmWorkspace(): React.ReactElement {
 
   /* REVIEW reports the existing SRS card's schedule — due, scheduled or graded
      today — and stays inert for algorithms without a curated recall set. */
-  const reviewAvailable = React.useMemo(() => hasReviewSet(slug), [slug]);
-  const reviewCard = useProgressStore((s) => s.reviewCards[slug]);
+  const reviewAvailable = React.useMemo(
+    () => hasReviewSet(slug, learningProblemSlug),
+    [slug, learningProblemSlug],
+  );
+  const reviewKey = learningProblemSlug ?? slug;
+  const reviewCard = useProgressStore((s) => s.reviewCards[reviewKey]);
   const reviewState = hydrated ? reviewStageState(reviewCard) : "none";
 
   const completeLesson = useProgressStore((s) => s.completeLesson);
@@ -294,13 +313,16 @@ function AlgorithmWorkspace(): React.ReactElement {
   React.useEffect(() => {
     if (!run) return;
     const handle = window.setTimeout(() => {
+      /* A route transition can keep this screen mounted briefly. Do not let a
+         stale player sync rewrite the destination back into an algorithm URL. */
+      if (window.location.pathname !== `/algorithms/${slug}`) return;
       void navigate({
         search: (prev: AlgorithmSearch) => mergePlayerSearch(prev, encodeInputs(rawInputs), index),
         replace: true,
       });
     }, 300);
     return () => window.clearTimeout(handle);
-  }, [run, rawInputs, index, navigate]);
+  }, [run, rawInputs, index, navigate, slug]);
 
   const shareUrl = React.useCallback((): string => {
     if (typeof window === "undefined") return "";
@@ -325,19 +347,24 @@ function AlgorithmWorkspace(): React.ReactElement {
   }
 
   return (
-    <div className="flex h-screen w-full flex-col overflow-hidden bg-paper">
-      <DesktopScaleFrame className="min-h-0 flex-1">
+    <div
+      className={cn(
+        "flex h-screen w-full flex-col overflow-hidden bg-paper",
+        !isTrace && modSlug === "trapping-rain-water" && "focused-visualizer",
+      )}
+    >
+      <DesktopScaleFrame className="min-h-0 flex-1" scaleNarrow={false}>
         <div className="flex h-full w-full flex-col bg-paper">
           {/* Top Nav (Global) */}
-          <header className="flex h-[68px] shrink-0 items-center justify-between border-b border-hairline bg-card px-24">
-            <div className="flex items-center gap-12">
+          <header className="flex min-h-[60px] shrink-0 items-center justify-between border-b border-hairline bg-card px-4 sm:px-6 lg:h-[68px] lg:px-12 xl:px-24">
+            <div className="flex min-w-0 items-center gap-6 lg:gap-12">
               <Link to="/" className="flex items-center gap-2">
                 <AlgoraGlyph />
                 <span className="font-mono text-[22px] font-medium tracking-tight text-foreground">
                   algora
                 </span>
               </Link>
-              <nav className="flex items-center gap-8 font-mono text-[14px]">
+              <nav className="hidden items-center gap-8 font-mono text-[14px] lg:flex">
                 <Link
                   to="/explore"
                   className="flex items-center gap-2 text-slate hover:text-ink transition-colors"
@@ -415,14 +442,17 @@ function AlgorithmWorkspace(): React.ReactElement {
                 </Link>
               </nav>
             </div>
-            <div className="flex shrink-0 items-center gap-4">
+            <div className="flex shrink-0 items-center gap-2 sm:gap-4">
               <span className="inline-flex h-9 items-center gap-2 rounded-full bg-tint px-3 font-mono text-[13px] text-primary">
                 <Flame className="h-4 w-4 text-primary" strokeWidth={1.8} /> {streak}
               </span>
-              <span className="inline-flex h-9 items-center rounded-full border border-hairline px-3 font-mono text-[13px] text-ink">
+              <span className="hidden h-9 items-center rounded-full border border-hairline px-3 font-mono text-[13px] text-ink sm:inline-flex">
                 {formatXp(xp)} XP
               </span>
-              <button className="text-slate hover:text-ink transition-colors">
+              <button
+                aria-label="Notifications"
+                className="hidden text-slate transition-colors hover:text-ink sm:block"
+              >
                 <Bell className="h-5 w-5" strokeWidth={1.5} />
               </button>
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-tint font-mono text-[12px] text-primary">
@@ -432,7 +462,7 @@ function AlgorithmWorkspace(): React.ReactElement {
           </header>
 
           {/* Main Workspace */}
-          <main className="flex min-h-0 flex-1 flex-col px-4 py-2 lg:px-8 xl:px-12 2xl:px-20">
+          <main className="flex min-h-0 flex-1 flex-col overflow-hidden px-3 py-3 sm:px-4 lg:px-8 lg:py-2 xl:px-12 2xl:px-20">
             {/* One compact lesson context row, then the learning-stage strip */}
             <div className="mb-3 flex shrink-0 flex-col gap-2">
               <LessonContextRow
@@ -443,11 +473,12 @@ function AlgorithmWorkspace(): React.ReactElement {
                 masteryPct={masteryPct}
                 practiceSlug={practiceSlug}
               />
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center justify-between gap-3">
                 <LessonStageStrip
                   active={isTrace ? "trace" : "visualize"}
                   practiceSlug={practiceSlug}
                   algorithmSlug={slug}
+                  problemSlug={learningProblemSlug}
                   traceAvailable={traceExercise !== undefined}
                   codeSlug={codeSlug}
                   codeComplete={codeComplete}
@@ -483,9 +514,10 @@ function AlgorithmWorkspace(): React.ReactElement {
               <TraceStoreProvider store={traceStore}>
                 <TraceWorkspace
                   exercise={traceExercise}
-                  algoName={algo.name}
+                  algoName={heading}
                   codeSlug={codeSlug}
                   algorithmSlug={slug}
+                  problemSlug={learningProblemSlug}
                 />
               </TraceStoreProvider>
             ) : (
@@ -506,5 +538,3 @@ function AlgorithmWorkspace(): React.ReactElement {
     </div>
   );
 }
-
-export default AlgorithmWorkspace;

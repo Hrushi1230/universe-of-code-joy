@@ -270,7 +270,7 @@ export const findMinimumRotatedModule: AlgorithmModule = {
       kind: "numbers",
       default: "4, 5, 6, 7, 0, 1, 2",
       help: "A sorted list of unique numbers, cut once and swapped end to end.",
-      max: 25,
+      max: 12,
     },
   ],
   validate(raw: Record<string, string>): ValidationResult {
@@ -287,15 +287,14 @@ export const findMinimumRotatedModule: AlgorithmModule = {
     /* The case that justifies measuring against a[hi] rather than a[lo]: an
        unrotated list, where an a[lo] comparison would walk right past index 0. */
     { label: "Never rotated at all", values: { values: "11, 13, 15, 17" } },
-    /* 21 cells of three-digit values crosses ArrayView's box-to-bar threshold, so
-       this one renders as bars: two rising ramps with a cliff between them, and
+    /* Twelve cells use the full fixed teaching width, so
+       this preset still shows two rising ramps with a cliff between them, and
        the search visibly closing on the foot of the cliff. Degrades to boxes if
        that threshold ever moves. */
     {
       label: "See the cliff",
       values: {
-        values:
-          "235, 245, 255, 265, 275, 285, 295, 305, 105, 115, 125, 135, 145, 155, 165, 175, 185, 195, 205, 215, 225",
+        values: "235, 245, 255, 265, 275, 305, 105, 125, 145, 165, 185, 205",
       },
     },
   ],

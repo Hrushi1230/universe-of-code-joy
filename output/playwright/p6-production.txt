@@ -1,0 +1,41 @@
+async (page) => {
+  const base = "http://127.0.0.1:4187";
+  const routes = ["/","/visualizer","/pricing","/campus","/blog","/contact","/privacy","/terms","/login","/auth","/forgot-password","/reset-password","/verify-email","/onboarding/goals","/onboarding/assessment","/onboarding/path","/dashboard","/explore","/paths","/mastery-map","/quests","/achievements","/leagues","/notifications","/settings","/settings/billing","/practice","/practice/results","/review","/algorithms/binary-search","/practice/two-sum"];
+  const pages = [], links = new Set(), failures = [], errors = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.setViewportSize({width:390,height:844});
+  for (const route of routes) {
+    const response = await page.goto(base + route);
+    await page.waitForLoadState("networkidle");
+    const data = await page.evaluate(() => {
+      const nav = performance.getEntriesByType("navigation")[0];
+      const visible = el => el.getClientRects().length > 0;
+      return {
+        title: document.title,
+        overflowX: document.documentElement.scrollWidth > innerWidth,
+        description: !!document.querySelector('meta[name="description"]')?.content,
+        links: [...document.querySelectorAll("a[href]")].filter(visible).map(el => el.getAttribute("href")),
+        unnamedButtons: [...document.querySelectorAll("button")].filter(visible).filter(el => !el.textContent.trim() && !el.getAttribute("aria-label") && !el.getAttribute("aria-labelledby") && !el.labels?.length).length,
+        dclMs: Math.round(nav.domContentLoadedEventEnd),
+        loadMs: Math.round(nav.loadEventEnd),
+        resources: performance.getEntriesByType("resource").length
+      };
+    });
+    for (const href of data.links) {
+      if (href.startsWith("/") && !href.startsWith("//")) links.add(href);
+      if (href === "#" || href.startsWith("javascript:")) failures.push({route,href});
+    }
+    if (response.status() >= 400 || data.overflowX || data.unnamedButtons) failures.push({route,status:response.status(),...data});
+    pages.push({route,status:response.status(),...data,links:undefined});
+  }
+  const brokenLinks = [];
+  for (const href of links) {
+    const response = await page.request.get(base + href);
+    if (response.status() >= 400) brokenLinks.push({href,status:response.status()});
+  }
+  const missing = await page.goto(base + "/p6-does-not-exist");
+  await page.getByRole("heading",{name:"Page not found",exact:true}).waitFor();
+  await page.getByRole("link",{name:"Go home",exact:true}).click();
+  await page.waitForURL(base + "/");
+  return {pages,failures,brokenLinks,uniqueInternalLinks:links.size,pageErrors:errors,notFoundStatus:missing.status(),homeRecovery:page.url()===base+"/"};
+}

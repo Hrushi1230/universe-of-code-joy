@@ -11,7 +11,8 @@ import type {
   ValidationResult,
 } from "@/engine/types";
 
-const MAX_NODES = 15;
+const MAX_NODES = 10;
+const MAX_EDGES = 16;
 
 /**
  * Pseudocode -> listing line. Both listings count in-degrees with a nested
@@ -160,6 +161,12 @@ export function parseDirectedEdges(
     if (!out.get(from)!.includes(to)) {
       out.get(from)!.push(to);
       edges.push({ from, to });
+      if (edges.length > MAX_EDGES) {
+        return {
+          ok: false,
+          error: `That graph has more than ${MAX_EDGES} arrows — please use a smaller one.`,
+        };
+      }
     }
   }
 
@@ -208,7 +215,7 @@ function buildFrame(
         x: pos.x,
         y: pos.y,
         state: states.get(id) ?? "idle",
-        badge: `in ${deg.get(id) ?? 0}`,
+        indegree: deg.get(id) ?? 0,
       };
     }),
     edges: graph.edges.map((e) => ({

@@ -1,0 +1,23 @@
+async (page) => {
+  const results = [];
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({width, height: 900});
+    for (const path of ['/', '/visualizer', '/pricing', '/campus', '/blog', '/contact', '/privacy', '/terms']) {
+      await page.goto('http://localhost:8081' + path);
+      await page.waitForTimeout(400);
+      results.push(await page.evaluate(() => ({
+        path: location.pathname,
+        width: innerWidth,
+        documentWidth: document.documentElement.scrollWidth,
+        heading: document.querySelector('h1')?.textContent,
+        navigationVisible: [...document.querySelectorAll('nav')].filter(el => el.getBoundingClientRect().width > 0).map(el => el.getAttribute('aria-label')),
+        headerButtons: [...document.querySelectorAll('header button')].map(el => el.textContent),
+        placeholderLinks: [...document.querySelectorAll('a')].filter(el => !el.getAttribute('href') || el.getAttribute('href') === '#').map(el => el.textContent?.trim()).slice(0, 12),
+        forms: document.querySelectorAll('form').length
+      })));
+      if (width === 390) await page.screenshot({path: 'output/playwright/roadmap-' + (path === '/' ? 'home' : path.slice(1)) + '-390.png', fullPage: false});
+    }
+  }
+  await page.goto('http://localhost:8081/');
+  return results;
+}

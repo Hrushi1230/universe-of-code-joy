@@ -1,276 +1,193 @@
 import type { LegalDocument } from "./types";
 
-/**
- * Algora — Privacy Policy Document
- *
- * SPECIFICATION REFERENCES:
- * - S10.7: "Legal pages are real content, not placeholder text."
- * - S6.7: "/privacy page — Real privacy policy explaining local storage usage, zero-cookie tracking."
- * - S5.8, S11.5 (R-9, R-10): Technical integrity, local storage privacy, data portability.
- */
+/** Current repository behavior only; review again when real services and regions are chosen. */
 export const PRIVACY_POLICY: LegalDocument = {
   id: "privacy",
-  title: "Privacy Policy",
-  subtitle:
-    "How Algora protects your personal data, honors local-first privacy, and never sells your learning history.",
-  version: "2.4.0",
-  effectiveDate: "2026-08-01",
-  lastUpdated: "2026-08-04",
+  title: "Privacy Notice",
+  subtitle: "What the current Algora browser preview stores, and what is not connected yet.",
+  version: "0.1.0",
+  effectiveDate: "2026-09-12",
+  lastUpdated: "2026-09-12",
   summaryMarkdown:
-    "Algora is built on a **local-first architecture**. Your algorithm progress, code solutions, streaks, and preferences reside directly in your browser's `localStorage`. We do not deploy third-party advertising trackers, we do not sell your personal data, and we provide one-click full data export and instant erasure at any time.",
+    "The current Algora preview is **local-first**. Learning progress and preferences are stored in this browser. Account, cloud sync, email delivery, contact delivery, analytics, and payment services are not connected in this repository build.",
   sections: [
     {
       id: "philosophy",
-      title: "1. Privacy Philosophy & Local-First Architecture",
-      summary: "We believe educational tools should teach computer science, not surveil learners.",
+      title: "1. Scope of this notice",
+      summary:
+        "This notice covers the current local frontend preview, not a future hosted service.",
       contentMarkdown:
-        "At Algora, we operate under a strict principle of data minimization. Unlike traditional learning platforms that pipe every keystroke and mouse movement to centralized analytics brokers, Algora is engineered with a **local-first runtime**.\n\nYour active algorithm step state, quiz attempts, coding challenge solutions, XP gains, and daily streaks are calculated and stored directly on your device. When you use Algora in guest mode, zero telemetry or personal identifiers ever leave your browser.",
+        "This notice describes behavior verified in the current Algora repository build. It does not claim that a future deployment, account system, campus service, or payment integration has been selected or approved. This copy must be reviewed again when those decisions are made.",
     },
     {
       id: "local-storage",
-      title: "2. Browser Storage & Local State Management",
-      summary:
-        "Detailed disclosure of keys stored in your browser's local storage and their specific purposes.",
+      title: "2. Browser storage",
+      summary: "Progress and preferences can remain in this browser between visits.",
       contentMarkdown:
-        "To deliver instantaneous visualizer playback, offline study continuity, and personalized learning trajectories, Algora utilizes the following standard browser `localStorage` keys:",
-      subsections: [
-        {
-          id: "storage-progress",
-          title: "2.1 `algora-progress` (Core Learning State)",
-          contentMarkdown:
-            "Stores your current learner level, total XP, algorithm mastery statuses, completed lesson slugs, solved problem challenge IDs, quiz response histories, active streak counts, timezone offsets, and weekly league points. This state is synchronized to our encrypted cloud store only if you explicitly create an account.",
-        },
-        {
-          id: "storage-prefs",
-          title: "2.2 `algora-prefs` (User Interface Preferences)",
-          contentMarkdown:
-            "Stores your local interface configurations including playback speed multiplier (0.5x to 3x), narration toggle, sound effect volume, reduced-motion preferences, quiet hours scheduling, and billing tier cache.",
-        },
-        {
-          id: "storage-auth",
-          title: "2.3 `algora-auth` (Authentication Session Token)",
-          contentMarkdown:
-            "If logged in, stores a secure, short-lived JSON Web Token (JWT) issued over TLS 1.3 to authenticate requests to your cloud backup. Guest users have no auth token stored.",
-        },
-      ],
+        "Algora currently persists local learning state under `algora-progress` and local profile and interface preferences under `algora-prefs` in browser `localStorage`. This can include practice progress, XP-style preview state, display preferences, and the local profile values you enter. Do not enter sensitive personal information into this preview.",
     },
     {
       id: "zero-tracking",
-      title: "3. Zero Third-Party Advertising & Cookie Policy",
-      summary: "No Google Analytics, no Meta pixels, no cross-site advertising networks.",
+      title: "3. Analytics and third parties",
+      summary:
+        "No third-party analytics or advertising integration is configured in this repository build.",
       contentMarkdown:
-        "Algora does not use third-party advertising cookies, behavioral retargeting pixels, or invasive surveillance scripts.\n\n- **No Ad Trackers:** We never embed scripts from ad brokers or behavioral data syndicates.\n- **Essential Cookies Only:** Any cookies set are strictly operational (e.g., CSRF tokens, load balancing, secure session validation).\n- **Do Not Track (DNT) & Global Privacy Control (GPC):** Algora respects browser DNT and GPC header signals natively by default.",
+        "The current source does not configure an advertising tracker or analytics provider. That is a statement about this repository build, not a permanent promise about every future deployment. Any later analytics, hosting, authentication, email, or payment provider must be disclosed here before launch.",
     },
     {
       id: "code-execution",
-      title: "4. Code Execution & In-Browser Sandboxing",
-      summary:
-        "Your code solutions execute locally in your browser's isolated Web Worker environment.",
+      title: "4. Local code execution",
+      summary: "Supported practice code runs in a browser Web Worker.",
       contentMarkdown:
-        "When you solve coding challenges in Algora's multi-language code runner (JavaScript, TypeScript, Python):\n\n1. **Client-Side Evaluation:** Code execution occurs inside an isolated, unprivileged Web Worker running in your local browser sandbox.\n2. **Zero Code Telemetry:** We do not index, retain, or train artificial intelligence models on your custom code submissions without your explicit consent.\n3. **Ephemeral Test Execution:** Test inputs, runtime metrics, and assertion outputs are evaluated in memory and discarded upon completion of the test suite.",
+        "Supported practice code is executed locally in a browser `Web Worker` with a frontend timeout. It is not a secure remote judge and should not be used for secrets or untrusted third-party code. Python shown in reader-only experiences is not a connected Python execution service.",
     },
     {
       id: "account-cloud-data",
-      title: "5. Information We Collect If You Create an Account",
-      summary: "Transparent accounting of data collected for registered learners.",
+      title: "5. Accounts, cloud data, and messages",
+      summary: "These services are not connected in the current preview.",
       contentMarkdown:
-        "If you choose to create an authenticated Algora account or subscribe to a Pro or Campus plan, we collect only the necessary information required to provide cloud synchronization and billing:",
-      subsections: [
-        {
-          id: "account-credentials",
-          title: "5.1 Credentials & Profile",
-          contentMarkdown:
-            "Your email address, hashed and salted password (via Argon2/bcrypt), display name, and optional avatar. We never store plaintext passwords.",
-        },
-        {
-          id: "billing-data",
-          title: "5.2 Payment & Billing Information",
-          contentMarkdown:
-            "Payment transactions are processed directly by our PCI-DSS Level 1 certified payment processor (Stripe). Algora does not store or process raw credit card numbers or bank account details. We retain only a tokenized customer identifier, subscription plan status, and transaction receipts.",
-        },
-        {
-          id: "cloud-sync",
-          title: "5.3 Encrypted Cloud Backups",
-          contentMarkdown:
-            "For registered users, your `algora-progress` state is synchronized periodically to our secure cloud database via TLS 1.3, allowing seamless resumption across desktop and mobile devices.",
-        },
-      ],
+        "The current login, signup, verification, recovery, settings, billing, campus, and contact screens are local product previews. They do not create a production account, send verification or recovery email, enable real two-factor authentication, charge a payment method, synchronize cloud data, or deliver a contact message.",
     },
     {
       id: "data-portability",
-      title: "6. Data Portability & Complete JSON Export",
-      summary:
-        "You own your learning data. Export your full history anytime in standard JSON format.",
+      title: "6. Accessing local data",
+      summary: "Browser developer tools can inspect the two current local storage records.",
       contentMarkdown:
-        "In compliance with GDPR Article 20 and CCPA guidelines, you have the right to full data portability.\n\nAt any time, from **Settings → Profile & Data**, you can download a complete, unencrypted JSON archive containing:\n- All algorithm mastery records and completion timestamps\n- Full lesson reading history and quiz scoring metrics\n- All saved coding challenge solutions across JS, TS, and Python\n- Complete streak history, XP ledger, and achievement unlock metadata\n\nThis JSON export can also be re-imported into any fresh Algora instance without account lock-in.",
+        "A production data export is not implemented. In this preview, technical users can inspect `algora-progress` and `algora-prefs` through browser developer tools. Product-ready export and import behavior remains a later frontend and service requirement.",
     },
     {
       id: "right-to-erasure",
-      title: "7. Right to Erasure & Instant Local Purge",
-      summary: "One-click deletion of all local storage and immediate server-side account purging.",
+      title: "7. Removing local data",
+      summary: "Clearing this site's browser data removes the current local preview records.",
       contentMarkdown:
-        "You have the absolute right to be forgotten (GDPR Article 17):\n\n- **Local Purge:** Clicking **Reset All Progress** in your preferences immediately wipes `algora-progress`, `algora-prefs`, and `algora-auth` from your browser's storage engine.\n- **Account Deletion:** Requesting account deletion from **Settings → Danger Zone** immediately purges your cloud record, authentication credentials, and synchronized backups from our production databases within 24 hours.",
+        "There is no cloud account record to delete in this build. You can remove current local preview data by clearing this site's storage in your browser. A verified in-product reset, account deletion workflow, retention schedule, backup policy, and deletion acknowledgment must be designed before a hosted service launches.",
     },
     {
       id: "educational-compliance",
-      title: "8. Children's Privacy & Educational Compliance (FERPA / COPPA)",
-      summary:
-        "Safe for university classrooms, K-12 educational environments, and student cohorts.",
+      title: "8. Audience and regional requirements",
+      summary: "Launch audience, age range, regions, and institutional obligations are undecided.",
       contentMarkdown:
-        "Algora is designed to serve university computer science departments, bootcamps, and individual students.\n\n- **COPPA Compliance:** Algora does not knowingly collect personal identifiable information from children under 13 without verified institutional or parental consent.\n- **FERPA Alignment:** When deployed under an Algora Campus institutional license, student roster data is processed strictly as an educational vendor under institutional oversight and is never repurposed for commercial profiling.",
-    },
-    {
-      id: "rights-matrix",
-      title: "9. Your Rights Under GDPR, CCPA, and Global Privacy Laws",
-      summary:
-        "Comprehensive breakdown of your international privacy rights and how to exercise them.",
-      contentMarkdown:
-        "Depending on your jurisdiction (including the European Economic Area, United Kingdom, and State of California), you hold the following statutory rights:\n\n| Legal Right | What It Means for You | How to Exercise in Algora |\n| :--- | :--- | :--- |\n| **Right of Access** | View all personal and telemetry data associated with your identity | Settings → Profile → Download Data |\n| **Right to Rectification** | Correct inaccurate profile or account details | Settings → Profile → Edit Details |\n| **Right to Erasure** | Permanently delete all local and cloud-stored data | Settings → Danger Zone → Delete Account |\n| **Right to Restriction** | Restrict cloud synchronization while maintaining offline local study | Settings → Preferences → Offline Mode |\n| **Right to Portability** | Receive machine-readable JSON copy of your progress | Settings → Profile → Export JSON |\n| **Right to Object** | Object to automated processing or communications | Account Preferences → Notifications Toggle |",
+        "This preview does not claim COPPA, FERPA, GDPR, CCPA, school-vendor, or other regulatory compliance. Those obligations depend on the eventual audience, regions, data flows, providers, contracts, and operating entity. They require specialist legal and security review before public service launch.",
     },
     {
       id: "security-practices",
-      title: "10. Security & Encryption Standards",
-      summary:
-        "Modern cryptographic safeguards protecting your learning session in transit and at rest.",
+      title: "9. Security status",
+      summary: "Local-only behavior is not a certification or security guarantee.",
       contentMarkdown:
-        "We implement industry-standard administrative, physical, and technical safeguards:\n\n- **In Transit:** All communications are encrypted using Transport Layer Security (TLS 1.3) with HSTS enforcement.\n- **At Rest:** Cloud database backups and user authentication tables are encrypted with AES-256 encryption.\n- **Content Security Policy (CSP):** We enforce strict CSP headers prohibiting inline script injection, unauthorized cross-origin connections, and frame-jacking.",
+        "No production security certification, uptime commitment, encryption claim, breach process, or cloud infrastructure is represented by this frontend preview. A later release needs an approved threat model, authentication and authorization design, dependency review, monitoring, incident response, and tested recovery plan.",
     },
     {
       id: "contact-dpo",
-      title: "11. Contact Our Data Protection Officer",
-      summary: "Reach out with questions, data requests, or institutional compliance verification.",
+      title: "10. Questions",
+      summary: "Use the current contact page to prepare an inquiry; delivery is not connected yet.",
       contentMarkdown:
-        "If you have inquiries regarding this Privacy Policy, wish to exercise your statutory rights, or require institutional Data Processing Agreements (DPA) for university licensing, please contact our team:\n\n- **Data Protection Officer:** `privacy@algora.io`\n- **Support Desk:** `support@algora.io`\n- **Mailing Address:** Algora Learning Technologies Inc., 100 Montgomery St, Suite 1400, San Francisco, CA 94104\n- **Web Form:** [/contact](/contact)",
+        "The repository does not establish a legal entity, Data Protection Officer, postal address, or monitored privacy mailbox. Use the [/contact](/contact) preview to review the intended inquiry fields. It will clearly state that no message was sent until a real delivery service is integrated.",
     },
   ],
 };
 
-/**
- * Algora — Terms of Service Document
- *
- * SPECIFICATION REFERENCES:
- * - S10.7: "Legal pages are real content, not placeholder text."
- * - S6.7: "/terms page — Real terms of service for educational usage."
- * - S10.4, R-10: Trust, billing transparency, educational integrity, 14-day refund guarantee.
- */
 export const TERMS_OF_SERVICE: LegalDocument = {
   id: "terms",
-  title: "Terms of Service",
-  subtitle:
-    "Clear, transparent terms governing the educational use of the Algora algorithm visualizer and learning platform.",
-  version: "2.4.0",
-  effectiveDate: "2026-08-01",
-  lastUpdated: "2026-08-04",
+  title: "Preview Terms",
+  subtitle: "Plain-language conditions for evaluating the current local Algora frontend preview.",
+  version: "0.1.0",
+  effectiveDate: "2026-09-12",
+  lastUpdated: "2026-09-12",
   summaryMarkdown:
-    "These Terms of Service govern your access to and use of Algora. Algora provides interactive algorithm visualizers, coding challenges, and structured computer science curricula for educational purposes. You retain 100% ownership of your code submissions, and we offer a transparent 14-day money-back guarantee on Pro subscriptions.",
+    "Algora is currently a **local educational software preview**. It has no connected production account, paid subscription, refund program, campus contract, cloud synchronization, or service-level commitment.",
   sections: [
     {
       id: "acceptance",
-      title: "1. Acceptance of Terms",
-      summary: "By accessing or using Algora, you agree to be bound by these Terms of Service.",
+      title: "1. Preview scope",
+      summary:
+        "These terms explain the current repository preview and are not launch-ready legal terms.",
       contentMarkdown:
-        "By accessing our website ([algora.io](https://algora.io)), utilizing our interactive visualizers, participating in coding challenges, or subscribing to paid services, you confirm that you have read, understood, and agreed to be bound by these Terms of Service and our [Privacy Policy](/privacy).\n\nIf you are accessing Algora on behalf of a university, school, or enterprise organization under a Campus license, you represent that you possess the authority to bind that entity to these terms.",
+        "You may evaluate the current Algora frontend for learning and product review. The preview can change, contain defects, or lose locally stored state. Final consumer, campus, and commercial terms require the operating entity, launch audience, regions, services, and offers to be decided and reviewed before release.",
     },
     {
       id: "educational-scope",
-      title: "2. Educational Purpose & Algorithmic Simulation Scope",
-      summary:
-        "Algora is an educational simulator designed to teach computer science and interview concepts.",
+      title: "2. Educational purpose",
+      summary: "Visual explanations support learning but do not guarantee outcomes.",
       contentMarkdown:
-        "Algora provides interactive step-by-step visualizations of classical and modern computer science algorithms (such as Dijkstra, Quicksort, BFS/DFS, Kadane, Binary Search, and Dynamic Programming).\n\n- **Simulation Models:** Visualizer execution models, timeline states, and memory layouts are designed for instructional clarity and cognitive comprehension. Real-world machine implementations (e.g., CPU caching, compiler optimizations, kernel scheduling) may exhibit differing micro-architectural characteristics.\n- **No Warranty on Interview Outcomes:** While our curricula are curated to optimize technical interview readiness, Algora makes no express or implied guarantees regarding employment, hiring offers, or academic exam grades.",
+        "Algora presents algorithms, practice questions, code, and synchronized visual states for educational use. It does not guarantee interview success, employment, grades, certification, or that every visualization models every implementation detail. Report suspected content errors through the [/contact](/contact) preview.",
     },
     {
       id: "intellectual-property",
-      title: "3. Intellectual Property Rights & Code Ownership",
-      summary:
-        "Algora owns the visualization engine and lesson content; you retain 100% ownership of the code you write.",
-      contentMarkdown: "We maintain clear boundaries regarding intellectual property:",
-      subsections: [
-        {
-          id: "algora-ip",
-          title: "3.1 Algora Platform Materials",
-          contentMarkdown:
-            "The Algora logo, brand assets, step-builder runtime engine, interactive SVG visualizer renderers, curriculum roadmaps, lesson notes, and custom illustration assets are the proprietary property of Algora Learning Technologies Inc. and are protected under international copyright and trademark laws.",
-        },
-        {
-          id: "user-code-ownership",
-          title: "3.2 Your Code & Solution Ownership",
-          contentMarkdown:
-            "**You retain full, exclusive ownership of all code, algorithms, solutions, and notes you write in Algora's code editor.** We claim zero proprietary rights, patent rights, or commercial licenses over your submitted challenge solutions.",
-        },
-      ],
+      title: "3. Code and content",
+      summary: "The local preview does not transmit submitted practice code to a service.",
+      contentMarkdown:
+        "Practice code entered into the current browser runner remains local to the preview's execution flow. Algora's application source, teaching content, illustrations, and visualizer design retain their existing applicable rights and licenses. No additional ownership transfer or public-content license is created by this preview notice.",
     },
     {
       id: "user-accounts",
-      title: "4. User Accounts & Security Responsibilities",
-      summary: "Keep your credentials secure. Individual accounts are non-transferable.",
+      title: "4. Local profiles, not accounts",
+      summary: "Current identity screens create local preview state only.",
       contentMarkdown:
-        "When registering an account:\n\n1. **Accurate Information:** You agree to provide accurate, current, and complete registration information.\n2. **Credential Confidentiality:** You are solely responsible for maintaining the confidentiality of your authentication credentials. Notify `security@algora.io` immediately if you suspect unauthorized account access.\n3. **Single-Learner Access:** Individual Pro subscriptions are non-transferable and may not be shared across multiple concurrent learners. Multi-student access requires an authorized [Campus License](/campus).",
+        "Signup, login, email verification, recovery, two-factor authentication, sessions, and profile controls are not connected to a production identity service. Do not reuse a real password or treat this preview as a secure account. A future account service will require separate terms and privacy disclosures.",
     },
     {
       id: "acceptable-use",
-      title: "5. Acceptable Use Policy & Anti-Abuse Rules",
-      summary: "Respect the platform, other learners, and the sandboxed execution environment.",
+      title: "5. Responsible evaluation",
+      summary: "Use the preview lawfully and do not attempt to harm systems or other people.",
       contentMarkdown:
-        "You agree **not** to engage in any of the following prohibited activities:\n\n- **Platform Interference:** Attempting to disrupt, degrade, or overburden our infrastructure or content delivery network.\n- **Malicious Code Execution:** Attempting to escape the browser Web Worker sandbox, execute arbitrary host filesystem operations, or exploit browser vulnerabilities.\n- **Commercial Cloning & Automated Scraping:** Systematically scraping, copying, or bulk-exporting proprietary visualizer state definitions or curriculum roadmaps for incorporation into competing commercial products.\n- **Leaderboard Manipulation:** Using automated bots, artificial latency simulators, or fraudulent score submissions to distort weekly League standings or Quest XP rewards.",
+        "Do not use this preview to distribute malicious code, infringe rights, misrepresent affiliation, or interfere with systems you do not own or have permission to test. The local runner is an educational convenience, not a security sandbox for hostile code.",
     },
     {
       id: "subscriptions-billing",
-      title: "6. Subscriptions, Pricing & Campus Licensing",
-      summary: "Clear pricing, transparent recurring billing, and self-serve management.",
+      title: "6. Pricing and billing status",
+      summary: "Displayed plan cards are product structure previews, not a live commercial offer.",
       contentMarkdown:
-        "Algora offers both free educational tiers and premium paid tiers (Algora Pro and Algora Campus):\n\n- **Billing Cadence:** Pro subscriptions are billed on a recurring monthly or annual basis as selected upon checkout.\n- **Price Changes:** Any subscription price changes will be communicated at least 30 days in advance via email. Your continued subscription after the effective date constitutes acceptance.\n- **Self-Serve Cancellation:** You may cancel your subscription at any time directly in **Settings → Billing**. Upon cancellation, you will retain Pro access through the end of your current paid billing period.",
+        "No checkout, subscription, invoice, payment method, entitlement, student verification, or campus billing service is connected. Prices and plan features shown on [/pricing](/pricing) are unapproved preview values and may change. Clicking a plan must not charge you or create a subscription.",
     },
     {
       id: "refund-policy",
-      title: "7. 14-Day Money-Back Guarantee",
-      summary: "Hassle-free 100% refund policy within 14 days of initial Pro subscription.",
+      title: "7. Refund status",
+      summary: "There is no refund policy because this build cannot accept payment.",
       contentMarkdown:
-        "We want you to be completely confident in your learning experience with Algora.\n\nIf you are not fully satisfied with Algora Pro, you are eligible for a **100% full refund within 14 calendar days** of your initial subscription purchase. No complex questionnaires or retention obstacles.\n\nTo request a refund:\n1. Email `billing@algora.io` with your account email address, or\n2. Open a refund request via [/contact](/contact).\n\nRefunds are processed to your original payment method within 3 to 5 business days.",
+        "The current preview does not sell a product or collect payment, so it does not offer or process refunds. Any future paid offer needs approved prices, cancellation terms, refund rules, payment-provider behavior, and legally reviewed checkout disclosures before launch.",
     },
     {
       id: "service-availability",
-      title: "8. Local-First Resilience & Service Availability",
-      summary:
-        "Offline-first capability ensures you can continue studying even without internet connectivity.",
+      title: "8. Availability and local data",
+      summary: "No uptime, offline-access, backup, or data-recovery guarantee is made.",
       contentMarkdown:
-        "Because Algora executes on client-side Web Workers and persists state in `localStorage`, primary visualization, lesson reading, and problem solving features remain fully accessible offline once loaded.\n\nFor cloud-dependent services (account synchronization, real-time weekly League updates, global leaderboards), we target a **99.9% uptime** service level objective, excluding scheduled maintenance announced in advance.",
+        "The preview is provided for evaluation and may be unavailable or changed without notice. Browser storage may be cleared by the user, browser, device policy, or development changes. There is no cloud backup, cross-device sync, support response time, service-level objective, or guaranteed offline mode in this build.",
     },
     {
       id: "liability-disclaimer",
-      title: "9. Limitation of Liability & Warranty Disclaimers",
-      summary: "Standard commercial legal protections for educational software platforms.",
+      title: "9. Accuracy and risk",
+      summary: "Verify important decisions independently and report learning-content defects.",
       contentMarkdown:
-        'TO THE MAXIMUM EXTENT PERMITTED UNDER APPLICABLE LAW, ALGORA AND ITS AFFILIATES PROVIDE THE PLATFORM AND ALL CONTENT ON AN "AS IS" AND "AS AVAILABLE" BASIS WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED.\n\nIN NO EVENT SHALL ALGORA BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING FROM YOUR ACCESS TO OR USE OF (OR INABILITY TO ACCESS OR USE) THE PLATFORM. ALGORA\'S AGGREGATE LIABILITY SHALL NOT EXCEED THE TOTAL AMOUNT ACTUALLY PAID BY YOU TO ALGORA IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM.',
+        "The team aims for correct educational content but this preview is still under verification. Do not rely on it as the sole source for high-stakes academic, hiring, legal, financial, or security decisions. Applicable limitations and consumer rights for a public launch require jurisdiction-specific legal review.",
     },
     {
       id: "termination",
-      title: "10. Termination & Account Deletion",
-      summary:
-        "You may terminate your account at any time. We reserve rights to suspend abusive users.",
+      title: "10. Stopping use",
+      summary: "You can stop using the preview and clear its local browser data.",
       contentMarkdown:
-        "You may terminate your account and these terms at any time by deleting your account via **Settings → Danger Zone**.\n\nAlgora reserves the right to suspend or terminate accounts that repeatedly violate our Acceptable Use Policy, engage in payment fraud, or harass other community members in collaborative features.",
+        "There is no production account to terminate. You may stop using the preview and clear this site's local browser storage. A future account suspension, appeal, cancellation, and deletion process must be specified before the related service is enabled.",
     },
     {
       id: "governing-law",
-      title: "11. Governing Law & Dispute Resolution",
-      summary: "Constructive informal dispute resolution followed by binding arbitration.",
+      title: "11. Governing terms not selected",
+      summary:
+        "The operating entity and governing jurisdiction are not asserted by this repository.",
       contentMarkdown:
-        "These Terms of Service are governed by the laws of the State of California, United States, without regard to its conflict of law provisions.\n\nIn the event of any controversy or dispute, the parties agree to first seek good-faith informal resolution by contacting `legal@algora.io`. If a dispute cannot be resolved informally within 30 days, it shall be settled by binding individual arbitration under the American Arbitration Association (AAA) rules.",
+        "This preview does not invent a company registration, office, governing law, arbitration forum, or legal contact address. Those details require the actual operating entity and launch regions to be confirmed and reviewed by qualified counsel.",
     },
     {
       id: "modifications",
-      title: "12. Modifications to Terms",
-      summary: "We will notify you of material changes 30 days prior to their effective date.",
+      title: "12. Changes to this preview",
+      summary: "The code and preview notices can change while the product is being built.",
       contentMarkdown:
-        "We may update these Terms of Service from time to time to reflect new platform capabilities, regulatory requirements, or service improvements.\n\nWhen material changes occur, we will provide at least 30 days' advance notice via an in-app notification banner or email to registered users. The current version and effective date will always be visible at the top of this document.",
+        "Material behavior changes should update these preview documents and their visible version and date. A future production notice process, consent model, and effective-date policy must be designed with the final service and legal requirements.",
     },
     {
       id: "contact-legal",
-      title: "13. Legal Inquiries & Contact Information",
-      summary: "Direct channel for legal, institutional, and compliance notices.",
+      title: "13. Questions and review",
+      summary: "No monitored legal mailbox or postal office is represented in this build.",
       contentMarkdown:
-        "For legal inquiries, copyright notices (DMCA), or contractual communications:\n\n- **Legal Team:** `legal@algora.io`\n- **Compliance & Billing:** `billing@algora.io`\n- **Postal Address:** Algora Learning Technologies Inc., 100 Montgomery St, Suite 1400, San Francisco, CA 94104\n- **Web Form:** [/contact](/contact)",
+        "Use the [/contact](/contact) preview to prepare feedback. The form currently validates locally and does not deliver a message. A real legal contact, operating entity, postal address, and support workflow must be added and verified before public launch.",
     },
   ],
 };

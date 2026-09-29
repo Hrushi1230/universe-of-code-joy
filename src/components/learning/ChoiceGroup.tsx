@@ -2,19 +2,19 @@ import * as React from "react";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export interface Choice {
-  id: string;
+export interface Choice<TId extends string = string> {
+  id: TId;
   label: string;
 }
 
-export interface ChoiceGroupProps {
+export interface ChoiceGroupProps<TId extends string = string> {
   /** Radio group name; must be unique per question on the page. */
   name: string;
   /** Element id of the label/heading describing this group. */
   labelledBy: string;
-  choices: readonly Choice[];
-  selectedId: string | null;
-  onSelect: (id: string) => void;
+  choices: readonly Choice<TId>[];
+  selectedId: TId | null;
+  onSelect: (id: TId) => void;
   disabled?: boolean;
   className?: string;
 }
@@ -24,7 +24,7 @@ export interface ChoiceGroupProps {
  * real radio group, keyboard-native, with selection carried by weight and a
  * check glyph rather than colour alone.
  */
-export function ChoiceGroup({
+export function ChoiceGroup<TId extends string>({
   name,
   labelledBy,
   choices,
@@ -32,7 +32,7 @@ export function ChoiceGroup({
   onSelect,
   disabled = false,
   className,
-}: ChoiceGroupProps): React.ReactElement {
+}: ChoiceGroupProps<TId>): React.ReactElement {
   return (
     <div
       role="radiogroup"

@@ -1,0 +1,80 @@
+async (page) => {
+  const routes = [
+    "/",
+    "/visualizer",
+    "/pricing",
+    "/campus",
+    "/blog",
+    "/contact",
+    "/privacy",
+    "/terms",
+    "/login",
+    "/auth",
+    "/forgot-password",
+    "/reset-password",
+    "/verify-email",
+    "/onboarding/goals",
+    "/onboarding/assessment",
+    "/onboarding/path",
+    "/dashboard",
+    "/explore",
+    "/paths",
+    "/mastery-map",
+    "/quests",
+    "/achievements",
+    "/leagues",
+    "/notifications",
+    "/settings",
+    "/settings/billing",
+  ];
+  const results = [];
+  for (const width of [320, 390, 768, 1024, 1440, 1920]) {
+    await page.setViewportSize({ width, height: 600 });
+    for (const route of routes) {
+      await page.goto("http://127.0.0.1:8081" + route);
+      await page.waitForLoadState("networkidle");
+      const geometry = await page.evaluate(() => {
+        const root = document.documentElement;
+        const controls = [
+          ...document.querySelectorAll("button, input, select, textarea, a"),
+        ].filter((el) => el.getClientRects().length && !el.closest('[aria-hidden="true"]'));
+        return {
+          width: root.clientWidth,
+          scrollWidth: root.scrollWidth,
+          placeholders: controls
+            .filter(
+              (el) =>
+                el.tagName === "A" && (!el.getAttribute("href") || el.getAttribute("href") === "#"),
+            )
+            .map((el) => el.textContent.trim()),
+          unnamed: controls
+            .filter(
+              (el) =>
+                el.tagName === "BUTTON" &&
+                !el.textContent.trim() &&
+                !el.labels?.length &&
+                !el.getAttribute("aria-label") &&
+                !el.getAttribute("aria-labelledby") &&
+                !el.getAttribute("title"),
+            )
+            .map((el) => el.outerHTML.slice(0, 240)),
+        };
+      });
+      results.push({ route, viewport: width + "x600", ...geometry });
+      if (
+        (width === 390 || width === 1440) &&
+        ["/", "/auth", "/notifications", "/pricing", "/contact"].includes(route)
+      ) {
+        await page.screenshot({
+          path: "output/playwright/p05-" + (route.slice(1) || "home") + "-" + width + ".png",
+        });
+      }
+    }
+  }
+  return {
+    checked: results.length,
+    failures: results.filter(
+      (r) => r.scrollWidth > r.width + 1 || r.placeholders.length || r.unnamed.length,
+    ),
+  };
+}
